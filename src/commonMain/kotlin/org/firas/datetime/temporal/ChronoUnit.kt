@@ -57,10 +57,6 @@
 package org.firas.datetime.temporal
 
 import org.firas.datetime.Duration
-import org.firas.datetime.Duration
-
-
-
 
 /**
  * A standard set of date periods units.

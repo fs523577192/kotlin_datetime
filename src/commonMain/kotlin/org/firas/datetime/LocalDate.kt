@@ -61,6 +61,8 @@
  */
 package org.firas.datetime
 
+import org.firas.datetime.temporal.ChronoField
+
 /**
  * A date without a time-zone in the ISO-8601 calendar system,
  * such as {@code 2007-12-03}.
@@ -95,7 +97,11 @@ package org.firas.datetime
  * @since Java 1.8
  * @author Wu Yuping
  */
-class LocalDate {
+class LocalDate private constructor(
+    private val year: Int,
+    private val month: Short,
+    private val day: Short
+): Comparable<LocalDate> {
 
     companion object {
         /**
@@ -146,9 +152,8 @@ class LocalDate {
          * or if the day-of-month is invalid for the month-year
          */
         fun of(year: Int, month: Month, dayOfMonth: Int): LocalDate {
-            YEAR.checkValidValue(year)
-            Objects.requireNonNull(month, "month")
-            DAY_OF_MONTH.checkValidValue(dayOfMonth)
+            ChronoField.YEAR.checkValidValue(year.toLong())
+            ChronoField.DAY_OF_MONTH.checkValidValue(dayOfMonth.toLong())
             return create(year, month.getValue(), dayOfMonth)
         }
 
@@ -167,9 +172,9 @@ class LocalDate {
          * or if the day-of-month is invalid for the month-year
          */
         fun of(year: Int, month: Int, dayOfMonth: Int): LocalDate {
-            YEAR.checkValidValue(year)
-            MONTH_OF_YEAR.checkValidValue(month)
-            DAY_OF_MONTH.checkValidValue(dayOfMonth)
+            ChronoField.YEAR.checkValidValue(year.toLong())
+            ChronoField.MONTH_OF_YEAR.checkValidValue(month.toLong())
+            ChronoField.DAY_OF_MONTH.checkValidValue(dayOfMonth.toLong())
             return create(year, month, dayOfMonth)
         }
 
@@ -188,10 +193,10 @@ class LocalDate {
          * or if the day-of-year is invalid for the year
          */
         fun ofYearDay(year: Int, dayOfYear: Int): LocalDate {
-            YEAR.checkValidValue(year)
-            DAY_OF_YEAR.checkValidValue(dayOfYear)
-            val leap = IsoChronology.INSTANCE.isLeapYear(year)
-            if (dayOfYear == 366 && leap == false) {
+            ChronoField.YEAR.checkValidValue(year.toLong())
+            ChronoField.DAY_OF_YEAR.checkValidValue(dayOfYear.toLong())
+            val leap = Year.isLeap(year)
+            if (dayOfYear == 366 && !leap) {
                 throw DateTimeException("Invalid date 'DayOfYear 366' as '$year' is not a leap year")
             }
             var moy = Month.of((dayOfYear - 1) / 31 + 1)
@@ -200,7 +205,49 @@ class LocalDate {
                 moy = moy.plus(1)
             }
             val dom = dayOfYear - moy.firstDayOfYear(leap) + 1
-            return LocalDate(year, moy.getValue(), dom)
+            return LocalDate(year, moy.getValue().toShort(), dom.toShort())
         }
+
+        //-----------------------------------------------------------------------
+        /**
+         * Creates a local date from the year, month and day fields.
+         *
+         * @param year  the year to represent, validated from MIN_YEAR to MAX_YEAR
+         * @param month  the month-of-year to represent, from 1 to 12, validated
+         * @param dayOfMonth  the day-of-month to represent, validated from 1 to 31
+         * @return the local date, not null
+         * @throws DateTimeException if the day-of-month is invalid for the month-year
+         */
+        private fun create(year: Int, month: Int, dayOfMonth: Int): LocalDate {
+            if (dayOfMonth > 28) {
+                var dom = 31
+                when (month) {
+                    2 -> dom = (if (Year.isLeap(year)) 29 else 28)
+                    4, 6, 9, 11 -> dom = 30
+                }
+                if (dayOfMonth > dom) {
+                    if (dayOfMonth == 29) {
+                        throw DateTimeException("Invalid date 'February 29' as '$year' is not a leap year")
+                    } else {
+                        throw DateTimeException("Invalid date '" + Month.of(month).name + " " + dayOfMonth + "'")
+                    }
+                }
+            }
+            return LocalDate(year, month.toShort(), dayOfMonth.toShort())
+        }
+    } // companion object
+
+    override fun compareTo(other: LocalDate): Int {
+        if (this.year > other.year) {
+            return 1
+        } else if (this.year < other.year) {
+            return -1
+        }
+        if (this.month > other.month) {
+            return 1
+        } else if (this.month < other.month) {
+            return -1
+        }
+        return if (this.day > other.day) 1 else if (this.day < other.day) -1 else 0
     }
 }
