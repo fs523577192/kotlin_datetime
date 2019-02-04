@@ -96,7 +96,8 @@ import kotlin.math.absoluteValue
  * @author Wu Yuping
  */
 class YearMonth private constructor(
-        val year: Int, val month: Int): Comparable<YearMonth> {
+        private val year: Int,
+        private val month: Int): Comparable<YearMonth> {
 
     companion object {
         /**

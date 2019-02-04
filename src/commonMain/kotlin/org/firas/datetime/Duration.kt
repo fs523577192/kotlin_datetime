@@ -61,8 +61,8 @@
  */
 package org.firas.datetime
 
-import org.firas.big_number.BigDecimal
-import org.firas.big_number.BigInteger
+import org.firas.math.BigDecimal
+import org.firas.math.BigInteger
 import org.firas.datetime.util.MathUtils
 
 /**
@@ -246,7 +246,7 @@ class Duration private constructor(
             if (divRem[0].bitLength() > 63) {
                 throw ArithmeticException("Exceeds capacity of Duration: $nanos")
             }
-            return ofSeconds(divRem[0].longValue(), divRem[1].intValue())
+            return ofSeconds(divRem[0].toLong(), divRem[1].toLong())
         }
     } // companion object
 
@@ -359,6 +359,6 @@ class Duration private constructor(
      * @return the total length of the duration in seconds, with a scale of 9, not null
      */
     private fun toSeconds(): BigDecimal {
-        return BigDecimal.valueOf(seconds) + BigDecimal.valueOf(nanos, 9)
+        return BigDecimal.valueOf(seconds) + BigDecimal.valueOf(nanos.toLong(), 9)
     }
 }

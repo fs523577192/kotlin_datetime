@@ -25,7 +25,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation 'org.jetbrains.kotlin:kotlin-stdlib-common'
-                // api 'org.firas.big_number:big_number:0.1.0'
+                api 'org.firas.big_number:big_number:0.2.0'
             }
         }
         commonTest {
@@ -37,7 +37,6 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-                api 'org.firas.big_number:big_number-jvm:0.1.0'
             }
         }
         jvmTest {
@@ -49,8 +48,6 @@ kotlin {
         jsMain {
             dependencies {
                 implementation 'org.jetbrains.kotlin:kotlin-stdlib-js'
-                api 'org.firas.big_number:big_number-js:0.1.0'
-                // api 'org.firas.big_number:big_number-metadata:0.1.0'
             }
         }
         jsTest {
