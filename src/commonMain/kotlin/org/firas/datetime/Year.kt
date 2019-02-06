@@ -100,7 +100,7 @@ import org.firas.datetime.temporal.ChronoField
  * @since Java 1.8
  * @author Wu Yuping
  */
-class Year private constructor(val year: Int): Comparable<Year> {
+class Year private constructor(val value: Int): Comparable<Year> {
 
     companion object {
         /**
@@ -168,18 +168,6 @@ class Year private constructor(val year: Int): Comparable<Year> {
     } // companion object
 
     /**
-     * Gets the year value.
-     *
-     *
-     * The year returned by this method is proleptic as per `get(YEAR)`.
-     *
-     * @return the year, `MIN_VALUE` to `MAX_VALUE`
-     */
-    fun getValue(): Int {
-        return this.year
-    }
-
-    /**
      * Checks if the year is a leap year, according to the ISO proleptic
      * calendar system rules.
      *
@@ -201,7 +189,7 @@ class Year private constructor(val year: Int): Comparable<Year> {
      * @return true if the year is leap, false otherwise
      */
     fun isLeap(): Boolean {
-        return Year.isLeap(this.year)
+        return Year.isLeap(this.value)
     }
 
     /**
@@ -228,7 +216,7 @@ class Year private constructor(val year: Int): Comparable<Year> {
         return if (yearsToAdd == 0) {
             this
         } else {
-            of(ChronoField.YEAR.checkValidIntValue(this.year.toLong() + yearsToAdd))
+            of(ChronoField.YEAR.checkValidIntValue(this.value.toLong() + yearsToAdd))
         }
         // overflow safe
     }
@@ -264,7 +252,7 @@ class Year private constructor(val year: Int): Comparable<Year> {
      * to 366 and this is not a leap year
      */
     fun atDay(dayOfYear: Int): LocalDate {
-        return LocalDate.ofYearDay(year, dayOfYear)
+        return LocalDate.ofYearDay(value, dayOfYear)
     }
 
     // ----==== Comparison ====----
@@ -279,7 +267,7 @@ class Year private constructor(val year: Int): Comparable<Year> {
      * @return the comparator value, negative if less, positive if greater
      */
     override fun compareTo(other: Year): Int {
-        return this.year - other.year
+        return this.value - other.value
     }
 
     /**
@@ -289,7 +277,7 @@ class Year private constructor(val year: Int): Comparable<Year> {
      * @return true if this is after the specified year
      */
     fun isAfter(other: Year): Boolean {
-        return this.year > other.year
+        return this.value > other.value
     }
 
     /**
@@ -299,7 +287,7 @@ class Year private constructor(val year: Int): Comparable<Year> {
      * @return true if this point is before the specified year
      */
     fun isBefore(other: Year): Boolean {
-        return this.year < other.year
+        return this.value < other.value
     }
 
     // ----==== override methods inherited from Any ----
@@ -316,7 +304,7 @@ class Year private constructor(val year: Int): Comparable<Year> {
         if (this === other) {
             return true
         }
-        return if (other is Year) (this.year == other.year) else false
+        return if (other is Year) (this.value == other.value) else false
     }
 
     /**
@@ -325,7 +313,7 @@ class Year private constructor(val year: Int): Comparable<Year> {
      * @return a suitable hash code
      */
     override fun hashCode(): Int {
-        return this.year
+        return this.value
     }
 
     /**
@@ -334,6 +322,6 @@ class Year private constructor(val year: Int): Comparable<Year> {
      * @return a string representation of this year, not null
      */
     override fun toString(): String {
-        return this.year.toString()
+        return this.value.toString()
     }
 }

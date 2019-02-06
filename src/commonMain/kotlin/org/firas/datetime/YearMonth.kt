@@ -96,8 +96,8 @@ import kotlin.math.absoluteValue
  * @author Wu Yuping
  */
 class YearMonth private constructor(
-        private val year: Int,
-        private val month: Int): Comparable<YearMonth> {
+        val year: Int,
+        val monthValue: Int): Comparable<YearMonth> {
 
     companion object {
         /**
@@ -134,36 +134,6 @@ class YearMonth private constructor(
     } // companion object
 
     /**
-     * Gets the year field.
-     *
-     *
-     * This method returns the primitive `int` value for the year.
-     *
-     *
-     * The year returned by this method is proleptic as per `get(YEAR)`.
-     *
-     * @return the year, from MIN_YEAR to MAX_YEAR
-     */
-    fun getYear(): Int {
-        return this.year
-    }
-
-    /**
-     * Gets the month-of-year field from 1 to 12.
-     *
-     *
-     * This method returns the month as an `int` from 1 to 12.
-     * Application code is frequently clearer if the enum [Month]
-     * is used by calling [.getMonth].
-     *
-     * @return the month-of-year, from 1 to 12
-     * @see .getMonth
-     */
-    fun getMonthValue(): Int {
-        return this.month
-    }
-
-    /**
      * Gets the month-of-year field using the `Month` enum.
      *
      *
@@ -176,7 +146,7 @@ class YearMonth private constructor(
      * @see .getMonthValue
      */
     fun getMonth(): Month {
-        return Month.of(this.month)
+        return Month.of(this.monthValue)
     }
 
     //-----------------------------------------------------------------------
@@ -257,7 +227,7 @@ class YearMonth private constructor(
      */
     fun withYear(year: Int): YearMonth {
         ChronoField.YEAR.checkValidValue(year.toLong())
-        return with(year, this.month)
+        return with(year, this.monthValue)
     }
 
     /**
@@ -291,7 +261,7 @@ class YearMonth private constructor(
             return this
         }
         val newYear = ChronoField.YEAR.checkValidIntValue(this.year.toLong() + yearsToAdd)  // safe overflow
-        return with(newYear, month)
+        return with(newYear, monthValue)
     }
 
     /**
@@ -308,7 +278,7 @@ class YearMonth private constructor(
         if (monthsToAdd == 0) {
             return this
         }
-        val monthCount = year * 12L + (month - 1)
+        val monthCount = this.year * 12L + (this.monthValue - 1)
         val calcMonths = monthCount + monthsToAdd  // safe overflow
         val newYear = ChronoField.YEAR.checkValidIntValue(MathUtils.floorDiv(calcMonths, 12))
         val newMonth = MathUtils.floorMod(calcMonths, 12) + 1
@@ -367,7 +337,7 @@ class YearMonth private constructor(
      * @see .isValidDay
      */
     fun atDay(dayOfMonth: Int): LocalDate {
-        return LocalDate.of(year, month, dayOfMonth)
+        return LocalDate.of(year, monthValue, dayOfMonth)
     }
 
     /**
@@ -387,7 +357,7 @@ class YearMonth private constructor(
      * @return the last valid date of this year-month, not null
      */
     fun atEndOfMonth(): LocalDate {
-        return LocalDate.of(year, month, lengthOfMonth())
+        return LocalDate.of(this.year, this.monthValue, lengthOfMonth())
     }
 
     // ----==== Comparison ====----
@@ -404,7 +374,7 @@ class YearMonth private constructor(
     override fun compareTo(other: YearMonth): Int {
         var cmp = this.year - other.year
         if (cmp == 0) {
-            cmp = this.month - other.month
+            cmp = this.monthValue - other.monthValue
         }
         return cmp
     }
@@ -444,7 +414,7 @@ class YearMonth private constructor(
             return true
         }
         if (other is YearMonth) {
-            return this.year == other.year && this.month == other.month
+            return this.year == other.year && this.monthValue == other.monthValue
         }
         return false
     }
@@ -455,7 +425,7 @@ class YearMonth private constructor(
      * @return a suitable hash code
      */
     override fun hashCode(): Int {
-        return this.year xor (this.month shl 27)
+        return this.year xor (this.monthValue shl 27)
     }
 
     /**
@@ -480,8 +450,8 @@ class YearMonth private constructor(
         } else {
             buf.append(this.year)
         }
-        return buf.append(if (this.month < 10) "-0" else "-")
-                .append(this.month)
+        return buf.append(if (this.monthValue < 10) "-0" else "-")
+                .append(this.monthValue)
                 .toString()
     }
 
@@ -494,12 +464,12 @@ class YearMonth private constructor(
      * @return the year-month, not null
      */
     private fun with(newYear: Int, newMonth: Int): YearMonth {
-        return if (this.year == newYear && this.month == newMonth) {
+        return if (this.year == newYear && this.monthValue == newMonth) {
             this
         } else YearMonth(newYear, newMonth)
     }
 
     private fun getProlepticMonth(): Long {
-        return year * 12L + month - 1
+        return this.year * 12L + this.monthValue - 1
     }
 }
