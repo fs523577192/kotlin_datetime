@@ -61,6 +61,7 @@
  */
 package org.firas.datetime
 
+import org.firas.datetime.chrono.ChronoLocalDate
 import org.firas.datetime.temporal.ChronoField
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneOffset
@@ -100,10 +101,10 @@ import org.firas.datetime.zone.ZoneOffset
  * @author Wu Yuping
  */
 class LocalDate private constructor(
-    private val year: Int,
-    private val monthValue: Short,
-    private val dayOfMonth: Short
-): Comparable<LocalDate> {
+    val year: Int,
+    val monthValue: Short,
+    val dayOfMonth: Short
+): Comparable<LocalDate>, ChronoLocalDate {
 
     companion object {
         /**
@@ -370,8 +371,7 @@ class LocalDate private constructor(
      *
      * @return true if the year is leap, false otherwise
      */
-    // @Override // override for Javadoc and performance
-    fun isLeapYear(): Boolean {
+    override fun isLeapYear(): Boolean {
         return Year.isLeap(this.year)
     }
 
@@ -384,7 +384,7 @@ class LocalDate private constructor(
      *
      * @return the length of the month in days
      */
-    fun lengthOfMonth(): Int {
+    override fun lengthOfMonth(): Int {
         return when (this.monthValue.toInt()) {
             2 -> if (isLeapYear()) 29 else 28
             4, 6, 9, 11 -> 30
@@ -400,7 +400,7 @@ class LocalDate private constructor(
      *
      * @return 366 if the year is leap, 365 otherwise
      */
-    fun lengthOfYear(): Int {
+    override fun lengthOfYear(): Int {
         return if (isLeapYear()) 366 else 365
     }
 
@@ -734,7 +734,7 @@ class LocalDate private constructor(
         return if (this.dayOfMonth > other.dayOfMonth) 1 else if (this.dayOfMonth < other.dayOfMonth) -1 else 0
     }
 
-    fun toEpochDay(): Long {
+    override fun toEpochDay(): Long {
         val y = this.year
         val m = this.monthValue
         var total: Long = 0

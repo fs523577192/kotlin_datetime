@@ -98,10 +98,10 @@ import org.firas.datetime.zone.ZoneOffset
  * @author Wu Yuping
  */
 class LocalTime private constructor(
-    private val hour: Byte,
-    private val minute: Byte,
-    private val second: Byte,
-    private val nano: Int
+    val hour: Byte,
+    val minute: Byte,
+    val second: Byte,
+    val nano: Int
 ): Comparable<LocalTime> {
 
     companion object {
@@ -332,6 +332,79 @@ class LocalTime private constructor(
      */
     fun atOffset(offset: ZoneOffset): OffsetTime {
         return OffsetTime.of(this, offset)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this `LocalTime` with the hour-of-day altered.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param hour  the hour-of-day to set in the result, from 0 to 23
+     * @return a `LocalTime` based on this time with the requested hour, not null
+     * @throws DateTimeException if the hour value is invalid
+     */
+    fun withHour(hour: Int): LocalTime {
+        if (this.hour.toInt() == hour) {
+            return this
+        }
+        ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
+        return create(hour, this.minute.toInt(), this.second.toInt(), this.nano)
+    }
+
+    /**
+     * Returns a copy of this `LocalTime` with the minute-of-hour altered.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param minute  the minute-of-hour to set in the result, from 0 to 59
+     * @return a `LocalTime` based on this time with the requested minute, not null
+     * @throws DateTimeException if the minute value is invalid
+     */
+    fun withMinute(minute: Int): LocalTime {
+        if (this.minute.toInt() == minute) {
+            return this
+        }
+        ChronoField.MINUTE_OF_HOUR.checkValidValue(minute.toLong())
+        return create(this.hour.toInt(), minute, this.second.toInt(), this.nano)
+    }
+
+    /**
+     * Returns a copy of this `LocalTime` with the second-of-minute altered.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param second  the second-of-minute to set in the result, from 0 to 59
+     * @return a `LocalTime` based on this time with the requested second, not null
+     * @throws DateTimeException if the second value is invalid
+     */
+    fun withSecond(second: Int): LocalTime {
+        if (this.second.toInt() == second) {
+            return this
+        }
+        ChronoField.SECOND_OF_MINUTE.checkValidValue(second.toLong())
+        return create(this.hour.toInt(), this.minute.toInt(), second, this.nano)
+    }
+
+    /**
+     * Returns a copy of this `LocalTime` with the nano-of-second altered.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param nanoOfSecond  the nano-of-second to set in the result, from 0 to 999,999,999
+     * @return a `LocalTime` based on this time with the requested nanosecond, not null
+     * @throws DateTimeException if the nanos value is invalid
+     */
+    fun withNano(nanoOfSecond: Int): LocalTime {
+        if (this.nano == nanoOfSecond) {
+            return this
+        }
+        ChronoField.NANO_OF_SECOND.checkValidValue(nanoOfSecond.toLong())
+        return create(this.hour.toInt(), this.minute.toInt(), this.second.toInt(), nanoOfSecond)
     }
 
     // ----==== Comparison ====----
