@@ -62,6 +62,9 @@
 package org.firas.datetime
 
 import org.firas.datetime.temporal.ChronoField
+import org.firas.datetime.zone.ZoneOffset
+
+
 
 /**
  * A time without time-zone in the ISO-8601 calendar system,
@@ -316,6 +319,20 @@ class LocalTime private constructor(
             }
         }
     } // companion object
+
+    /**
+     * Combines this time with an offset to create an `OffsetTime`.
+     *
+     *
+     * This returns an `OffsetTime` formed from this time at the specified offset.
+     * All possible combinations of time and offset are valid.
+     *
+     * @param offset  the offset to combine with, not null
+     * @return the offset time formed from this time and the specified offset, not null
+     */
+    fun atOffset(offset: ZoneOffset): OffsetTime {
+        return OffsetTime.of(this, offset)
+    }
 
     // ----==== Comparison ====----
     /**
