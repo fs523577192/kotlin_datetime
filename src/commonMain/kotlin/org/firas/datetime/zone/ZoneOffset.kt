@@ -61,6 +61,10 @@
  */
 package org.firas.datetime.zone
 
+import org.firas.datetime.DateTimeException
+import org.firas.datetime.LocalTime.Companion.MINUTES_PER_HOUR
+import org.firas.datetime.LocalTime.Companion.SECONDS_PER_HOUR
+import org.firas.datetime.LocalTime.Companion.SECONDS_PER_MINUTE
 import kotlin.math.absoluteValue
 
 /**
@@ -112,19 +116,15 @@ class ZoneOffset private constructor(
     val id: String = buildId(this.totalSeconds)
 
     companion object {
-        /** Cache of time-zone offset by offset in seconds.  */
-        private val SECONDS_CACHE = HashMap<Int, ZoneOffset>(16, 0.75f)
-        /** Cache of time-zone offset by ID.  */
-        private val ID_CACHE = HashMap<String, ZoneOffset>(16, 0.75f)
-
         /**
          * The abs maximum seconds.
          */
-        private val MAX_SECONDS = 18 * LocalTime.SECONDS_PER_HOUR
+        private val MAX_SECONDS = 18 * SECONDS_PER_HOUR
+
         /**
          * Serialization version.
          */
-        private val serialVersionUID = 2357656521762053153L
+        private const val serialVersionUID = 2357656521762053153L
 
         /**
          * The time-zone offset for UTC, with an ID of 'Z'.
@@ -293,7 +293,7 @@ class ZoneOffset private constructor(
             if (totalSeconds < -MAX_SECONDS || totalSeconds > MAX_SECONDS) {
                 throw DateTimeException("Zone offset not in valid range: -18:00 to +18:00")
             }
-            if (totalSeconds % (15 * LocalTime.SECONDS_PER_MINUTE) == 0) {
+            if (totalSeconds % (15 * SECONDS_PER_MINUTE) == 0) {
                 var result = SECONDS_CACHE[totalSeconds]
                 if (result == null) {
                     result = ZoneOffset(totalSeconds)
@@ -313,12 +313,12 @@ class ZoneOffset private constructor(
             } else {
                 val absTotalSeconds = totalSeconds.absoluteValue
                 val buf = StringBuilder()
-                val absHours = absTotalSeconds / LocalTime.SECONDS_PER_HOUR
-                val absMinutes = absTotalSeconds / LocalTime.SECONDS_PER_MINUTE % LocalTime.MINUTES_PER_HOUR
+                val absHours = absTotalSeconds / SECONDS_PER_HOUR
+                val absMinutes = absTotalSeconds / SECONDS_PER_MINUTE % MINUTES_PER_HOUR
                 buf.append(if (totalSeconds < 0) "-" else "+")
                     .append(if (absHours < 10) "0" else "").append(absHours)
                     .append(if (absMinutes < 10) ":0" else ":").append(absMinutes)
-                val absSeconds = absTotalSeconds % LocalTime.SECONDS_PER_MINUTE
+                val absSeconds = absTotalSeconds % SECONDS_PER_MINUTE
                 if (absSeconds != 0) {
                     buf.append(if (absSeconds < 10) ":0" else ":").append(absSeconds)
                 }
@@ -394,7 +394,7 @@ class ZoneOffset private constructor(
          * @return the total in seconds
          */
         private fun totalSeconds(hours: Int, minutes: Int, seconds: Int): Int {
-            return hours * LocalTime.SECONDS_PER_HOUR + minutes * LocalTime.SECONDS_PER_MINUTE + seconds
+            return hours * SECONDS_PER_HOUR + minutes * SECONDS_PER_MINUTE + seconds
         }
     } // companion object
 
@@ -455,3 +455,8 @@ class ZoneOffset private constructor(
         return this.id
     }
 }
+
+/** Cache of time-zone offset by offset in seconds.  */
+internal expect val SECONDS_CACHE: MutableMap<Int, ZoneOffset>
+/** Cache of time-zone offset by ID.  */
+internal expect val ID_CACHE: MutableMap<String, ZoneOffset>
