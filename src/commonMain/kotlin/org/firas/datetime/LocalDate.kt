@@ -65,6 +65,9 @@ import org.firas.datetime.chrono.ChronoLocalDate
 import org.firas.datetime.temporal.ChronoField
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneOffset
+import org.firas.datetime.chrono.IsoChronology
+
+
 
 /**
  * A date without a time-zone in the ISO-8601 calendar system,
@@ -104,7 +107,7 @@ class LocalDate private constructor(
     val year: Int,
     val monthValue: Short,
     val dayOfMonth: Short
-): Comparable<LocalDate>, ChronoLocalDate {
+): ChronoLocalDate {
 
     companion object {
         /**
@@ -301,6 +304,21 @@ class LocalDate private constructor(
             return LocalDate(year, month, day.toShort())
         }
     } // companion object
+
+    /**
+     * Gets the chronology of this date, which is the ISO calendar system.
+     *
+     *
+     * The `Chronology` represents the calendar system in use.
+     * The ISO-8601 calendar system is the modern civil calendar system used today
+     * in most of the world. It is equivalent to the proleptic Gregorian calendar
+     * system, in which today's rules for leap years are applied for all time.
+     *
+     * @return the ISO chronology, not null
+     */
+    override fun getChronology(): IsoChronology {
+        return IsoChronology.INSTANCE
+    }
 
     /**
      * Gets the month-of-year field using the `Month` enum.
@@ -720,7 +738,11 @@ class LocalDate private constructor(
             plusDays(Long.MAX_VALUE).plusDays(1) else plusDays(-daysToSubtract)
     }
 
-    override fun compareTo(other: LocalDate): Int {
+    override operator fun compareTo(other: ChronoLocalDate): Int {
+        return if (other is LocalDate) compareTo(other) else -other.compareTo(this)
+    }
+
+    operator fun compareTo(other: LocalDate): Int {
         if (this.year > other.year) {
             return 1
         } else if (this.year < other.year) {

@@ -68,7 +68,11 @@ import org.firas.datetime.LocalTime.Companion.NANOS_PER_HOUR
 import org.firas.datetime.LocalTime.Companion.NANOS_PER_MINUTE
 import org.firas.datetime.LocalTime.Companion.NANOS_PER_SECOND
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_DAY
+import org.firas.datetime.chrono.ChronoLocalDateTime
 import org.firas.datetime.util.MathUtils
+import org.firas.datetime.zone.ZoneOffset
+
+
 
 /**
  * A date-time without a time-zone in the ISO-8601 calendar system,
@@ -108,9 +112,17 @@ import org.firas.datetime.util.MathUtils
  * @author Wu Yuping
  */
 class LocalDateTime private constructor(
-    val date: LocalDate,
-    val time: LocalTime
-): Comparable<LocalDateTime> {
+    private val date: LocalDate,
+    private val time: LocalTime
+): Comparable<LocalDateTime>, ChronoLocalDateTime<LocalDate> {
+
+    override fun getDate(): LocalDate {
+        return date
+    }
+
+    override fun getTime(): LocalTime {
+        return time
+    }
 
     companion object {
         /**
@@ -441,6 +453,20 @@ class LocalDateTime private constructor(
      */
     fun getNano(): Int {
         return time.nano
+    }
+
+    /**
+     * Combines this date-time with an offset to create an `OffsetDateTime`.
+     *
+     *
+     * This returns an `OffsetDateTime` formed from this date-time at the specified offset.
+     * All possible combinations of date-time and offset are valid.
+     *
+     * @param offset  the offset to combine with, not null
+     * @return the offset date-time formed from this date-time and the specified offset, not null
+     */
+    fun atOffset(offset: ZoneOffset): OffsetDateTime {
+        return OffsetDateTime.of(this, offset)
     }
 
     //-----------------------------------------------------------------------

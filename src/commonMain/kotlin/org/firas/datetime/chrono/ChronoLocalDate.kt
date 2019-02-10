@@ -1,5 +1,67 @@
+/*
+ * Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
 
+/*
+ * This file is available under and governed by the GNU General Public
+ * License version 2 only, as published by the Free Software Foundation.
+ * However, the following notice accompanied the original version of this
+ * file:
+ *
+ * Copyright (c) 2012, Stephen Colebourne & Michael Nascimento Santos
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ *  * Neither the name of JSR-310 nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package org.firas.datetime.chrono
+
+import org.firas.datetime.temporal.ChronoField
 
 /**
  * A date without time-of-day or time-zone in an arbitrary chronology, intended
@@ -8,15 +70,15 @@ package org.firas.datetime.chrono
  * <b>Most applications should declare method signatures, fields and variables
  * as {@link LocalDate}, not this interface.</b>
  * <p>
- * A {@code ChronoLocalDate} is the abstract representation of a date where the
- * {@code Chronology chronology}, or calendar system, is pluggable.
+ * A `ChronoLocalDate` is the abstract representation of a date where the
+ * `Chronology chronology`, or calendar system, is pluggable.
  * The date is defined in terms of fields expressed by {@link TemporalField},
  * where most common implementations are defined in {@link ChronoField}.
  * The chronology defines how the calendar system operates and the meaning of
  * the standard fields.
  *
  * <h3>When to use this interface</h3>
- * The design of the API encourages the use of {@code LocalDate} rather than this
+ * The design of the API encourages the use of `LocalDate` rather than this
  * interface, even in the case where the application needs to deal with multiple
  * calendar systems.
  * <p>
@@ -25,13 +87,13 @@ package org.firas.datetime.chrono
  * However, as explored below, abstracting the calendar system is usually the wrong
  * approach, resulting in logic errors and hard to find bugs.
  * As such, it should be considered an application-wide architectural decision to choose
- * to use this interface as opposed to {@code LocalDate}.
+ * to use this interface as opposed to `LocalDate`.
  *
  * <h3>Architectural issues to consider</h3>
  * These are some of the points that must be considered before using this interface
  * throughout an application.
  * <p>
- * 1) Applications using this interface, as opposed to using just {@code LocalDate},
+ * 1) Applications using this interface, as opposed to using just `LocalDate`,
  * face a significantly higher probability of bugs. This is because the calendar system
  * in use is not known at development time. A key cause of bugs is where the developer
  * applies assumptions from their day-to-day knowledge of the ISO calendar system
@@ -43,13 +105,13 @@ package org.firas.datetime.chrono
  * 2) This interface does not enforce immutability of implementations.
  * While the implementation notes indicate that all implementations must be immutable
  * there is nothing in the code or type system to enforce this. Any method declared
- * to accept a {@code ChronoLocalDate} could therefore be passed a poorly or
+ * to accept a `ChronoLocalDate` could therefore be passed a poorly or
  * maliciously written mutable implementation.
  * <p>
  * 3) Applications using this interface  must consider the impact of eras.
- * {@code LocalDate} shields users from the concept of eras, by ensuring that {@code getYear()}
+ * `LocalDate` shields users from the concept of eras, by ensuring that `getYear()`
  * returns the proleptic year. That decision ensures that developers can think of
- * {@code LocalDate} instances as consisting of three fields - year, month-of-year and day-of-month.
+ * `LocalDate` instances as consisting of three fields - year, month-of-year and day-of-month.
  * By contrast, users of this interface must think of dates as consisting of four fields -
  * era, year-of-era, month-of-year and day-of-month. The extra era field is frequently
  * forgotten, yet it is of vital importance to dates in an arbitrary calendar system.
@@ -65,7 +127,7 @@ package org.firas.datetime.chrono
  * ISO-8601 calendar system (or the related Julian-Gregorian). Passing around dates in other
  * calendar systems increases the complications of interacting with persistence.
  * <p>
- * 6) Most of the time, passing a {@code ChronoLocalDate} throughout an application
+ * 6) Most of the time, passing a `ChronoLocalDate` throughout an application
  * is unnecessary, as discussed in the last section below.
  *
  * <h3>False assumptions causing bugs in multi-calendar system code</h3>
@@ -90,8 +152,8 @@ package org.firas.datetime.chrono
  * Code that adds seven days and assumes that a week has been added is invalid.
  * Some calendar systems have weeks of other than seven days, such as the French Revolutionary.
  * <p>
- * Code that assumes that because the year of {@code date1} is greater than the year of {@code date2}
- * then {@code date1} is after {@code date2} is invalid. This is invalid for all calendar systems
+ * Code that assumes that because the year of `date1` is greater than the year of `date2`
+ * then `date1` is after `date2` is invalid. This is invalid for all calendar systems
  * when referring to the year-of-era, and especially untrue of the Japanese calendar system
  * where the year-of-era restarts with the reign of every new Emperor.
  * <p>
@@ -106,10 +168,10 @@ package org.firas.datetime.chrono
  * <h3>Using LocalDate instead</h3>
  * The primary alternative to using this interface throughout your application is as follows.
  * <ul>
- * <li>Declare all method signatures referring to dates in terms of {@code LocalDate}.
+ * <li>Declare all method signatures referring to dates in terms of `LocalDate`.
  * <li>Either store the chronology (calendar system) in the user profile or lookup
  *  the chronology from the user locale
- * <li>Convert the ISO {@code LocalDate} to and from the user's preferred calendar system during
+ * <li>Convert the ISO `LocalDate` to and from the user's preferred calendar system during
  *  printing and parsing
  * </ul>
  * This approach treats the problem of globalized calendar systems as a localization issue
@@ -133,11 +195,11 @@ package org.firas.datetime.chrono
  * which may require manipulating the date.
  * This kind of use case can be handled as follows:
  * <ul>
- * <li>start from the ISO {@code LocalDate} being passed to the method
+ * <li>start from the ISO `LocalDate` being passed to the method
  * <li>convert the date to the alternate calendar system, which for this use case is known
  *  rather than arbitrary
  * <li>perform the calculation
- * <li>convert back to {@code LocalDate}
+ * <li>convert back to `LocalDate`
  * </ul>
  * Developers writing low-level frameworks or libraries should also avoid this interface.
  * Instead, one of the two general purpose access interfaces should be used.
@@ -155,7 +217,45 @@ package org.firas.datetime.chrono
  * @since Java 1.8
  * @author Wu Yuping
  */
-interface ChronoLocalDate {
+interface ChronoLocalDate: Comparable<ChronoLocalDate> {
+
+    companion object {
+        /**
+         * Gets a comparator that compares `ChronoLocalDate` in
+         * time-line order ignoring the chronology.
+         *
+         *
+         * This comparator differs from the comparison in [.compareTo] in that it
+         * only compares the underlying date and not the chronology.
+         * This allows dates in different calendar systems to be compared based
+         * on the position of the date on the local time-line.
+         * The underlying comparison is equivalent to comparing the epoch-day.
+         *
+         * @return a comparator that compares in time-line order ignoring the chronology
+         * @see .isAfter
+         *
+         * @see .isBefore
+         *
+         * @see .isEqual
+         */
+        val timeLineOrder: Comparator<ChronoLocalDate> =
+            { date1: ChronoLocalDate, date2: ChronoLocalDate ->
+                val a = date1.toEpochDay()
+                val b = date2.toEpochDay()
+                if (a > b) 1 else if (a < b) -1 else 0
+            } as Comparator<ChronoLocalDate>
+    } // companion object
+
+    /**
+     * Gets the chronology of this date.
+     *
+     *
+     * The `Chronology` represents the calendar system in use.
+     * The era and other fields in [ChronoField] are defined by the chronology.
+     *
+     * @return the chronology, not null
+     */
+    fun getChronology(): Chronology
 
     /**
      * Checks if the year is a leap year, as defined by the calendar system.
@@ -189,7 +289,9 @@ interface ChronoLocalDate {
      *
      * @return the length of the year in days
      */
-    fun lengthOfYear(): Int
+    fun lengthOfYear(): Int {
+        return if (isLeapYear()) 366 else 365
+    }
 
     /**
      * Converts this date to the Epoch Day.
@@ -198,9 +300,108 @@ interface ChronoLocalDate {
      * incrementing count of days where day 0 is 1970-01-01 (ISO).
      * This definition is the same for all chronologies, enabling conversion.
      * <p>
-     * This default implementation queries the {@code EPOCH_DAY} field.
+     * This default implementation queries the `EPOCH_DAY` field.
      *
      * @return the Epoch Day equivalent to this date
      */
     fun toEpochDay(): Long
+
+    //-----------------------------------------------------------------------
+    /**
+     * Compares this date to another date, including the chronology.
+     *
+     *
+     * The comparison is based first on the underlying time-line date, then
+     * on the chronology.
+     * It is "consistent with equals", as defined by [Comparable].
+     *
+     *
+     * For example, the following is the comparator order:
+     *
+     *  1. `2012-12-03 (ISO)`
+     *  1. `2012-12-04 (ISO)`
+     *  1. `2555-12-04 (ThaiBuddhist)`
+     *  1. `2012-12-05 (ISO)`
+     *
+     * Values #2 and #3 represent the same date on the time-line.
+     * When two values represent the same date, the chronology ID is compared to distinguish them.
+     * This step is needed to make the ordering "consistent with equals".
+     *
+     *
+     * If all the date objects being compared are in the same chronology, then the
+     * additional chronology stage is not required and only the local date is used.
+     * To compare the dates of two `TemporalAccessor` instances, including dates
+     * in two different chronologies, use [ChronoField.EPOCH_DAY] as a comparator.
+     *
+     *
+     * This default implementation performs the comparison defined above.
+     *
+     * @param other  the other date to compare to, not null
+     * @return the comparator value, negative if less, positive if greater
+     */
+    override operator fun compareTo(other: ChronoLocalDate): Int {
+        val a = this.toEpochDay()
+        val b = other.toEpochDay()
+        return if (a > b) 1 else if (a < b) -1 else this.getChronology().compareTo(other.getChronology())
+    }
+
+    /**
+     * Checks if this date is after the specified date ignoring the chronology.
+     *
+     *
+     * This method differs from the comparison in [.compareTo] in that it
+     * only compares the underlying date and not the chronology.
+     * This allows dates in different calendar systems to be compared based
+     * on the time-line position.
+     * This is equivalent to using `date1.toEpochDay() > date2.toEpochDay()`.
+     *
+     *
+     * This default implementation performs the comparison based on the epoch-day.
+     *
+     * @param other  the other date to compare to, not null
+     * @return true if this is after the specified date
+     */
+    fun isAfter(other: ChronoLocalDate): Boolean {
+        return this.toEpochDay() > other.toEpochDay()
+    }
+
+    /**
+     * Checks if this date is before the specified date ignoring the chronology.
+     *
+     *
+     * This method differs from the comparison in [.compareTo] in that it
+     * only compares the underlying date and not the chronology.
+     * This allows dates in different calendar systems to be compared based
+     * on the time-line position.
+     * This is equivalent to using `date1.toEpochDay() < date2.toEpochDay()`.
+     *
+     *
+     * This default implementation performs the comparison based on the epoch-day.
+     *
+     * @param other  the other date to compare to, not null
+     * @return true if this is before the specified date
+     */
+    fun isBefore(other: ChronoLocalDate): Boolean {
+        return this.toEpochDay() < other.toEpochDay()
+    }
+
+    /**
+     * Checks if this date is equal to the specified date ignoring the chronology.
+     *
+     *
+     * This method differs from the comparison in [.compareTo] in that it
+     * only compares the underlying date and not the chronology.
+     * This allows dates in different calendar systems to be compared based
+     * on the time-line position.
+     * This is equivalent to using `date1.toEpochDay() == date2.toEpochDay()`.
+     *
+     *
+     * This default implementation performs the comparison based on the epoch-day.
+     *
+     * @param other  the other date to compare to, not null
+     * @return true if the underlying date is equal to the specified date
+     */
+    fun isEqual(other: ChronoLocalDate): Boolean {
+        return this.toEpochDay() == other.toEpochDay()
+    }
 }
