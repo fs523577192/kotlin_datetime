@@ -460,3 +460,5 @@ class ZoneOffset private constructor(
 internal expect val SECONDS_CACHE: MutableMap<Int, ZoneOffset>
 /** Cache of time-zone offset by ID.  */
 internal expect val ID_CACHE: MutableMap<String, ZoneOffset>
+
+expect fun getSystemZoneOffset(): ZoneOffset

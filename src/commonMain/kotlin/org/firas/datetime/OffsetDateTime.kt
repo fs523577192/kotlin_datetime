@@ -63,7 +63,7 @@ package org.firas.datetime
 
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.temporal.ChronoField
-
+import org.firas.datetime.zone.getSystemZoneOffset
 
 
 /**
@@ -146,6 +146,10 @@ class OffsetDateTime private constructor(
          * Serialization version.
          */
         private const val serialVersionUID = 2287754244819255394L
+
+        fun now(): OffsetDateTime {
+            return OffsetDateTime.of(LocalDateTime.now(), getSystemZoneOffset())
+        }
 
         //-----------------------------------------------------------------------
         /**

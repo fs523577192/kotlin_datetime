@@ -69,10 +69,10 @@ import org.firas.datetime.LocalTime.Companion.NANOS_PER_MINUTE
 import org.firas.datetime.LocalTime.Companion.NANOS_PER_SECOND
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_DAY
 import org.firas.datetime.chrono.ChronoLocalDateTime
+import org.firas.datetime.temporal.ChronoField
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneOffset
-
-
+import org.firas.datetime.zone.getSystemZoneOffset
 
 /**
  * A date-time without a time-zone in the ISO-8601 calendar system,
@@ -144,6 +144,12 @@ class LocalDateTime private constructor(
          * Serialization version.
          */
         private const val serialVersionUID = 6207766400415563566L
+
+        fun now(): LocalDateTime {
+            val currentInstant = Instant.now()
+            return ofEpochSecond(currentInstant.epochSecond, currentInstant.nanos,
+                    getSystemZoneOffset())
+        }
 
         //-----------------------------------------------------------------------
         /**
@@ -325,6 +331,32 @@ class LocalDateTime private constructor(
          * @return the local date-time, not null
          */
         fun of(date: LocalDate, time: LocalTime): LocalDateTime {
+            return LocalDateTime(date, time)
+        }
+
+        /**
+         * Obtains an instance of `LocalDateTime` using seconds from the
+         * epoch of 1970-01-01T00:00:00Z.
+         *
+         *
+         * This allows the [epoch-second][ChronoField.INSTANT_SECONDS] field
+         * to be converted to a local date-time. This is primarily intended for
+         * low-level conversions rather than general application usage.
+         *
+         * @param epochSecond  the number of seconds from the epoch of 1970-01-01T00:00:00Z
+         * @param nanoOfSecond  the nanosecond within the second, from 0 to 999,999,999
+         * @param offset  the zone offset, not null
+         * @return the local date-time, not null
+         * @throws DateTimeException if the result exceeds the supported range,
+         * or if the nano-of-second is invalid
+         */
+        fun ofEpochSecond(epochSecond: Long, nanoOfSecond: Int, offset: ZoneOffset): LocalDateTime {
+            ChronoField.NANO_OF_SECOND.checkValidValue(nanoOfSecond.toLong())
+            val localSecond = epochSecond + offset.totalSeconds  // overflow caught later
+            val localEpochDay = MathUtils.floorDiv(localSecond, SECONDS_PER_DAY.toLong())
+            val secsOfDay = MathUtils.floorMod(localSecond.toInt(), SECONDS_PER_DAY)
+            val date = LocalDate.ofEpochDay(localEpochDay)
+            val time = LocalTime.ofNanoOfDay(secsOfDay * NANOS_PER_SECOND + nanoOfSecond)
             return LocalDateTime(date, time)
         }
     } // companion object

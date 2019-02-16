@@ -220,6 +220,20 @@ class Instant(val epochSecond: Long, val nanos: Int): Comparable<Instant> {
         private const val serialVersionUID = -665713676816604388L
 
         /**
+         * This method is not the same as the one in OpenJDK.
+         * It uses `Date` instead of `Clock` and therefore
+         * the precision of the result is one millisecond
+         * instead of one nanosecond
+         *
+         * @author Wu Yuping
+         */
+        fun now(): Instant {
+            val timestamp = Date().getTime()
+            return ofEpochSecond(timestamp / 1000,
+                    timestamp % 1000 * 1000000)
+        }
+
+        /**
          * Obtains an instance of `Instant` using seconds from the
          * epoch of 1970-01-01T00:00:00Z.
          *
