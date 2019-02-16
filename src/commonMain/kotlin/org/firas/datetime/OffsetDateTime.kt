@@ -61,8 +61,8 @@
  */
 package org.firas.datetime
 
-import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.temporal.ChronoField
+import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.zone.getSystemZoneOffset
 
 
@@ -102,7 +102,7 @@ import org.firas.datetime.zone.getSystemZoneOffset
 class OffsetDateTime private constructor(
     val localDateTime: LocalDateTime,
     val offset: ZoneOffset
-) {
+): Comparable<OffsetDateTime> {
 
     companion object {
         /**
@@ -214,6 +214,24 @@ class OffsetDateTime private constructor(
         ): OffsetDateTime {
             val dt = LocalDateTime.of(year, month, dayOfMonth, hour, minute, second, nanoOfSecond)
             return OffsetDateTime(dt, offset)
+        }
+
+        /**
+         * Compares this `OffsetDateTime` to another date-time.
+         * The comparison is based on the instant.
+         *
+         * @param datetime1  the first date-time to compare, not null
+         * @param datetime2  the other date-time to compare to, not null
+         * @return the comparator value, negative if less, positive if greater
+         */
+        fun compareInstant(datetime1: OffsetDateTime, datetime2: OffsetDateTime): Int {
+            if (datetime1.offset.equals(datetime2.offset)) {
+                return datetime1.localDateTime.compareTo(datetime2.localDateTime)
+            }
+            val a = datetime1.toEpochSecond()
+            val b = datetime2.toEpochSecond()
+            return if (a > b) 1 else if (a < b) -1 else
+                datetime1.toLocalTime().nano - datetime2.toLocalTime().nano
         }
     } // companion object
 
@@ -889,6 +907,90 @@ class OffsetDateTime private constructor(
     fun minusNanos(nanos: Long): OffsetDateTime {
         return if (nanos == Long.MIN_VALUE) plusNanos(Long.MAX_VALUE).plusNanos(1)
                 else plusNanos(-nanos)
+    }
+
+    // ----==== Comparison ====----
+    /**
+     * Compares this date-time to another date-time.
+     *
+     * The comparison is based on the instant then on the local date-time.
+     * It is "consistent with equals", as defined by {@link Comparable}.
+     *
+     * For example, the following is the comparator order:
+     *
+     * * `2008-12-03T10:30+01:00}`
+     * * `2008-12-03T11:00+01:00}`
+     * * `2008-12-03T12:00+02:00}`
+     * * `2008-12-03T11:30+01:00}`
+     * * `2008-12-03T12:00+01:00}`
+     * * `2008-12-03T12:30+01:00}`
+     *
+     *
+     * Values #2 and #3 represent the same instant on the time-line.
+     * When two values represent the same instant, the local date-time is compared
+     * to distinguish them. This step is needed to make the ordering
+     * consistent with `.equals()`.
+     *
+     * @param other  the other date-time to compare to, not null
+     * @return the comparator value, negative if less, positive if greater
+     */
+    override fun compareTo(other: OffsetDateTime): Int {
+        val cmp = compareInstant(this, other)
+        return if (cmp == 0) {
+            this.localDateTime.compareTo(other.localDateTime)
+        } else cmp
+    }
+
+    /**
+     * Checks if the instant of this date-time is after that of the specified date-time.
+     *
+     *
+     * This method differs from the comparison in [.compareTo] and [.equals] in that it
+     * only compares the instant of the date-time. This is equivalent to using
+     * `dateTime1.toInstant().isAfter(dateTime2.toInstant());`.
+     *
+     * @param other  the other date-time to compare to, not null
+     * @return true if this is after the instant of the specified date-time
+     */
+    fun isAfter(other: OffsetDateTime): Boolean {
+        val thisEpochSec = this.toEpochSecond()
+        val otherEpochSec = other.toEpochSecond()
+        return thisEpochSec > otherEpochSec ||
+                thisEpochSec == otherEpochSec && this.toLocalTime().nano > other.toLocalTime().nano
+    }
+
+    /**
+     * Checks if the instant of this date-time is before that of the specified date-time.
+     *
+     *
+     * This method differs from the comparison in [.compareTo] in that it
+     * only compares the instant of the date-time. This is equivalent to using
+     * `dateTime1.toInstant().isBefore(dateTime2.toInstant());`.
+     *
+     * @param other  the other date-time to compare to, not null
+     * @return true if this is before the instant of the specified date-time
+     */
+    fun isBefore(other: OffsetDateTime): Boolean {
+        val thisEpochSec = this.toEpochSecond()
+        val otherEpochSec = other.toEpochSecond()
+        return thisEpochSec < otherEpochSec ||
+                thisEpochSec == otherEpochSec && this.toLocalTime().nano < other.toLocalTime().nano
+    }
+
+    /**
+     * Checks if the instant of this date-time is equal to that of the specified date-time.
+     *
+     *
+     * This method differs from the comparison in [.compareTo] and [.equals]
+     * in that it only compares the instant of the date-time. This is equivalent to using
+     * `dateTime1.toInstant().equals(dateTime2.toInstant());`.
+     *
+     * @param other  the other date-time to compare to, not null
+     * @return true if the instant equals the instant of the specified date-time
+     */
+    fun isEqual(other: OffsetDateTime): Boolean {
+        return this.toEpochSecond() == other.toEpochSecond() &&
+                this.toLocalTime().nano == other.toLocalTime().nano
     }
 
     /**

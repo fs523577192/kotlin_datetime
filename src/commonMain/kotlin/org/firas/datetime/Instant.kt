@@ -338,7 +338,7 @@ class Instant(val epochSecond: Long, val nanos: Int): Comparable<Instant> {
         }
     }
 
-    //-----------------------------------------------------------------------
+    // ----==== Comparison ====----
     /**
      * Compares this instant to the specified instant.
      *

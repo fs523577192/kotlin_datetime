@@ -951,9 +951,18 @@ class LocalDateTime private constructor(
         return plusWithOverflow(date, 0, 0, 0, nanos, -1)
     }
 
+    // ----==== Comparison ====----
     override fun compareTo(other: LocalDateTime): Int {
         val cmp = this.date.compareTo(other.date)
         return if (cmp == 0) this.time.compareTo(other.time) else cmp
+    }
+
+    fun isAfter(other: LocalDateTime): Boolean {
+        return this > other
+    }
+
+    fun isBefore(other: LocalDateTime): Boolean {
+        return this < other
     }
 
     /**
