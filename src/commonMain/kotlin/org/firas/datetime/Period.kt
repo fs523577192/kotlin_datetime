@@ -66,6 +66,7 @@ import org.firas.datetime.chrono.IsoChronology
 import org.firas.datetime.format.DateTimeParseException
 import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
+import org.firas.util.Integers
 
 /**
  * A date-based amount of time in the ISO-8601 calendar system,
@@ -940,6 +941,69 @@ class Period private constructor(
             temporal = temporal.minus(this.days.toLong(), ChronoUnit.DAYS)
         }
         return temporal
+    }
+
+    // ----==== Override methods inherited from Any ====----
+    /**
+     * Checks if this period is equal to another period.
+     *
+     *
+     * The comparison is based on the type `Period` and each of the three amounts.
+     * To be equal, the years, months and days units must be individually equal.
+     * Note that this means that a period of "15 Months" is not equal to a period
+     * of "1 Year and 3 Months".
+     *
+     * @param other  the object to check, null returns false
+     * @return true if this is equal to the other period
+     */
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other is Period) {
+            return years == other.years &&
+                    months == other.months &&
+                    days == other.days
+        }
+        return false
+    }
+
+    /**
+     * A hash code for this period.
+     *
+     * @return a suitable hash code
+     */
+    override fun hashCode(): Int {
+        return years + Integers.rotateLeft(months, 8) + Integers.rotateLeft(days, 16)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Outputs this period as a `String`, such as `P6Y3M1D`.
+     *
+     *
+     * The output will be in the ISO-8601 period format.
+     * A zero period will be represented as zero days, 'P0D'.
+     *
+     * @return a string representation of this period, not null
+     */
+    override fun toString(): String {
+        if (this == ZERO) {
+            return "P0D"
+        } else {
+            val buf = StringBuilder()
+            buf.append('P')
+            if (this.years != 0) {
+                buf.append(this.years).append('Y')
+            }
+            if (this.months != 0) {
+                buf.append(this.months).append('M')
+            }
+            if (this.days != 0) {
+                buf.append(this.days).append('D')
+            }
+            return buf.toString()
+        }
     }
 
     /**

@@ -61,36 +61,42 @@
  */
 package org.firas.datetime
 
+import org.firas.datetime.temporal.*
 import org.firas.math.BigDecimal
 import org.firas.math.BigInteger
 import org.firas.datetime.util.MathUtils
 
 /**
  * A time-based amount of time, such as '34.5 seconds'.
- * <p>
+ *
+ *
  * This class models a quantity or amount of time in terms of seconds and nanoseconds.
  * It can be accessed using other duration-based units, such as minutes and hours.
  * In addition, the {@link ChronoUnit#DAYS DAYS} unit can be used and is treated as
  * exactly equal to 24 hours, thus ignoring daylight savings effects.
- * See {@link Period} for the date-based equivalent to this class.
- * <p>
+ * See [Period] for the date-based equivalent to this class.
+ *
+ *
  * A physical duration could be of infinite length.
  * For practicality, the duration is stored with constraints similar to {@link Instant}.
  * The duration uses nanosecond resolution with a maximum value of the seconds that can
  * be held in a {@code long}. This is greater than the current estimated age of the universe.
- * <p>
+ *
+ *
  * The range of a duration requires the storage of a number larger than a {@code long}.
  * To achieve this, the class stores a {@code long} representing seconds and an {@code int}
  * representing nanosecond-of-second, which will always be between 0 and 999,999,999.
  * The model is of a directed duration, meaning that the duration may be negative.
- * <p>
+ *
+ *
  * The duration is measured in "seconds", but these are not necessarily identical to
  * the scientific "SI second" definition based on atomic clocks.
  * This difference only impacts durations measured near a leap-second and should not affect
  * most applications.
- * See {@link Instant} for a discussion as to the meaning of the second and time-scales.
+ * See [Instant] for a discussion as to the meaning of the second and time-scales.
  *
- * <p>
+ *
+ *
  * This is a <a href="{@docRoot}/java.base/java/lang/doc-files/ValueBased.html">value-based</a>
  * class; use of identity-sensitive operations (including reference equality
  * (`===`), identity hash code, or synchronization) on instances of
@@ -105,13 +111,15 @@ import org.firas.datetime.util.MathUtils
  */
 class Duration private constructor(
         private val seconds: Long,
-        private val nanos: Int): Comparable<Duration> {
+        private val nanos: Int): TemporalAmount, Comparable<Duration> {
 
     companion object {
         /**
          * Constant for a duration of zero.
          */
         val ZERO = Duration(0, 0)
+
+        private val UNITS = listOf<TemporalUnit>(ChronoUnit.SECONDS, ChronoUnit.NANOS)
 
         /**
          * Serialization version.
@@ -251,6 +259,45 @@ class Duration private constructor(
     } // companion object
 
     /**
+     * Gets the value of the requested unit.
+     *
+     *
+     * This returns a value for each of the two supported units,
+     * [SECONDS][ChronoUnit.SECONDS] and [NANOS][ChronoUnit.NANOS].
+     * All other units throw an exception.
+     *
+     * @param unit the `TemporalUnit` for which to return the value
+     * @return the long value of the unit
+     * @throws DateTimeException if the unit is not supported
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     */
+    override fun get(unit: TemporalUnit): Long {
+        return when (unit) {
+            ChronoUnit.SECONDS -> seconds
+            ChronoUnit.NANOS -> nanos.toLong()
+            else -> throw UnsupportedTemporalTypeException("Unsupported unit: $unit")
+        }
+    }
+
+    /**
+     * Gets the set of units supported by this duration.
+     *
+     *
+     * The supported units are [SECONDS][ChronoUnit.SECONDS],
+     * and [NANOS][ChronoUnit.NANOS].
+     * They are returned in the order seconds, nanos.
+     *
+     *
+     * This set can be used in conjunction with [.get]
+     * to access the entire state of the duration.
+     *
+     * @return a list containing the seconds and nanos units, not null
+     */
+    override fun getUnits(): List<TemporalUnit> {
+        return UNITS
+    }
+
+    /**
      * Compares this duration to the specified {@code Duration}.
      * <p>
      * The comparison is based on the total length of the durations.
@@ -350,6 +397,85 @@ class Duration private constructor(
         return if (multiplicand == 1L) {
             this
         } else create(toSeconds() * BigDecimal.valueOf(multiplicand))
+    }
+
+    //-------------------------------------------------------------------------
+    /**
+     * Adds this duration to the specified temporal object.
+     *
+     *
+     * This returns a temporal object of the same observable type as the input
+     * with this duration added.
+     *
+     *
+     * In most cases, it is clearer to reverse the calling pattern by using
+     * [Temporal.plus].
+     * <pre>
+     * // these two lines are equivalent, but the second approach is recommended
+     * dateTime = thisDuration.addTo(dateTime);
+     * dateTime = dateTime.plus(thisDuration);
+    </pre> *
+     *
+     *
+     * The calculation will add the seconds, then nanos.
+     * Only non-zero amounts will be added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param temporal  the temporal object to adjust, not null
+     * @return an object of the same type with the adjustment made, not null
+     * @throws DateTimeException if unable to add
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun addTo(temporal: Temporal): Temporal {
+        var temporal = temporal
+        if (this.seconds != 0L) {
+            temporal = temporal.plus(this.seconds, ChronoUnit.SECONDS)
+        }
+        if (this.nanos != 0) {
+            temporal = temporal.plus(this.nanos.toLong(), ChronoUnit.NANOS)
+        }
+        return temporal
+    }
+
+    /**
+     * Subtracts this duration from the specified temporal object.
+     *
+     *
+     * This returns a temporal object of the same observable type as the input
+     * with this duration subtracted.
+     *
+     *
+     * In most cases, it is clearer to reverse the calling pattern by using
+     * [Temporal.minus].
+     * <pre>
+     * // these two lines are equivalent, but the second approach is recommended
+     * dateTime = thisDuration.subtractFrom(dateTime);
+     * dateTime = dateTime.minus(thisDuration);
+    </pre> *
+     *
+     *
+     * The calculation will subtract the seconds, then nanos.
+     * Only non-zero amounts will be added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param temporal  the temporal object to adjust, not null
+     * @return an object of the same type with the adjustment made, not null
+     * @throws DateTimeException if unable to subtract
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun subtractFrom(temporal: Temporal): Temporal {
+        var temporal = temporal
+        if (this.seconds != 0L) {
+            temporal = temporal.minus(this.seconds, ChronoUnit.SECONDS)
+        }
+        if (this.nanos != 0) {
+            temporal = temporal.minus(this.nanos.toLong(), ChronoUnit.NANOS)
+        }
+        return temporal
     }
 
     /**
