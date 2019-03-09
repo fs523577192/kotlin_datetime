@@ -181,8 +181,7 @@ interface TemporalAccessor {
             }
             throw UnsupportedTemporalTypeException("Unsupported field: $field")
         }
-        throw UnsupportedTemporalTypeException("Unsupported field: $field")
-        // TODO: return field.rangeRefinedBy(this)
+        return field.rangeRefinedBy(this)
     }
 
     /**

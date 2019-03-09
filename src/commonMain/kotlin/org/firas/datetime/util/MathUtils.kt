@@ -36,6 +36,22 @@ class MathUtils private constructor() {
 
     companion object {
         /**
+         * Returns the value of the `long` argument;
+         * throwing an exception if the value overflows an `int`.
+         *
+         * @param value the long value
+         * @return the argument as an int
+         * @throws ArithmeticException if the `argument` overflows an int
+         * @since 1.8
+         */
+        fun toIntExact(value: Long): Int {
+            if (value.toInt().toLong() != value) {
+                throw ArithmeticException("integer overflow")
+            }
+            return value.toInt()
+        }
+
+        /**
          * Returns the sum of its arguments,
          * throwing an exception if the result overflows an `int`.
          *
