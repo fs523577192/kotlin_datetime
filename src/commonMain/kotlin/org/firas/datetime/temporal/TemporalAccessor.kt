@@ -62,6 +62,7 @@
 package org.firas.datetime.temporal
 
 import org.firas.datetime.DateTimeException
+import kotlin.reflect.KClass
 
 /**
  * Framework-level interface defining read-only access to a temporal object,
@@ -333,4 +334,6 @@ interface TemporalAccessor {
             null
         } else query.queryFrom(this)
     }
+
+    fun getKClass(): KClass<out Temporal>
 }

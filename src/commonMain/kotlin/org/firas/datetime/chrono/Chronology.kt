@@ -62,22 +62,28 @@
 package org.firas.datetime.chrono
 
 import org.firas.datetime.DateTimeException
+import org.firas.datetime.Instant
+import org.firas.datetime.LocalTime
 import org.firas.datetime.temporal.ChronoField
+import org.firas.datetime.temporal.TemporalAccessor
+import org.firas.datetime.temporal.TemporalQueries
 import org.firas.datetime.util.MathUtils
+import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
-
 
 /**
  * A calendar system, used to organize and identify dates.
- * <p>
+ *
+ *
  * The main date and time API is built on the ISO calendar system.
  * The chronology operates behind the scenes to represent the general concept of a calendar system.
  * For example, the Japanese, Minguo, Thai Buddhist and others.
- * <p>
+ *
+ *
  * Most other calendar systems also operate on the shared concepts of year, month and day,
  * linked to the cycles of the Earth around the Sun, and the Moon around the Earth.
  * These shared concepts are defined by {@link ChronoField} and are available
- * for use by any {@code Chronology} implementation:
+ * for use by any `Chronology` implementation:
  * <pre>
  *   LocalDate isoDate = ...
  *   ThaiBuddhistDate thaiDate = ...
@@ -85,48 +91,54 @@ import org.firas.datetime.zone.ZoneOffset
  *   int thaiYear = thaiDate.get(ChronoField.YEAR);
  * </pre>
  * As shown, although the date objects are in different calendar systems, represented by different
- * {@code Chronology} instances, both can be queried using the same constant on {@code ChronoField}.
+ * `Chronology` instances, both can be queried using the same constant on `ChronoField`.
  * For a full discussion of the implications of this, see {@link ChronoLocalDate}.
- * In general, the advice is to use the known ISO-based {@code LocalDate}, rather than
- * {@code ChronoLocalDate}.
- * <p>
- * While a {@code Chronology} object typically uses {@code ChronoField} and is based on
+ * In general, the advice is to use the known ISO-based `LocalDate`, rather than
+ * `ChronoLocalDate`.
+ *
+ *
+ * While a `Chronology` object typically uses `ChronoField` and is based on
  * an era, year-of-era, month-of-year, day-of-month model of a date, this is not required.
- * A {@code Chronology} instance may represent a totally different kind of calendar system,
+ * A `Chronology` instance may represent a totally different kind of calendar system,
  * such as the Mayan.
- * <p>
- * In practical terms, the {@code Chronology} instance also acts as a factory.
+ *
+ *
+ * In practical terms, the `Chronology` instance also acts as a factory.
  * The {@link #of(String)} method allows an instance to be looked up by identifier,
  * while the {@link #ofLocale(Locale)} method allows lookup by locale.
- * <p>
- * The {@code Chronology} instance provides a set of methods to create {@code ChronoLocalDate} instances.
+ *
+ *
+ * The `Chronology` instance provides a set of methods to create `ChronoLocalDate` instances.
  * The date classes are used to manipulate specific dates.
- * <ul>
- * <li> {@link #dateNow() dateNow()}
- * <li> {@link #dateNow(Clock) dateNow(clock)}
- * <li> {@link #dateNow(ZoneId) dateNow(zone)}
- * <li> {@link #date(int, int, int) date(yearProleptic, month, day)}
- * <li> {@link #date(Era, int, int, int) date(era, yearOfEra, month, day)}
- * <li> {@link #dateYearDay(int, int) dateYearDay(yearProleptic, dayOfYear)}
- * <li> {@link #dateYearDay(Era, int, int) dateYearDay(era, yearOfEra, dayOfYear)}
- * <li> {@link #date(TemporalAccessor) date(TemporalAccessor)}
- * </ul>
+ *
+ * * {@link #dateNow() dateNow()}
+ * * {@link #dateNow(Clock) dateNow(clock)}
+ * * {@link #dateNow(ZoneId) dateNow(zone)}
+ * * {@link #date(int, int, int) date(yearProleptic, month, day)}
+ * * {@link #date(Era, int, int, int) date(era, yearOfEra, month, day)}
+ * * {@link #dateYearDay(int, int) dateYearDay(yearProleptic, dayOfYear)}
+ * * {@link #dateYearDay(Era, int, int) dateYearDay(era, yearOfEra, dayOfYear)}
+ * * {@link #date(TemporalAccessor) date(TemporalAccessor)}
+ *
  *
  * <h3 id="addcalendars">Adding New Calendars</h3>
  * The set of available chronologies can be extended by applications.
  * Adding a new calendar system requires the writing of an implementation of
- * {@code Chronology}, {@code ChronoLocalDate} and {@code Era}.
+ * `Chronology`, `ChronoLocalDate` and `Era`.
  * The majority of the logic specific to the calendar system will be in the
- * {@code ChronoLocalDate} implementation.
- * The {@code Chronology} implementation acts as a factory.
- * <p>
+ * `ChronoLocalDate` implementation.
+ * The `Chronology` implementation acts as a factory.
+ *
+ *
+ *
  * To permit the discovery of additional chronologies, the {@link java.util.ServiceLoader ServiceLoader}
- * is used. A file must be added to the {@code META-INF/services} directory with the
+ * is used. A file must be added to the `META-INF/services` directory with the
  * name 'java.time.chrono.Chronology' listing the implementation classes.
  * See the ServiceLoader for more details on service loading.
  * For lookup by id or calendarType, the system provided calendars are found
  * first followed by application provided calendars.
- * <p>
+ *
+ *
  * Each chronology must define a chronology ID that is unique within the system.
  * If the chronology represents a calendar system defined by the
  * CLDR specification then the calendar type is the concatenation of the
@@ -139,10 +151,35 @@ import org.firas.datetime.zone.ZoneOffset
  *
  * @since Java 1.8
  * @author Wu Yuping
- * @version 1.0.0
- * @since 1.0.0
  */
 interface Chronology: Comparable<Chronology> {
+
+    companion object {
+        /**
+         * Obtains an instance of `Chronology` from a temporal object.
+         *
+         *
+         * This obtains a chronology based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `Chronology`.
+         *
+         *
+         * The conversion will obtain the chronology using [TemporalQueries.chronology].
+         * If the specified temporal object does not have a chronology, [IsoChronology] is returned.
+         *
+         *
+         * This method matches the signature of the functional interface [TemporalQuery]
+         * allowing it to be used as a query via method reference, `Chronology::from`.
+         *
+         * @param temporal  the temporal to convert, not null
+         * @return the chronology, not null
+         * @throws DateTimeException if unable to convert to a `Chronology`
+         */
+        fun from(temporal: TemporalAccessor): Chronology {
+            val obj = temporal.query(TemporalQueries.CHRONO)
+            return obj?:IsoChronology.INSTANCE
+        }
+    }
 
     /**
      * Gets the ID of the chronology.
@@ -260,5 +297,104 @@ interface Chronology: Comparable<Chronology> {
         val daysInSec = MathUtils.multiplyExact(date(prolepticYear, month, dayOfMonth).toEpochDay(), 86400)
         val timeinSec = ((hour * 60 + minute) * 60 + second).toLong()
         return MathUtils.addExact(daysInSec, timeinSec - zoneOffset.totalSeconds)
+    }
+
+    /**
+     * Obtains a local date in this chronology from another temporal object.
+     *
+     *
+     * This obtains a date in this chronology based on the specified temporal.
+     * A `TemporalAccessor` represents an arbitrary set of date and time information,
+     * which this factory converts to an instance of `ChronoLocalDate`.
+     *
+     *
+     * The conversion typically uses the {@link ChronoField#EPOCH_DAY EPOCH_DAY}
+     * field, which is standardized across calendar systems.
+     *
+     *
+     * This method matches the signature of the functional interface {@link TemporalQuery}
+     * allowing it to be used as a query via method reference, `aChronology::date`.
+     *
+     * @param temporal  the temporal object to convert, not null
+     * @return the local date in this chronology, not null
+     * @throws DateTimeException if unable to create the date
+     * @see ChronoLocalDate#from(TemporalAccessor)
+     */
+    fun date(temporal: TemporalAccessor): ChronoLocalDate
+
+    /**
+     * Obtains a local date-time in this chronology from another temporal object.
+     *
+     *
+     * This obtains a date-time in this chronology based on the specified temporal.
+     * A `TemporalAccessor` represents an arbitrary set of date and time information,
+     * which this factory converts to an instance of `ChronoLocalDateTime`.
+     *
+     *
+     * The conversion extracts and combines the `ChronoLocalDate` and the
+     * `LocalTime` from the temporal object.
+     * Implementations are permitted to perform optimizations such as accessing
+     * those fields that are equivalent to the relevant objects.
+     * The result uses this chronology.
+     *
+     *
+     * This method matches the signature of the functional interface {@link TemporalQuery}
+     * allowing it to be used as a query via method reference, `aChronology::localDateTime`.
+     *
+     * @param temporal  the temporal object to convert, not null
+     * @return the local date-time in this chronology, not null
+     * @throws DateTimeException if unable to create the date-time
+     * @see ChronoLocalDateTime#from(TemporalAccessor)
+     */
+    fun localDateTime(temporal: TemporalAccessor): ChronoLocalDateTime<out ChronoLocalDate> {
+        try {
+            return date(temporal).atTime(LocalTime.from(temporal))
+        } catch (ex: DateTimeException) {
+            throw DateTimeException("Unable to obtain ChronoLocalDateTime from TemporalAccessor: " +
+                    temporal.getKClass(), ex)
+        }
+    }
+
+    /**
+     * Obtains a `ChronoZonedDateTime` in this chronology from another temporal object.
+     * <p>
+     * This obtains a zoned date-time in this chronology based on the specified temporal.
+     * A `TemporalAccessor` represents an arbitrary set of date and time information,
+     * which this factory converts to an instance of `ChronoZonedDateTime`.
+     * <p>
+     * The conversion will first obtain a `ZoneId` from the temporal object,
+     * falling back to a `ZoneOffset` if necessary. It will then try to obtain
+     * an `Instant`, falling back to a `ChronoLocalDateTime` if necessary.
+     * The result will be either the combination of `ZoneId` or `ZoneOffset`
+     * with `Instant` or `ChronoLocalDateTime`.
+     * Implementations are permitted to perform optimizations such as accessing
+     * those fields that are equivalent to the relevant objects.
+     * The result uses this chronology.
+     * <p>
+     * This method matches the signature of the functional interface {@link TemporalQuery}
+     * allowing it to be used as a query via method reference, `aChronology::zonedDateTime`.
+     *
+     * @param temporal  the temporal object to convert, not null
+     * @return the zoned date-time in this chronology, not null
+     * @throws DateTimeException if unable to create the date-time
+     * @see ChronoZonedDateTime#from(TemporalAccessor)
+     */
+    fun zonedDateTime(temporal: TemporalAccessor): ChronoZonedDateTime<out ChronoLocalDate> {
+        try {
+            val zone = ZoneId.from(temporal)
+            // try {
+                val instant = Instant.from(temporal)
+                return zonedDateTime(instant, zone)
+
+            /*
+            } catch (ex1: DateTimeException) {
+                ChronoLocalDateTimeImpl<?> cldt = ChronoLocalDateTimeImpl.ensureValid(this, localDateTime(temporal));
+                return ChronoZonedDateTimeImpl.ofBest(cldt, zone, null);
+            }
+            */
+        } catch (ex: DateTimeException) {
+            throw DateTimeException("Unable to obtain ChronoZonedDateTime from TemporalAccessor: " +
+                    temporal.getKClass(), ex)
+        }
     }
 }

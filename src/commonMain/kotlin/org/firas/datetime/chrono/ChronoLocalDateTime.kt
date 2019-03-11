@@ -64,30 +64,31 @@ package org.firas.datetime.chrono
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.Instant
 import org.firas.datetime.LocalTime
-import org.firas.datetime.temporal.ChronoField
-
-
+import org.firas.datetime.temporal.*
 
 /**
  * A date-time without a time-zone in an arbitrary chronology, intended
  * for advanced globalization use cases.
- * <p>
+ *
+ *
  * <b>Most applications should declare method signatures, fields and variables
- * as {@link LocalDateTime}, not this interface.</b>
- * <p>
- * A {@code ChronoLocalDateTime} is the abstract representation of a local date-time
- * where the {@code Chronology chronology}, or calendar system, is pluggable.
- * The date-time is defined in terms of fields expressed by {@link TemporalField},
- * where most common implementations are defined in {@link ChronoField}.
+ * as [LocalDateTime], not this interface.</b>
+ *
+ *
+ * A `ChronoLocalDateTime` is the abstract representation of a local date-time
+ * where the `Chronology chronology`, or calendar system, is pluggable.
+ * The date-time is defined in terms of fields expressed by [TemporalField],
+ * where most common implementations are defined in [ChronoField].
  * The chronology defines how the calendar system operates and the meaning of
  * the standard fields.
  *
  * <h3>When to use this interface</h3>
- * The design of the API encourages the use of {@code LocalDateTime} rather than this
+ * The design of the API encourages the use of `LocalDateTime` rather than this
  * interface, even in the case where the application needs to deal with multiple
- * calendar systems. The rationale for this is explored in detail in {@link ChronoLocalDate}.
- * <p>
- * Ensure that the discussion in {@code ChronoLocalDate} has been read and understood
+ * calendar systems. The rationale for this is explored in detail in [ChronoLocalDate].
+ *
+ *
+ * Ensure that the discussion in `ChronoLocalDate` has been read and understood
  * before using this interface.
  *
  * @implSpec
@@ -99,7 +100,7 @@ import org.firas.datetime.temporal.ChronoField
  * @since Java 1.8
  * @author Wu Yuping
  */
-interface ChronoLocalDateTime<D: ChronoLocalDate> {
+interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal {
 
     /**
      * renamed from ~toLocalDate`
@@ -163,6 +164,69 @@ interface ChronoLocalDateTime<D: ChronoLocalDate> {
         var secs = epochDay * 86400 + getTime().toSecondOfDay()
         secs -= offset.totalSeconds.toLong()
         return secs
+    }
+
+    /**
+     * Checks if the specified unit is supported.
+     *
+     *
+     * This checks if the specified unit can be added to or subtracted from this date-time.
+     * If false, then calling the [.plus] and
+     * [minus][.minus] methods will throw an exception.
+     *
+     *
+     * The set of supported units is defined by the chronology and normally includes
+     * all `ChronoUnit` units except `FOREVER`.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.isSupportedBy(Temporal)`
+     * passing `this` as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    override fun isSupported(unit: TemporalUnit): Boolean {
+        return if (unit is ChronoUnit) {
+            unit !== ChronoUnit.FOREVER
+        } else unit.isSupportedBy(this)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Queries this date-time using the specified query.
+     *
+     *
+     * This queries this date-time using the specified query strategy object.
+     * The `TemporalQuery` object defines the logic to be used to
+     * obtain the result. Read the documentation of the query to understand
+     * what the result of this method will be.
+     *
+     *
+     * The result of this method is obtained by invoking the
+     * [TemporalQuery.queryFrom] method on the
+     * specified query passing `this` as the argument.
+     *
+     * @param <R> the type of the result
+     * @param query  the query to invoke, not null
+     * @return the query result, null may be returned (defined by the query)
+     * @throws DateTimeException if unable to query (defined by the query)
+     * @throws ArithmeticException if numeric overflow occurs (defined by the query)
+     */
+    override fun <R> query(query: TemporalQuery<R>): R? {
+        if (query == TemporalQueries.ZONE_ID || query == TemporalQueries.ZONE || query == TemporalQueries.OFFSET) {
+            return null
+        } else if (query == TemporalQueries.LOCAL_TIME) {
+            return getTime() as R
+        } else if (query == TemporalQueries.CHRONO) {
+            return getChronology() as R
+        } else if (query == TemporalQueries.PRECISION) {
+            return ChronoUnit.NANOS as R
+        }
+        // inline TemporalAccessor.super.query(query) as an optimization
+        // non-JDK classes are not permitted to make this optimization
+        return query.queryFrom(this)
     }
 
     /**

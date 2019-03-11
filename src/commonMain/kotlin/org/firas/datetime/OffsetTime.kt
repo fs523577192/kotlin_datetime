@@ -89,7 +89,7 @@ import org.firas.datetime.temporal.ChronoField
  * @author Wu Yuping
  */
 class OffsetTime private constructor(
-    private val time: LocalTime,
+    val localTime: LocalTime,
     val offset: ZoneOffset
 ): Comparable<OffsetTime> {
 
@@ -171,7 +171,7 @@ class OffsetTime private constructor(
      */
     fun toEpochSecond(date: LocalDate): Long {
         val epochDay = date.toEpochDay()
-        var secs = epochDay * 86400 + time.toSecondOfDay()
+        var secs = epochDay * 86400 + localTime.toSecondOfDay()
         secs -= offset.totalSeconds
         return secs
     }
@@ -207,11 +207,11 @@ class OffsetTime private constructor(
      */
     override fun compareTo(other: OffsetTime): Int {
         if (this.offset == other.offset) {
-            return time.compareTo(other.time)
+            return localTime.compareTo(other.localTime)
         }
         val a = toEpochNano()
         val b = other.toEpochNano()
-        return if (a > b) 1 else if (a < b) -1 else time.compareTo(other.time)
+        return if (a > b) 1 else if (a < b) -1 else localTime.compareTo(other.localTime)
     }
 
     //-----------------------------------------------------------------------
@@ -283,7 +283,7 @@ class OffsetTime private constructor(
             return true
         }
         if (other is OffsetTime) {
-            return time == other.time && offset == other.offset
+            return localTime == other.localTime && offset == other.offset
         }
         return false
     }
@@ -294,7 +294,7 @@ class OffsetTime private constructor(
      * @return a suitable hash code
      */
     override fun hashCode(): Int {
-        return time.hashCode() xor offset.hashCode()
+        return localTime.hashCode() xor offset.hashCode()
     }
 
     /**
@@ -315,7 +315,7 @@ class OffsetTime private constructor(
      * @return a string representation of this time, not null
      */
     override fun toString(): String {
-        return time.toString() + offset.toString()
+        return localTime.toString() + offset.toString()
     }
 
     /**
@@ -324,7 +324,7 @@ class OffsetTime private constructor(
      * @return the epoch nanos value
      */
     private fun toEpochNano(): Long {
-        val nod = time.toNanoOfDay()
+        val nod = localTime.toNanoOfDay()
         val offsetNanos = offset.totalSeconds * LocalTime.NANOS_PER_SECOND
         return nod - offsetNanos
     }
@@ -336,7 +336,7 @@ class OffsetTime private constructor(
      * @param offset  the zone offset to create with, not null
      */
     private fun with(time: LocalTime, offset: ZoneOffset): OffsetTime {
-        return if (this.time == time && this.offset == offset) {
+        return if (this.localTime == time && this.offset == offset) {
             this
         } else OffsetTime(time, offset)
     }

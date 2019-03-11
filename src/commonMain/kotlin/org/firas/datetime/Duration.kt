@@ -157,7 +157,7 @@ class Duration private constructor(
          * Duration.ofSeconds(3, 1);
          * Duration.ofSeconds(4, -999_999_999);
          * Duration.ofSeconds(2, 1000_000_001);
-        </pre> *
+         * </pre>
          *
          * @param seconds  the number of seconds, positive or negative
          * @param nanoAdjustment  the nanosecond adjustment to the number of seconds, positive or negative
@@ -414,7 +414,7 @@ class Duration private constructor(
      * // these two lines are equivalent, but the second approach is recommended
      * dateTime = thisDuration.addTo(dateTime);
      * dateTime = dateTime.plus(thisDuration);
-    </pre> *
+     * </pre>
      *
      *
      * The calculation will add the seconds, then nanos.
@@ -453,7 +453,7 @@ class Duration private constructor(
      * // these two lines are equivalent, but the second approach is recommended
      * dateTime = thisDuration.subtractFrom(dateTime);
      * dateTime = dateTime.minus(thisDuration);
-    </pre> *
+     * </pre>
      *
      *
      * The calculation will subtract the seconds, then nanos.

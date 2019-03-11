@@ -61,35 +61,37 @@
  */
 package org.firas.datetime
 
-import org.firas.datetime.temporal.ChronoField
+import org.firas.datetime.temporal.*
 import org.firas.datetime.zone.ZoneOffset
-
-
+import kotlin.reflect.KClass
 
 /**
  * A time without time-zone in the ISO-8601 calendar system,
- * such as {@code 10:15:30}.
- * <p>
- * {@code LocalTime} is an immutable date-time object that represents a time,
+ * such as `10:15:30`.
+ *
+ *
+ * `LocalTime` is an immutable date-time object that represents a time,
  * often viewed as hour-minute-second.
  * Time is represented to nanosecond precision.
- * For example, the value "13:45.30.123456789" can be stored in a {@code LocalTime}.
- * <p>
+ * For example, the value "13:45.30.123456789" can be stored in a `LocalTime`.
+ *
+ *
  * It does not store or represent a date or time-zone.
  * Instead, it is a description of the local time as seen on a wall clock.
  * It cannot represent an instant on the time-line without additional information
  * such as an offset or time-zone.
- * <p>
+ *
+ *
  * The ISO-8601 calendar system is the modern civil calendar system used today
  * in most of the world. This API assumes that all calendar systems use the same
  * representation, this class, for time-of-day.
  *
- * <p>
+ *
  * This is a <a href="{@docRoot}/java/lang/doc-files/ValueBased.html">value-based</a>
  * class; use of identity-sensitive operations (including reference equality
- * ({@code ==}), identity hash code, or synchronization) on instances of
- * {@code LocalTime} may have unpredictable results and should be avoided.
- * The {@code equals} method should be used for comparisons.
+ * (`==`), identity hash code, or synchronization) on instances of
+ * `LocalTime` may have unpredictable results and should be avoided.
+ * The `equals` method should be used for comparisons.
  *
  * @implSpec
  * This class is immutable and thread-safe.
@@ -102,7 +104,7 @@ class LocalTime private constructor(
     val minute: Byte,
     val second: Byte,
     val nano: Int
-): Comparable<LocalTime> {
+): Temporal, Comparable<LocalTime> {
 
     companion object {
         /**
@@ -300,6 +302,30 @@ class LocalTime private constructor(
         }
 
         /**
+         * Obtains an instance of `LocalTime` from a temporal object.
+         *
+         *
+         * This obtains a local time based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `LocalTime`.
+         * <p>
+         * The conversion uses the {@link TemporalQueries#localTime()} query, which relies
+         * on extracting the {@link ChronoField#NANO_OF_DAY NANO_OF_DAY} field.
+         * <p>
+         * This method matches the signature of the functional interface {@link TemporalQuery}
+         * allowing it to be used as a query via method reference, `LocalTime::from`.
+         *
+         * @param temporal  the temporal object to convert, not null
+         * @return the local time, not null
+         * @throws DateTimeException if unable to convert to a `LocalTime`
+         */
+        fun from(temporal: TemporalAccessor): LocalTime {
+            return temporal.query(TemporalQueries.LOCAL_TIME) ?:
+                    throw DateTimeException("Unable to obtain LocalTime from TemporalAccessor: " +
+                            temporal + " of type " + temporal.getKClass().qualifiedName)
+        }
+
+        /**
          * Creates a local time from the hour, minute, second and nanosecond fields.
          *
          *
@@ -321,6 +347,166 @@ class LocalTime private constructor(
     } // companion object
 
     /**
+     * Gets the value of the specified field from this time as an `int`.
+     *
+     *
+     * This queries this time for the value of the specified field.
+     * The returned value will always be within the valid range of values for the field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a {@link ChronoField} then the query is implemented here.
+     * The {@link #isSupported(TemporalField) supported fields} will return valid
+     * values based on this time, except `NANO_OF_DAY` and `MICRO_OF_DAY`
+     * which are too large to fit in an `int` and throw an `UnsupportedTemporalTypeException`.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained or
+     *         the value is outside the range of valid values for the field
+     * @throws UnsupportedTemporalTypeException if the field is not supported or
+     *         the range of values exceeds an `int`
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun get(field: TemporalField): Int {
+        if (field is ChronoField) {
+            return get0(field)
+        }
+        TODO("return Temporal.super.get(this, field)")
+    }
+
+    /**
+     * Gets the value of the specified field from this time as a `Long`.
+     *
+     *
+     * This queries this time for the value of the specified field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The {@link #isSupported(TemporalField) supported fields} will return valid
+     * values based on this time.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun getLong(field: TemporalField): Long {
+        if (field is ChronoField) {
+            if (field == ChronoField.NANO_OF_DAY) {
+                return toNanoOfDay()
+            }
+            if (field == ChronoField.MICRO_OF_DAY) {
+                return toNanoOfDay() / 1000
+            }
+            return get0(field).toLong()
+        }
+        return field.getFrom(this)
+    }
+
+    /**
+     * Checks if the specified field is supported.
+     *
+     *
+     * This checks if this time can be queried for the specified field.
+     * If false, then calling the [range][.range],
+     * [get][.get] and [.with]
+     * methods will throw an exception.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The supported fields are:
+     *
+     *  * `NANO_OF_SECOND`
+     *  * `NANO_OF_DAY`
+     *  * `MICRO_OF_SECOND`
+     *  * `MICRO_OF_DAY`
+     *  * `MILLI_OF_SECOND`
+     *  * `MILLI_OF_DAY`
+     *  * `SECOND_OF_MINUTE`
+     *  * `SECOND_OF_DAY`
+     *  * `MINUTE_OF_HOUR`
+     *  * `MINUTE_OF_DAY`
+     *  * `HOUR_OF_AMPM`
+     *  * `CLOCK_HOUR_OF_AMPM`
+     *  * `HOUR_OF_DAY`
+     *  * `CLOCK_HOUR_OF_DAY`
+     *  * `AMPM_OF_DAY`
+     *
+     * All other `ChronoField` instances will return false.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.isSupportedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the field is supported is determined by the field.
+     *
+     * @param field  the field to check, null returns false
+     * @return true if the field is supported on this time, false if not
+     */
+    override fun isSupported(field: TemporalField): Boolean {
+        return if (field is ChronoField) {
+            field.isTimeBased()
+        } else field.isSupportedBy(this)
+    }
+
+    /**
+     * Checks if the specified unit is supported.
+     *
+     *
+     * This checks if the specified unit can be added to, or subtracted from, this time.
+     * If false, then calling the [.plus] and
+     * [minus][.minus] methods will throw an exception.
+     *
+     *
+     * If the unit is a [ChronoUnit] then the query is implemented here.
+     * The supported units are:
+     *
+     *  * `NANOS`
+     *  * `MICROS`
+     *  * `MILLIS`
+     *  * `SECONDS`
+     *  * `MINUTES`
+     *  * `HOURS`
+     *  * `HALF_DAYS`
+     *
+     * All other `ChronoUnit` instances will return false.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.isSupportedBy(Temporal)`
+     * passing `this` as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    // override for Javadoc
+    override fun isSupported(unit: TemporalUnit): Boolean {
+        return if (unit is ChronoUnit) {
+            unit.isTimeBased()
+        } else unit.isSupportedBy(this)
+    }
+
+    /**
      * Combines this time with an offset to create an `OffsetTime`.
      *
      *
@@ -332,6 +518,119 @@ class LocalTime private constructor(
      */
     fun atOffset(offset: ZoneOffset): OffsetTime {
         return OffsetTime.of(this, offset)
+    }
+
+    /**
+     * Returns a copy of this time with the specified field set to a new value.
+     *
+     *
+     * This returns a `LocalTime`, based on this one, with the value
+     * for the specified field changed.
+     * This can be used to change any supported field, such as the hour, minute or second.
+     * If it is not possible to set the value, because the field is not supported or for
+     * some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the adjustment is implemented here.
+     * The supported fields behave as follows:
+     *
+     *  * `NANO_OF_SECOND` -
+     * Returns a `LocalTime` with the specified nano-of-second.
+     * The hour, minute and second will be unchanged.
+     *  * `NANO_OF_DAY` -
+     * Returns a `LocalTime` with the specified nano-of-day.
+     * This completely replaces the time and is equivalent to [.ofNanoOfDay].
+     *  * `MICRO_OF_SECOND` -
+     * Returns a `LocalTime` with the nano-of-second replaced by the specified
+     * micro-of-second multiplied by 1,000.
+     * The hour, minute and second will be unchanged.
+     *  * `MICRO_OF_DAY` -
+     * Returns a `LocalTime` with the specified micro-of-day.
+     * This completely replaces the time and is equivalent to using [.ofNanoOfDay]
+     * with the micro-of-day multiplied by 1,000.
+     *  * `MILLI_OF_SECOND` -
+     * Returns a `LocalTime` with the nano-of-second replaced by the specified
+     * milli-of-second multiplied by 1,000,000.
+     * The hour, minute and second will be unchanged.
+     *  * `MILLI_OF_DAY` -
+     * Returns a `LocalTime` with the specified milli-of-day.
+     * This completely replaces the time and is equivalent to using [.ofNanoOfDay]
+     * with the milli-of-day multiplied by 1,000,000.
+     *  * `SECOND_OF_MINUTE` -
+     * Returns a `LocalTime` with the specified second-of-minute.
+     * The hour, minute and nano-of-second will be unchanged.
+     *  * `SECOND_OF_DAY` -
+     * Returns a `LocalTime` with the specified second-of-day.
+     * The nano-of-second will be unchanged.
+     *  * `MINUTE_OF_HOUR` -
+     * Returns a `LocalTime` with the specified minute-of-hour.
+     * The hour, second-of-minute and nano-of-second will be unchanged.
+     *  * `MINUTE_OF_DAY` -
+     * Returns a `LocalTime` with the specified minute-of-day.
+     * The second-of-minute and nano-of-second will be unchanged.
+     *  * `HOUR_OF_AMPM` -
+     * Returns a `LocalTime` with the specified hour-of-am-pm.
+     * The AM/PM, minute-of-hour, second-of-minute and nano-of-second will be unchanged.
+     *  * `CLOCK_HOUR_OF_AMPM` -
+     * Returns a `LocalTime` with the specified clock-hour-of-am-pm.
+     * The AM/PM, minute-of-hour, second-of-minute and nano-of-second will be unchanged.
+     *  * `HOUR_OF_DAY` -
+     * Returns a `LocalTime` with the specified hour-of-day.
+     * The minute-of-hour, second-of-minute and nano-of-second will be unchanged.
+     *  * `CLOCK_HOUR_OF_DAY` -
+     * Returns a `LocalTime` with the specified clock-hour-of-day.
+     * The minute-of-hour, second-of-minute and nano-of-second will be unchanged.
+     *  * `AMPM_OF_DAY` -
+     * Returns a `LocalTime` with the specified AM/PM.
+     * The hour-of-am-pm, minute-of-hour, second-of-minute and nano-of-second will be unchanged.
+     *
+     *
+     *
+     * In all cases, if the new value is outside the valid range of values for the field
+     * then a `DateTimeException` will be thrown.
+     *
+     *
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.adjustInto(Temporal, long)`
+     * passing `this` as the argument. In this case, the field determines
+     * whether and how to adjust the instant.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param field  the field to set in the result, not null
+     * @param newValue  the new value of the field in the result
+     * @return a `LocalTime` based on `this` with the specified field set, not null
+     * @throws DateTimeException if the field cannot be set
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun with(field: TemporalField, newValue: Long): LocalTime {
+        if (field is ChronoField) {
+            field.checkValidValue(newValue)
+            return when (field) {
+                ChronoField.NANO_OF_SECOND -> withNano(newValue.toInt())
+                ChronoField.NANO_OF_DAY -> LocalTime.ofNanoOfDay(newValue)
+                ChronoField.MICRO_OF_SECOND -> withNano(newValue.toInt() * 1000)
+                ChronoField.MICRO_OF_DAY -> LocalTime.ofNanoOfDay(newValue * 1000)
+                ChronoField.MILLI_OF_SECOND -> withNano(newValue.toInt() * 1000000)
+                ChronoField.MILLI_OF_DAY -> LocalTime.ofNanoOfDay(newValue * 1000000)
+                ChronoField.SECOND_OF_MINUTE -> withSecond(newValue.toInt())
+                ChronoField.SECOND_OF_DAY -> plusSeconds(newValue - toSecondOfDay())
+                ChronoField.MINUTE_OF_HOUR -> withMinute(newValue.toInt())
+                ChronoField.MINUTE_OF_DAY -> plusMinutes(newValue - (hour * 60 + minute))
+                ChronoField.HOUR_OF_AMPM -> plusHours(newValue - hour % 12)
+                ChronoField.CLOCK_HOUR_OF_AMPM -> plusHours((if (newValue == 12L) 0 else newValue) - hour % 12)
+                ChronoField.HOUR_OF_DAY -> withHour(newValue.toInt())
+                ChronoField.CLOCK_HOUR_OF_DAY -> withHour((if (newValue == 24L) 0 else newValue).toInt())
+                ChronoField.AMPM_OF_DAY -> plusHours((newValue - hour / 12) * 12)
+                else -> throw UnsupportedTemporalTypeException("Unsupported field: $field")
+            }
+        }
+        return field.adjustInto(this, newValue)
     }
 
     //-----------------------------------------------------------------------
@@ -405,6 +704,355 @@ class LocalTime private constructor(
         }
         ChronoField.NANO_OF_SECOND.checkValidValue(nanoOfSecond.toLong())
         return create(this.hour.toInt(), this.minute.toInt(), this.second.toInt(), nanoOfSecond)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this time with the specified amount added.
+     *
+     *
+     * This returns a `LocalTime`, based on this one, with the specified amount added.
+     * The amount is typically [Duration] but may be any other type implementing
+     * the [TemporalAmount] interface.
+     *
+     *
+     * The calculation is delegated to the amount object by calling
+     * [TemporalAmount.addTo]. The amount implementation is free
+     * to implement the addition in any way it wishes, however it typically
+     * calls back to [.plus]. Consult the documentation
+     * of the amount implementation to determine if it can be successfully added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amount  the amount to add, not null
+     * @return a `LocalTime` based on this time with the addition made, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun plus(amount: TemporalAmount): LocalTime {
+        return amount.addTo(this) as LocalTime
+    }
+
+    /**
+     * Returns a copy of this time with the specified amount added.
+     *
+     *
+     * This returns a `LocalTime`, based on this one, with the amount
+     * in terms of the unit added. If it is not possible to add the amount, because the
+     * unit is not supported or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoUnit] then the addition is implemented here.
+     * The supported fields behave as follows:
+     *
+     *  * `NANOS` -
+     * Returns a `LocalTime` with the specified number of nanoseconds added.
+     * This is equivalent to [.plusNanos].
+     *  * `MICROS` -
+     * Returns a `LocalTime` with the specified number of microseconds added.
+     * This is equivalent to [.plusNanos] with the amount
+     * multiplied by 1,000.
+     *  * `MILLIS` -
+     * Returns a `LocalTime` with the specified number of milliseconds added.
+     * This is equivalent to [.plusNanos] with the amount
+     * multiplied by 1,000,000.
+     *  * `SECONDS` -
+     * Returns a `LocalTime` with the specified number of seconds added.
+     * This is equivalent to [.plusSeconds].
+     *  * `MINUTES` -
+     * Returns a `LocalTime` with the specified number of minutes added.
+     * This is equivalent to [.plusMinutes].
+     *  * `HOURS` -
+     * Returns a `LocalTime` with the specified number of hours added.
+     * This is equivalent to [.plusHours].
+     *  * `HALF_DAYS` -
+     * Returns a `LocalTime` with the specified number of half-days added.
+     * This is equivalent to [.plusHours] with the amount
+     * multiplied by 12.
+     *
+     *
+     *
+     * All other `ChronoUnit` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.addTo(Temporal, long)`
+     * passing `this` as the argument. In this case, the unit determines
+     * whether and how to perform the addition.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount of the unit to add to the result, may be negative
+     * @param unit  the unit of the amount to add, not null
+     * @return a `LocalTime` based on this time with the specified amount added, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun plus(amountToAdd: Long, unit: TemporalUnit): LocalTime {
+        if (unit is ChronoUnit) {
+            return when (unit) {
+                ChronoUnit.NANOS -> plusNanos(amountToAdd)
+                ChronoUnit.MICROS -> plusNanos(amountToAdd % MICROS_PER_DAY * 1000)
+                ChronoUnit.MILLIS -> plusNanos(amountToAdd % MILLIS_PER_DAY * 1000000)
+                ChronoUnit.SECONDS -> plusSeconds(amountToAdd)
+                ChronoUnit.MINUTES -> plusMinutes(amountToAdd)
+                ChronoUnit.HOURS -> plusHours(amountToAdd)
+                ChronoUnit.HALF_DAYS -> plusHours(amountToAdd % 2 * 12)
+                else -> throw UnsupportedTemporalTypeException("Unsupported unit: $unit")
+            }
+        }
+        return unit.addTo(this, amountToAdd)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this `LocalTime` with the specified number of hours added.
+     *
+     *
+     * This adds the specified number of hours to this time, returning a new time.
+     * The calculation wraps around midnight.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param hoursToAdd  the hours to add, may be negative
+     * @return a `LocalTime` based on this time with the hours added, not null
+     */
+    fun plusHours(hoursToAdd: Long): LocalTime {
+        if (hoursToAdd == 0L) {
+            return this
+        }
+        val newHour = ((hoursToAdd % HOURS_PER_DAY).toInt() + this.hour + HOURS_PER_DAY) % HOURS_PER_DAY
+        return create(newHour, this.minute.toInt(), this.second.toInt(), this.nano)
+    }
+
+    /**
+     * Returns a copy of this `LocalTime` with the specified number of minutes added.
+     *
+     *
+     * This adds the specified number of minutes to this time, returning a new time.
+     * The calculation wraps around midnight.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param minutesToAdd  the minutes to add, may be negative
+     * @return a `LocalTime` based on this time with the minutes added, not null
+     */
+    fun plusMinutes(minutesToAdd: Long): LocalTime {
+        if (minutesToAdd == 0L) {
+            return this
+        }
+        val mofd = this.hour * MINUTES_PER_HOUR + this.minute
+        val newMofd = ((minutesToAdd % MINUTES_PER_DAY).toInt() + mofd + MINUTES_PER_DAY) % MINUTES_PER_DAY
+        if (mofd == newMofd) {
+            return this
+        }
+        val newHour = newMofd / MINUTES_PER_HOUR
+        val newMinute = newMofd % MINUTES_PER_HOUR
+        return create(newHour, newMinute, this.second.toInt(), this.nano)
+    }
+
+    /**
+     * Returns a copy of this `LocalTime` with the specified number of seconds added.
+     *
+     *
+     * This adds the specified number of seconds to this time, returning a new time.
+     * The calculation wraps around midnight.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param secondstoAdd  the seconds to add, may be negative
+     * @return a `LocalTime` based on this time with the seconds added, not null
+     */
+    fun plusSeconds(secondstoAdd: Long): LocalTime {
+        if (secondstoAdd == 0L) {
+            return this
+        }
+        val sofd = this.hour * SECONDS_PER_HOUR +
+                this.minute * SECONDS_PER_MINUTE + this.second
+        val newSofd = ((secondstoAdd % SECONDS_PER_DAY).toInt() + sofd + SECONDS_PER_DAY) % SECONDS_PER_DAY
+        if (sofd == newSofd) {
+            return this
+        }
+        val newHour = newSofd / SECONDS_PER_HOUR
+        val newMinute = newSofd / SECONDS_PER_MINUTE % MINUTES_PER_HOUR
+        val newSecond = newSofd % SECONDS_PER_MINUTE
+        return create(newHour, newMinute, newSecond, this.nano)
+    }
+
+    /**
+     * Returns a copy of this `LocalTime` with the specified number of nanoseconds added.
+     *
+     *
+     * This adds the specified number of nanoseconds to this time, returning a new time.
+     * The calculation wraps around midnight.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param nanosToAdd  the nanos to add, may be negative
+     * @return a `LocalTime` based on this time with the nanoseconds added, not null
+     */
+    fun plusNanos(nanosToAdd: Long): LocalTime {
+        if (nanosToAdd == 0L) {
+            return this
+        }
+        val nofd = toNanoOfDay()
+        val newNofd = (nanosToAdd % NANOS_PER_DAY + nofd + NANOS_PER_DAY) % NANOS_PER_DAY
+        if (nofd == newNofd) {
+            return this
+        }
+        val newHour = (newNofd / NANOS_PER_HOUR).toInt()
+        val newMinute = (newNofd / NANOS_PER_MINUTE % MINUTES_PER_HOUR).toInt()
+        val newSecond = (newNofd / NANOS_PER_SECOND % SECONDS_PER_MINUTE).toInt()
+        val newNano = (newNofd % NANOS_PER_SECOND).toInt()
+        return create(newHour, newMinute, newSecond, newNano)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Queries this time using the specified query.
+     *
+     *
+     * This queries this time using the specified query strategy object.
+     * The `TemporalQuery` object defines the logic to be used to
+     * obtain the result. Read the documentation of the query to understand
+     * what the result of this method will be.
+     *
+     *
+     * The result of this method is obtained by invoking the
+     * [TemporalQuery.queryFrom] method on the
+     * specified query passing `this` as the argument.
+     *
+     * @param <R> the type of the result
+     * @param query  the query to invoke, not null
+     * @return the query result, null may be returned (defined by the query)
+     * @throws DateTimeException if unable to query (defined by the query)
+     * @throws ArithmeticException if numeric overflow occurs (defined by the query)
+     */
+    override fun <R> query(query: TemporalQuery<R>): R? {
+        if (query == TemporalQueries.CHRONO || query == TemporalQueries.ZONE_ID ||
+            query == TemporalQueries.ZONE || query == TemporalQueries.OFFSET
+        ) {
+            return null
+        } else if (query == TemporalQueries.LOCAL_TIME) {
+            return this as R
+        } else if (query === TemporalQueries.LOCAL_DATE) {
+            return null
+        } else if (query == TemporalQueries.PRECISION) {
+            return ChronoUnit.NANOS as R
+        }
+        // inline TemporalAccessor.super.query(query) as an optimization
+        // non-JDK classes are not permitted to make this optimization
+        return query.queryFrom(this)
+    }
+
+    /**
+     * Adjusts the specified temporal object to have the same time as this object.
+     *
+     *
+     * This returns a temporal object of the same observable type as the input
+     * with the time changed to be the same as this.
+     *
+     *
+     * The adjustment is equivalent to using [Temporal.with]
+     * passing [ChronoField.NANO_OF_DAY] as the field.
+     *
+     *
+     * In most cases, it is clearer to reverse the calling pattern by using
+     * [Temporal.with]:
+     * <pre>
+     * // these two lines are equivalent, but the second approach is recommended
+     * temporal = thisLocalTime.adjustInto(temporal);
+     * temporal = temporal.with(thisLocalTime);
+    </pre> *
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param temporal  the target object to be adjusted, not null
+     * @return the adjusted object, not null
+     * @throws DateTimeException if unable to make the adjustment
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun adjustInto(temporal: Temporal): Temporal {
+        return temporal.with(ChronoField.NANO_OF_DAY, toNanoOfDay())
+    }
+
+    /**
+     * Calculates the amount of time until another time in terms of the specified unit.
+     *
+     *
+     * This calculates the amount of time between two `LocalTime`
+     * objects in terms of a single `TemporalUnit`.
+     * The start and end points are `this` and the specified time.
+     * The result will be negative if the end is before the start.
+     * The `Temporal` passed to this method is converted to a
+     * `LocalTime` using [.from].
+     * For example, the amount in hours between two times can be calculated
+     * using `startTime.until(endTime, HOURS)`.
+     *
+     *
+     * The calculation returns a whole number, representing the number of
+     * complete units between the two times.
+     * For example, the amount in hours between 11:30 and 13:29 will only
+     * be one hour as it is one minute short of two hours.
+     *
+     *
+     * There are two equivalent ways of using this method.
+     * The first is to invoke this method.
+     * The second is to use [TemporalUnit.between]:
+     * <pre>
+     * // these two lines are equivalent
+     * amount = start.until(end, MINUTES);
+     * amount = MINUTES.between(start, end);
+    </pre> *
+     * The choice should be made based on which makes the code more readable.
+     *
+     *
+     * The calculation is implemented in this method for [ChronoUnit].
+     * The units `NANOS`, `MICROS`, `MILLIS`, `SECONDS`,
+     * `MINUTES`, `HOURS` and `HALF_DAYS` are supported.
+     * Other `ChronoUnit` values will throw an exception.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.between(Temporal, Temporal)`
+     * passing `this` as the first argument and the converted input temporal
+     * as the second argument.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param endExclusive  the end time, exclusive, which is converted to a `LocalTime`, not null
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this time and the end time
+     * @throws DateTimeException if the amount cannot be calculated, or the end
+     * temporal cannot be converted to a `LocalTime`
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun until(endExclusive: Temporal, unit: TemporalUnit): Long {
+        val end = LocalTime.from(endExclusive)
+        if (unit is ChronoUnit) {
+            val nanosUntil = end.toNanoOfDay() - toNanoOfDay()  // no overflow
+            return when (unit) {
+                ChronoUnit.NANOS -> nanosUntil
+                ChronoUnit.MICROS -> nanosUntil / 1000
+                ChronoUnit.MILLIS -> nanosUntil / 1000000
+                ChronoUnit.SECONDS -> nanosUntil / NANOS_PER_SECOND
+                ChronoUnit.MINUTES -> nanosUntil / NANOS_PER_MINUTE
+                ChronoUnit.HOURS -> nanosUntil / NANOS_PER_HOUR
+                ChronoUnit.HALF_DAYS -> nanosUntil / (12 * NANOS_PER_HOUR)
+                else -> throw UnsupportedTemporalTypeException("Unsupported unit: $unit")
+            }
+        }
+        return unit.between(this, end)
     }
 
     // ----==== Comparison ====----
@@ -528,5 +1176,35 @@ class LocalTime private constructor(
         total += second * NANOS_PER_SECOND
         total += nano
         return total
+    }
+
+    override fun getKClass(): KClass<out Temporal> {
+        return LocalTime::class
+    }
+
+    private fun get0(field: TemporalField): Int {
+        return when (field as ChronoField) {
+            ChronoField.NANO_OF_SECOND -> this.nano
+            ChronoField.NANO_OF_DAY -> throw UnsupportedTemporalTypeException(
+                    "Invalid field 'NanoOfDay' for get() method, use getLong() instead")
+            ChronoField.MICRO_OF_SECOND -> this.nano / 1000
+            ChronoField.MICRO_OF_DAY -> throw UnsupportedTemporalTypeException(
+                    "Invalid field 'MicroOfDay' for get() method, use getLong() instead")
+            ChronoField.MILLI_OF_SECOND -> this.nano / 1000000
+            ChronoField.MILLI_OF_DAY -> (toNanoOfDay() / 1000000).toInt()
+            ChronoField.SECOND_OF_MINUTE -> this.second.toInt()
+            ChronoField.SECOND_OF_DAY -> toSecondOfDay()
+            ChronoField.MINUTE_OF_HOUR -> this.minute.toInt()
+            ChronoField.MINUTE_OF_DAY -> this.hour * 60 + this.minute
+            ChronoField.HOUR_OF_AMPM -> this.hour % 12
+            ChronoField.CLOCK_HOUR_OF_AMPM -> {
+                val ham = this.hour % 12
+                if (ham % 12 == 0) 12 else ham
+            }
+            ChronoField.HOUR_OF_DAY -> this.hour.toInt()
+            ChronoField.CLOCK_HOUR_OF_DAY -> if (this.hour.toInt() == 0) 24 else hour.toInt()
+            ChronoField.AMPM_OF_DAY -> hour / 12
+            else -> throw UnsupportedTemporalTypeException("Unsupported field: $field")
+        }
     }
 }

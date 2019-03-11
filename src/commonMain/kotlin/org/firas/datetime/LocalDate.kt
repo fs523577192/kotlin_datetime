@@ -62,27 +62,29 @@
 package org.firas.datetime
 
 import org.firas.datetime.chrono.ChronoLocalDate
-import org.firas.datetime.temporal.ChronoField
+import org.firas.datetime.chrono.IsoChronology
+import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneOffset
-import org.firas.datetime.chrono.IsoChronology
-
-
+import kotlin.reflect.KClass
 
 /**
  * A date without a time-zone in the ISO-8601 calendar system,
- * such as {@code 2007-12-03}.
- * <p>
- * {@code LocalDate} is an immutable date-time object that represents a date,
+ * such as `2007-12-03`.
+ *
+ *
+ * `LocalDate` is an immutable date-time object that represents a date,
  * often viewed as year-month-day. Other date fields, such as day-of-year,
  * day-of-week and week-of-year, can also be accessed.
- * For example, the value "2nd October 2007" can be stored in a {@code LocalDate}.
- * <p>
+ * For example, the value "2nd October 2007" can be stored in a `LocalDate`.
+ *
+ *
  * This class does not store or represent a time or time-zone.
  * Instead, it is a description of the date, as used for birthdays.
  * It cannot represent an instant on the time-line without additional information
  * such as an offset or time-zone.
- * <p>
+ *
+ *
  * The ISO-8601 calendar system is the modern civil calendar system used today
  * in most of the world. It is equivalent to the proleptic Gregorian calendar
  * system, in which today's rules for leap years are applied for all time.
@@ -90,12 +92,13 @@ import org.firas.datetime.chrono.IsoChronology
  * However, any application that makes use of historical dates, and requires them
  * to be accurate will find the ISO-8601 approach unsuitable.
  *
- * <p>
+ *
+ *
  * This is a <a href="{@docRoot}/java.base/java/lang/doc-files/ValueBased.html">value-based</a>
  * class; use of identity-sensitive operations (including reference equality
- * ({@code ==}), identity hash code, or synchronization) on instances of
- * {@code LocalDate} may have unpredictable results and should be avoided.
- * The {@code equals} method should be used for comparisons.
+ * (`==`), identity hash code, or synchronization) on instances of
+ * `LocalDate` may have unpredictable results and should be avoided.
+ * The `equals` method should be used for comparisons.
  *
  * @implSpec
  * This class is immutable and thread-safe.
@@ -257,6 +260,32 @@ class LocalDate private constructor(
             // check year now we are certain it is correct
             val year = ChronoField.YEAR.checkValidIntValue(yearEst)
             return LocalDate(year, month.toShort(), dom.toShort())
+        }
+
+        /**
+         * Obtains an instance of `LocalDate` from a temporal object.
+         *
+         *
+         * This obtains a local date based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `LocalDate`.
+         *
+         *
+         * The conversion uses the {@link TemporalQueries#localDate()} query, which relies
+         * on extracting the {@link ChronoField#EPOCH_DAY EPOCH_DAY} field.
+         *
+         *
+         * This method matches the signature of the functional interface [TemporalQuery]
+         * allowing it to be used as a query via method reference, `LocalDate::from`.
+         *
+         * @param temporal  the temporal object to convert, not null
+         * @return the local date, not null
+         * @throws DateTimeException if unable to convert to a `LocalDate`
+         */
+        fun from(temporal: TemporalAccessor): LocalDate {
+            return temporal.query(TemporalQueries.LOCAL_DATE) ?:
+                    throw DateTimeException ("Unable to obtain LocalDate from TemporalAccessor: " +
+                            temporal + " of type " + temporal.getKClass().qualifiedName)
         }
 
         //-----------------------------------------------------------------------
@@ -422,6 +451,145 @@ class LocalDate private constructor(
         return if (isLeapYear()) 366 else 365
     }
 
+    /**
+     * Returns a copy of this date with the specified field set to a new value.
+     *
+     *
+     * This returns a `LocalDate`, based on this one, with the value
+     * for the specified field changed.
+     * This can be used to change any supported field, such as the year, month or day-of-month.
+     * If it is not possible to set the value, because the field is not supported or for
+     * some other reason, an exception is thrown.
+     *
+     *
+     * In some cases, changing the specified field can cause the resulting date to become invalid,
+     * such as changing the month from 31st January to February would make the day-of-month invalid.
+     * In cases like this, the field is responsible for resolving the date. Typically it will choose
+     * the previous valid date, which would be the last valid day of February in this example.
+     *
+     *
+     * If the field is a [ChronoField] then the adjustment is implemented here.
+     * The supported fields behave as follows:
+     *
+     *  * `DAY_OF_WEEK` -
+     * Returns a `LocalDate` with the specified day-of-week.
+     * The date is adjusted up to 6 days forward or backward within the boundary
+     * of a Monday to Sunday week.
+     *  * `ALIGNED_DAY_OF_WEEK_IN_MONTH` -
+     * Returns a `LocalDate` with the specified aligned-day-of-week.
+     * The date is adjusted to the specified month-based aligned-day-of-week.
+     * Aligned weeks are counted such that the first week of a given month starts
+     * on the first day of that month.
+     * This may cause the date to be moved up to 6 days into the following month.
+     *  * `ALIGNED_DAY_OF_WEEK_IN_YEAR` -
+     * Returns a `LocalDate` with the specified aligned-day-of-week.
+     * The date is adjusted to the specified year-based aligned-day-of-week.
+     * Aligned weeks are counted such that the first week of a given year starts
+     * on the first day of that year.
+     * This may cause the date to be moved up to 6 days into the following year.
+     *  * `DAY_OF_MONTH` -
+     * Returns a `LocalDate` with the specified day-of-month.
+     * The month and year will be unchanged. If the day-of-month is invalid for the
+     * year and month, then a `DateTimeException` is thrown.
+     *  * `DAY_OF_YEAR` -
+     * Returns a `LocalDate` with the specified day-of-year.
+     * The year will be unchanged. If the day-of-year is invalid for the
+     * year, then a `DateTimeException` is thrown.
+     *  * `EPOCH_DAY` -
+     * Returns a `LocalDate` with the specified epoch-day.
+     * This completely replaces the date and is equivalent to [.ofEpochDay].
+     *  * `ALIGNED_WEEK_OF_MONTH` -
+     * Returns a `LocalDate` with the specified aligned-week-of-month.
+     * Aligned weeks are counted such that the first week of a given month starts
+     * on the first day of that month.
+     * This adjustment moves the date in whole week chunks to match the specified week.
+     * The result will have the same day-of-week as this date.
+     * This may cause the date to be moved into the following month.
+     *  * `ALIGNED_WEEK_OF_YEAR` -
+     * Returns a `LocalDate` with the specified aligned-week-of-year.
+     * Aligned weeks are counted such that the first week of a given year starts
+     * on the first day of that year.
+     * This adjustment moves the date in whole week chunks to match the specified week.
+     * The result will have the same day-of-week as this date.
+     * This may cause the date to be moved into the following year.
+     *  * `MONTH_OF_YEAR` -
+     * Returns a `LocalDate` with the specified month-of-year.
+     * The year will be unchanged. The day-of-month will also be unchanged,
+     * unless it would be invalid for the new month and year. In that case, the
+     * day-of-month is adjusted to the maximum valid value for the new month and year.
+     *  * `PROLEPTIC_MONTH` -
+     * Returns a `LocalDate` with the specified proleptic-month.
+     * The day-of-month will be unchanged, unless it would be invalid for the new month
+     * and year. In that case, the day-of-month is adjusted to the maximum valid value
+     * for the new month and year.
+     *  * `YEAR_OF_ERA` -
+     * Returns a `LocalDate` with the specified year-of-era.
+     * The era and month will be unchanged. The day-of-month will also be unchanged,
+     * unless it would be invalid for the new month and year. In that case, the
+     * day-of-month is adjusted to the maximum valid value for the new month and year.
+     *  * `YEAR` -
+     * Returns a `LocalDate` with the specified year.
+     * The month will be unchanged. The day-of-month will also be unchanged,
+     * unless it would be invalid for the new month and year. In that case, the
+     * day-of-month is adjusted to the maximum valid value for the new month and year.
+     *  * `ERA` -
+     * Returns a `LocalDate` with the specified era.
+     * The year-of-era and month will be unchanged. The day-of-month will also be unchanged,
+     * unless it would be invalid for the new month and year. In that case, the
+     * day-of-month is adjusted to the maximum valid value for the new month and year.
+     *
+     *
+     *
+     * In all cases, if the new value is outside the valid range of values for the field
+     * then a `DateTimeException` will be thrown.
+     *
+     *
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.adjustInto(Temporal, long)`
+     * passing `this` as the argument. In this case, the field determines
+     * whether and how to adjust the instant.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param field  the field to set in the result, not null
+     * @param newValue  the new value of the field in the result
+     * @return a `LocalDate` based on `this` with the specified field set, not null
+     * @throws DateTimeException if the field cannot be set
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun with(field: TemporalField, newValue: Long): LocalDate {
+        if (field is ChronoField) {
+            field.checkValidValue(newValue)
+            return when (field) {
+                ChronoField.DAY_OF_WEEK -> plusDays(newValue - getDayOfWeek().getValue())
+                ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH -> plusDays(newValue -
+                        getLong(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH))
+                ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR -> plusDays(newValue -
+                        getLong(ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR))
+                ChronoField.DAY_OF_MONTH -> withDayOfMonth(newValue.toInt())
+                ChronoField.DAY_OF_YEAR -> withDayOfYear(newValue.toInt())
+                ChronoField.EPOCH_DAY -> LocalDate.ofEpochDay(newValue)
+                ChronoField.ALIGNED_WEEK_OF_MONTH -> plusWeeks(newValue -
+                        getLong(ChronoField.ALIGNED_WEEK_OF_MONTH))
+                ChronoField.ALIGNED_WEEK_OF_YEAR -> plusWeeks(newValue -
+                        getLong(ChronoField.ALIGNED_WEEK_OF_YEAR))
+                ChronoField.MONTH_OF_YEAR -> withMonth(newValue.toInt())
+                ChronoField.PROLEPTIC_MONTH -> plusMonths(newValue - getProlepticMonth())
+                ChronoField.YEAR_OF_ERA -> withYear((if (year >= 1) newValue else 1 - newValue).toInt())
+                ChronoField.YEAR -> withYear(newValue.toInt())
+                ChronoField.ERA -> if (getLong(ChronoField.ERA) == newValue) this
+                        else withYear(1 - year)
+                else -> throw UnsupportedTemporalTypeException("Unsupported field: $field")
+            }
+        }
+        return field.adjustInto(this, newValue)
+    }
+
     //-----------------------------------------------------------------------
     /**
      * Returns a copy of this `LocalDate` with the year altered.
@@ -503,6 +671,142 @@ class LocalDate private constructor(
         return if (this.getDayOfYear() == dayOfYear) {
             this
         } else ofYearDay(this.year, dayOfYear)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this date with the specified amount added.
+     *
+     *
+     * This returns a `LocalDate`, based on this one, with the specified amount added.
+     * The amount is typically [Period] but may be any other type implementing
+     * the [TemporalAmount] interface.
+     *
+     *
+     * The calculation is delegated to the amount object by calling
+     * [TemporalAmount.addTo]. The amount implementation is free
+     * to implement the addition in any way it wishes, however it typically
+     * calls back to [.plus]. Consult the documentation
+     * of the amount implementation to determine if it can be successfully added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount to add, not null
+     * @return a `LocalDate` based on this date with the addition made, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun plus(amountToAdd: TemporalAmount): LocalDate {
+        if (amountToAdd is Period) {
+            return plusMonths(amountToAdd.toTotalMonths()).plusDays(amountToAdd.days.toLong())
+        }
+        return amountToAdd.addTo(this) as LocalDate
+    }
+
+    /**
+     * Returns a copy of this date with the specified amount added.
+     *
+     *
+     * This returns a `LocalDate`, based on this one, with the amount
+     * in terms of the unit added. If it is not possible to add the amount, because the
+     * unit is not supported or for some other reason, an exception is thrown.
+     *
+     *
+     * In some cases, adding the amount can cause the resulting date to become invalid.
+     * For example, adding one month to 31st January would result in 31st February.
+     * In cases like this, the unit is responsible for resolving the date.
+     * Typically it will choose the previous valid date, which would be the last valid
+     * day of February in this example.
+     *
+     *
+     * If the field is a [ChronoUnit] then the addition is implemented here.
+     * The supported fields behave as follows:
+     *
+     *  * `DAYS` -
+     * Returns a `LocalDate` with the specified number of days added.
+     * This is equivalent to [.plusDays].
+     *  * `WEEKS` -
+     * Returns a `LocalDate` with the specified number of weeks added.
+     * This is equivalent to [.plusWeeks] and uses a 7 day week.
+     *  * `MONTHS` -
+     * Returns a `LocalDate` with the specified number of months added.
+     * This is equivalent to [.plusMonths].
+     * The day-of-month will be unchanged unless it would be invalid for the new
+     * month and year. In that case, the day-of-month is adjusted to the maximum
+     * valid value for the new month and year.
+     *  * `YEARS` -
+     * Returns a `LocalDate` with the specified number of years added.
+     * This is equivalent to [.plusYears].
+     * The day-of-month will be unchanged unless it would be invalid for the new
+     * month and year. In that case, the day-of-month is adjusted to the maximum
+     * valid value for the new month and year.
+     *  * `DECADES` -
+     * Returns a `LocalDate` with the specified number of decades added.
+     * This is equivalent to calling [.plusYears] with the amount
+     * multiplied by 10.
+     * The day-of-month will be unchanged unless it would be invalid for the new
+     * month and year. In that case, the day-of-month is adjusted to the maximum
+     * valid value for the new month and year.
+     *  * `CENTURIES` -
+     * Returns a `LocalDate` with the specified number of centuries added.
+     * This is equivalent to calling [.plusYears] with the amount
+     * multiplied by 100.
+     * The day-of-month will be unchanged unless it would be invalid for the new
+     * month and year. In that case, the day-of-month is adjusted to the maximum
+     * valid value for the new month and year.
+     *  * `MILLENNIA` -
+     * Returns a `LocalDate` with the specified number of millennia added.
+     * This is equivalent to calling [.plusYears] with the amount
+     * multiplied by 1,000.
+     * The day-of-month will be unchanged unless it would be invalid for the new
+     * month and year. In that case, the day-of-month is adjusted to the maximum
+     * valid value for the new month and year.
+     *  * `ERAS` -
+     * Returns a `LocalDate` with the specified number of eras added.
+     * Only two eras are supported so the amount must be one, zero or minus one.
+     * If the amount is non-zero then the year is changed such that the year-of-era
+     * is unchanged.
+     * The day-of-month will be unchanged unless it would be invalid for the new
+     * month and year. In that case, the day-of-month is adjusted to the maximum
+     * valid value for the new month and year.
+     *
+     *
+     *
+     * All other `ChronoUnit` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.addTo(Temporal, long)`
+     * passing `this` as the argument. In this case, the unit determines
+     * whether and how to perform the addition.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount of the unit to add to the result, may be negative
+     * @param unit  the unit of the amount to add, not null
+     * @return a `LocalDate` based on this date with the specified amount added, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun plus(amountToAdd: Long, unit: TemporalUnit): LocalDate {
+        if (unit is ChronoUnit) {
+            return when (unit) {
+                ChronoUnit.DAYS -> plusDays(amountToAdd)
+                ChronoUnit.WEEKS -> plusWeeks(amountToAdd)
+                ChronoUnit.MONTHS -> plusMonths(amountToAdd)
+                ChronoUnit.YEARS -> plusYears(amountToAdd)
+                ChronoUnit.DECADES -> plusYears(MathUtils.multiplyExact(amountToAdd, 10))
+                ChronoUnit.CENTURIES -> plusYears(MathUtils.multiplyExact(amountToAdd, 100))
+                ChronoUnit.MILLENNIA -> plusYears(MathUtils.multiplyExact(amountToAdd, 1000))
+                ChronoUnit.ERAS -> with(ChronoField.ERA,
+                        MathUtils.addExact(getLong(ChronoField.ERA),amountToAdd))
+                else -> throw UnsupportedTemporalTypeException("Unsupported unit: $unit")
+            }
+        }
+        return unit.addTo(this, amountToAdd)
     }
 
     //-----------------------------------------------------------------------
@@ -799,8 +1103,281 @@ class LocalDate private constructor(
         return secs
     }
 
+    /**
+     * Combines this date with a time to create a `LocalDateTime`.
+     *
+     *
+     * This returns a `LocalDateTime` formed from this date at the specified time.
+     * All possible combinations of date and time are valid.
+     *
+     * @param time  the time to combine with, not null
+     * @return the local date-time formed from this date and the specified time, not null
+     */
+    override fun atTime(time: LocalTime): LocalDateTime {
+        return LocalDateTime.of(this, time)
+    }
+
+    /**
+     * Combines this date with a time to create a `LocalDateTime`.
+     *
+     *
+     * This returns a `LocalDateTime` formed from this date at the
+     * specified hour and minute.
+     * The seconds and nanosecond fields will be set to zero.
+     * The individual time fields must be within their valid range.
+     * All possible combinations of date and time are valid.
+     *
+     * @param hour  the hour-of-day to use, from 0 to 23
+     * @param minute  the minute-of-hour to use, from 0 to 59
+     * @return the local date-time formed from this date and the specified time, not null
+     * @throws DateTimeException if the value of any field is out of range
+     */
+    fun atTime(hour: Int, minute: Int): LocalDateTime {
+        return atTime(LocalTime.of(hour, minute))
+    }
+
+    /**
+     * Combines this date with a time to create a `LocalDateTime`.
+     *
+     *
+     * This returns a `LocalDateTime` formed from this date at the
+     * specified hour, minute and second.
+     * The nanosecond field will be set to zero.
+     * The individual time fields must be within their valid range.
+     * All possible combinations of date and time are valid.
+     *
+     * @param hour  the hour-of-day to use, from 0 to 23
+     * @param minute  the minute-of-hour to use, from 0 to 59
+     * @param second  the second-of-minute to represent, from 0 to 59
+     * @return the local date-time formed from this date and the specified time, not null
+     * @throws DateTimeException if the value of any field is out of range
+     */
+    fun atTime(hour: Int, minute: Int, second: Int): LocalDateTime {
+        return atTime(LocalTime.of(hour, minute, second))
+    }
+
+    /**
+     * Combines this date with a time to create a `LocalDateTime`.
+     *
+     *
+     * This returns a `LocalDateTime` formed from this date at the
+     * specified hour, minute, second and nanosecond.
+     * The individual time fields must be within their valid range.
+     * All possible combinations of date and time are valid.
+     *
+     * @param hour  the hour-of-day to use, from 0 to 23
+     * @param minute  the minute-of-hour to use, from 0 to 59
+     * @param second  the second-of-minute to represent, from 0 to 59
+     * @param nanoOfSecond  the nano-of-second to represent, from 0 to 999,999,999
+     * @return the local date-time formed from this date and the specified time, not null
+     * @throws DateTimeException if the value of any field is out of range
+     */
+    fun atTime(hour: Int, minute: Int, second: Int, nanoOfSecond: Int): LocalDateTime {
+        return atTime(LocalTime.of(hour, minute, second, nanoOfSecond))
+    }
+
+    /**
+     * Combines this date with an offset time to create an `OffsetDateTime`.
+     *
+     *
+     * This returns an `OffsetDateTime` formed from this date at the specified time.
+     * All possible combinations of date and time are valid.
+     *
+     * @param time  the time to combine with, not null
+     * @return the offset date-time formed from this date and the specified time, not null
+     */
+    fun atTime(time: OffsetTime): OffsetDateTime {
+        return OffsetDateTime.of(LocalDateTime.of(this, time.localTime), time.offset)
+    }
+
+    /**
+     * Combines this date with the time of midnight to create a `LocalDateTime`
+     * at the start of this date.
+     *
+     *
+     * This returns a `LocalDateTime` formed from this date at the time of
+     * midnight, 00:00, at the start of this date.
+     *
+     * @return the local date-time of midnight at the start of this date, not null
+     */
+    fun atStartOfDay(): LocalDateTime {
+        return LocalDateTime.of(this, LocalTime.MIDNIGHT)
+    }
+
+    /**
+     * Calculates the amount of time until another date in terms of the specified unit.
+     *
+     *
+     * This calculates the amount of time between two `LocalDate`
+     * objects in terms of a single `TemporalUnit`.
+     * The start and end points are `this` and the specified date.
+     * The result will be negative if the end is before the start.
+     * The `Temporal` passed to this method is converted to a
+     * `LocalDate` using [.from].
+     * For example, the amount in days between two dates can be calculated
+     * using `startDate.until(endDate, DAYS)`.
+     *
+     *
+     * The calculation returns a whole number, representing the number of
+     * complete units between the two dates.
+     * For example, the amount in months between 2012-06-15 and 2012-08-14
+     * will only be one month as it is one day short of two months.
+     *
+     *
+     * There are two equivalent ways of using this method.
+     * The first is to invoke this method.
+     * The second is to use [TemporalUnit.between]:
+     * <pre>
+     * // these two lines are equivalent
+     * amount = start.until(end, MONTHS);
+     * amount = MONTHS.between(start, end);
+    </pre> *
+     * The choice should be made based on which makes the code more readable.
+     *
+     *
+     * The calculation is implemented in this method for [ChronoUnit].
+     * The units `DAYS`, `WEEKS`, `MONTHS`, `YEARS`,
+     * `DECADES`, `CENTURIES`, `MILLENNIA` and `ERAS`
+     * are supported. Other `ChronoUnit` values will throw an exception.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.between(Temporal, Temporal)`
+     * passing `this` as the first argument and the converted input temporal
+     * as the second argument.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param endExclusive  the end date, exclusive, which is converted to a `LocalDate`, not null
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this date and the end date
+     * @throws DateTimeException if the amount cannot be calculated, or the end
+     * temporal cannot be converted to a `LocalDate`
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun until(endExclusive: Temporal, unit: TemporalUnit): Long {
+        val end = LocalDate.from(endExclusive)
+        if (unit is ChronoUnit) {
+            return when (unit) {
+                ChronoUnit.DAYS -> daysUntil(end)
+                ChronoUnit.WEEKS -> daysUntil(end) / 7
+                ChronoUnit.MONTHS -> monthsUntil(end)
+                ChronoUnit.YEARS -> monthsUntil(end) / 12
+                ChronoUnit.DECADES -> monthsUntil(end) / 120
+                ChronoUnit.CENTURIES -> monthsUntil(end) / 1200
+                ChronoUnit.MILLENNIA -> monthsUntil(end) / 12000
+                ChronoUnit.ERAS -> end.getLong(ChronoField.ERA) - getLong(ChronoField.ERA)
+                else -> throw UnsupportedTemporalTypeException("Unsupported unit: $unit")
+            }
+        }
+        return unit.between(this, end)
+    }
+
+    /**
+     * Gets the value of the specified field from this date as an `int`.
+     *
+     *
+     * This queries this date for the value of the specified field.
+     * The returned value will always be within the valid range of values for the field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The {@link #isSupported(TemporalField) supported fields} will return valid
+     * values based on this date, except `EPOCH_DAY` and `PROLEPTIC_MONTH`
+     * which are too large to fit in an `int` and throw an `UnsupportedTemporalTypeException`.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained or
+     *         the value is outside the range of valid values for the field
+     * @throws UnsupportedTemporalTypeException if the field is not supported or
+     *         the range of values exceeds an `int`
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun get(field: TemporalField): Int {
+        if (field is ChronoField) {
+            return get0(field)
+        }
+        TODO("return ChronoLocalDate.super.get(field)")
+    }
+
+    /**
+     * Gets the value of the specified field from this date as a `long`.
+     *
+     *
+     * This queries this date for the value of the specified field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The {@link #isSupported(TemporalField) supported fields} will return valid
+     * values based on this date.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun getLong(field: TemporalField): Long {
+        if (field is ChronoField) {
+            if (field == ChronoField.EPOCH_DAY) {
+                return toEpochDay()
+            }
+            if (field == ChronoField.PROLEPTIC_MONTH) {
+                return getProlepticMonth()
+            }
+            return get0(field).toLong()
+        }
+        return field.getFrom(this)
+    }
+
+    override fun getKClass(): KClass<out Temporal> {
+        return LocalDate::class
+    }
+
     internal fun daysUntil(end: LocalDate): Long {
         return end.toEpochDay() - toEpochDay()  // no overflow
+    }
+
+    private fun get0(field: TemporalField): Int {
+        return when (field) {
+            ChronoField.DAY_OF_WEEK -> getDayOfWeek().getValue()
+            ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH -> ((this.dayOfMonth - 1) % 7) + 1
+            ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR -> ((getDayOfYear() - 1) % 7) + 1
+            ChronoField.DAY_OF_MONTH -> this.dayOfMonth.toInt()
+            ChronoField.DAY_OF_YEAR -> getDayOfYear()
+            ChronoField.EPOCH_DAY -> throw UnsupportedTemporalTypeException(
+                    "Invalid field 'EpochDay' for get() method, use getLong() instead")
+            ChronoField.ALIGNED_WEEK_OF_MONTH -> ((this.dayOfMonth - 1) / 7) + 1
+            ChronoField.ALIGNED_WEEK_OF_YEAR -> ((getDayOfYear() - 1) / 7) + 1
+            ChronoField.MONTH_OF_YEAR -> this.monthValue.toInt()
+            ChronoField.PROLEPTIC_MONTH -> throw UnsupportedTemporalTypeException(
+                    "Invalid field 'ProlepticMonth' for get() method, use getLong() instead")
+            ChronoField.YEAR_OF_ERA -> if (this.year >= 1) this.year else 1 - this.year
+            ChronoField.YEAR -> this.year
+            ChronoField.ERA -> if (this.year >= 1) 1 else 0
+            else -> throw UnsupportedTemporalTypeException("Unsupported field: $field")
+        }
     }
 
     private fun monthsUntil(end: LocalDate): Long {

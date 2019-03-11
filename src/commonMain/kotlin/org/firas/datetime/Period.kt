@@ -314,10 +314,12 @@ class Period private constructor(
         //-----------------------------------------------------------------------
         /**
          * Obtains a `Period` from a text string such as `PnYnMnD`.
-         * <p>
+         *
+         *
          * This will parse the string produced by `toString()` which is
          * based on the ISO-8601 period formats `PnYnMnD` and `PnW`.
-         * <p>
+         *
+         *
          * The string starts with an optional sign, denoted by the ASCII negative
          * or positive symbol. If negative, the whole period is negated.
          * The ASCII letter "P" is next in upper or lower case.
@@ -328,13 +330,15 @@ class Period private constructor(
          * The suffixes must occur in order.
          * The number part of each section must consist of ASCII digits.
          * The number may be prefixed by the ASCII negative or positive symbol.
-         * The number must parse to an `int`.
-         * <p>
+         * The number must parse to an `Int`.
+         *
+         *
          * The leading plus/minus sign, and negative values for other units are
          * not part of the ISO-8601 standard. In addition, ISO-8601 does not
          * permit mixing between the `PnYnMnD` and `PnW` formats.
          * Any week-based input is multiplied by 7 and treated as a number of days.
-         * <p>
+         *
+         *
          * For example, the following are valid inputs:
          * <pre>
          *   "P2Y"             -- Period.ofYears(2)
@@ -842,7 +846,7 @@ class Period private constructor(
      * // these two lines are equivalent, but the second approach is recommended
      * dateTime = thisPeriod.addTo(dateTime);
      * dateTime = dateTime.plus(thisPeriod);
-    </pre> *
+     * </pre>
      *
      *
      * The calculation operates as follows.
@@ -900,7 +904,7 @@ class Period private constructor(
      * // these two lines are equivalent, but the second approach is recommended
      * dateTime = thisPeriod.subtractFrom(dateTime);
      * dateTime = dateTime.minus(thisPeriod);
-    </pre> *
+     * </pre>
      *
      *
      * The calculation operates as follows.

@@ -61,7 +61,9 @@
  */
 package org.firas.datetime.chrono
 
-import org.firas.datetime.temporal.ChronoField
+import org.firas.datetime.DateTimeException
+import org.firas.datetime.LocalTime
+import org.firas.datetime.temporal.*
 
 /**
  * A date without time-of-day or time-zone in an arbitrary chronology, intended
@@ -217,7 +219,7 @@ import org.firas.datetime.temporal.ChronoField
  * @since Java 1.8
  * @author Wu Yuping
  */
-interface ChronoLocalDate: Comparable<ChronoLocalDate> {
+interface ChronoLocalDate: Temporal, Comparable<ChronoLocalDate> {
 
     companion object {
         /**
@@ -244,6 +246,43 @@ interface ChronoLocalDate: Comparable<ChronoLocalDate> {
                 val b = date2.toEpochDay()
                 if (a > b) 1 else if (a < b) -1 else 0
             } as Comparator<ChronoLocalDate>
+
+        /**
+         * Obtains an instance of `ChronoLocalDate` from a temporal object.
+         *
+         *
+         * This obtains a local date based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `ChronoLocalDate`.
+         *
+         *
+         * The conversion extracts and combines the chronology and the date
+         * from the temporal object. The behavior is equivalent to using
+         * {@link Chronology#date(TemporalAccessor)} with the extracted chronology.
+         * Implementations are permitted to perform optimizations such as accessing
+         * those fields that are equivalent to the relevant objects.
+         *
+         *
+         *
+         * This method matches the signature of the functional interface [TemporalQuery]
+         * allowing it to be used as a query via method reference, `ChronoLocalDate::from`.
+         *
+         * @param temporal  the temporal object to convert, not null
+         * @return the date, not null
+         * @throws DateTimeException if unable to convert to a `ChronoLocalDate`
+         * @see Chronology#date(TemporalAccessor)
+         */
+        fun from(temporal: TemporalAccessor): ChronoLocalDate {
+            if (temporal is ChronoLocalDate) {
+                return temporal
+            }
+            val chrono = temporal.query(TemporalQueries.CHRONO)
+            if (chrono == null) {
+                throw DateTimeException("Unable to obtain ChronoLocalDate from TemporalAccessor: " +
+                        temporal.getKClass())
+            }
+            return chrono.date(temporal)
+        }
     } // companion object
 
     /**
@@ -305,6 +344,61 @@ interface ChronoLocalDate: Comparable<ChronoLocalDate> {
      * @return the Epoch Day equivalent to this date
      */
     fun toEpochDay(): Long
+
+    /**
+     * Checks if the specified field is supported.
+     *
+     *
+     * This checks if the specified field can be queried on this date.
+     * If false, then calling the [range][.range],
+     * [get][.get] and [.with]
+     * methods will throw an exception.
+     *
+     *
+     * The set of supported fields is defined by the chronology and normally includes
+     * all `ChronoField` date fields.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.isSupportedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the field is supported is determined by the field.
+     *
+     * @param field  the field to check, null returns false
+     * @return true if the field can be queried, false if not
+     */
+    override fun isSupported(field: TemporalField): Boolean {
+        return if (field is ChronoField) {
+            field.isDateBased()
+        } else field.isSupportedBy(this)
+    }
+
+    /**
+     * Checks if the specified unit is supported.
+     *
+     *
+     * This checks if the specified unit can be added to or subtracted from this date.
+     * If false, then calling the [.plus] and
+     * [minus][.minus] methods will throw an exception.
+     *
+     *
+     * The set of supported units is defined by the chronology and normally includes
+     * all `ChronoUnit` date units except `FOREVER`.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.isSupportedBy(Temporal)`
+     * passing `this` as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    override fun isSupported(unit: TemporalUnit): Boolean {
+        return if (unit is ChronoUnit) {
+            unit.isDateBased()
+        } else unit.isSupportedBy(this)
+    }
 
     //-----------------------------------------------------------------------
     /**
@@ -404,4 +498,16 @@ interface ChronoLocalDate: Comparable<ChronoLocalDate> {
     fun isEqual(other: ChronoLocalDate): Boolean {
         return this.toEpochDay() == other.toEpochDay()
     }
+
+    /**
+     * Combines this date with a time to create a `ChronoLocalDateTime`.
+     *
+     *
+     * This returns a `ChronoLocalDateTime` formed from this date at the specified time.
+     * All possible combinations of date and time are valid.
+     *
+     * @param localTime  the local time to use, not null
+     * @return the local date-time formed from this date and the specified time, not null
+     */
+    fun atTime(localTime: LocalTime): ChronoLocalDateTime<*>
 }
