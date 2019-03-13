@@ -335,5 +335,5 @@ interface TemporalAccessor {
         } else query.queryFrom(this)
     }
 
-    fun getKClass(): KClass<out Temporal>
+    fun getKClass(): KClass<out TemporalAccessor>
 }

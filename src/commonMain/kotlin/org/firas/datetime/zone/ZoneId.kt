@@ -62,6 +62,8 @@
 package org.firas.datetime.zone
 
 import org.firas.datetime.DateTimeException
+import org.firas.datetime.temporal.TemporalAccessor
+import org.firas.datetime.temporal.TemporalQueries
 
 /**
  * A time-zone ID, such as `Europe/Paris`.
@@ -172,7 +174,7 @@ abstract class ZoneId internal constructor() {
          * A map of zone overrides to enable the short time-zone names to be used.
          *
          *
-         * Use of short zone IDs has been deprecated in {@code java.util.TimeZone}.
+         * Use of short zone IDs has been deprecated in `java.util.TimeZone`.
          * This map allows the IDs to continue to be used via the
          * {@link #of(String, Map)} factory method.
          *
@@ -279,6 +281,37 @@ abstract class ZoneId internal constructor() {
                 prefix = prefix + offset.id
             }
             return ZoneRegion(prefix /*, offset.getRules() */)
+        }
+
+        /**
+         * Obtains an instance of `ZoneId` from a temporal object.
+         *
+         *
+         * This obtains a zone based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `ZoneId`.
+         *
+         *
+         * A `TemporalAccessor` represents some form of date and time information.
+         * This factory converts the arbitrary temporal object to an instance of `ZoneId`.
+         *
+         *
+         * The conversion will try to obtain the zone in a way that favours region-based
+         * zones over offset-based zones using {@link TemporalQueries#zone()}.
+         *
+         *
+         * This method matches the signature of the functional interface [TemporalQuery]
+         * allowing it to be used as a query via method reference, `ZoneId::from`.
+         *
+         * @param temporal  the temporal object to convert, not null
+         * @return the zone ID, not null
+         * @throws DateTimeException if unable to convert to a `ZoneId`
+         */
+        fun from(temporal: TemporalAccessor): ZoneId {
+            return temporal.query(TemporalQueries.ZONE) ?: throw DateTimeException(
+                "Unable to obtain ZoneId from TemporalAccessor: " +
+                        temporal + " of type " + temporal.getKClass().qualifiedName
+            )
         }
 
         /**

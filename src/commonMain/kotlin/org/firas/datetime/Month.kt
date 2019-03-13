@@ -61,20 +61,25 @@
  */
 package org.firas.datetime
 
+import org.firas.datetime.chrono.Chronology
+import org.firas.datetime.chrono.IsoChronology
+import org.firas.datetime.temporal.*
+import kotlin.reflect.KClass
+
 /**
  * A month-of-year, such as 'July'.
  * <p>
- * {@code Month} is an enum representing the 12 months of the year -
+ * `Month` is an enum representing the 12 months of the year -
  * January, February, March, April, May, June, July, August, September, October,
  * November and December.
  * <p>
- * In addition to the textual enum name, each month-of-year has an {@code int} value.
- * The {@code int} value follows normal usage and the ISO-8601 standard,
+ * In addition to the textual enum name, each month-of-year has an `int` value.
+ * The `int` value follows normal usage and the ISO-8601 standard,
  * from 1 (January) to 12 (December). It is recommended that applications use the enum
- * rather than the {@code int} value to ensure code clarity.
+ * rather than the `int` value to ensure code clarity.
  * <p>
- * <b>Do not use {@code ordinal()} to obtain the numeric representation of {@code Month}.
- * Use {@code getValue()} instead.</b>
+ * <b>Do not use `ordinal()` to obtain the numeric representation of `Month`.
+ * Use `getValue()` instead.</b>
  * <p>
  * This enum represents a common concept that is found in many calendar systems.
  * As such, this enum may be used by any calendar system that has the month-of-year
@@ -86,65 +91,65 @@ package org.firas.datetime
  * @since Java 1.8
  * @author Wu Yuping
  */
-enum class Month {
+enum class Month: TemporalAccessor {
     /**
      * The singleton instance for the month of January with 31 days.
-     * This has the numeric value of {@code 1}.
+     * This has the numeric value of `1`.
      */
     JANUARY,
     /**
      * The singleton instance for the month of February with 28 days, or 29 in a leap year.
-     * This has the numeric value of {@code 2}.
+     * This has the numeric value of `2`.
      */
     FEBRUARY,
     /**
      * The singleton instance for the month of March with 31 days.
-     * This has the numeric value of {@code 3}.
+     * This has the numeric value of `3`.
      */
     MARCH,
     /**
      * The singleton instance for the month of April with 30 days.
-     * This has the numeric value of {@code 4}.
+     * This has the numeric value of `4`.
      */
     APRIL,
     /**
      * The singleton instance for the month of May with 31 days.
-     * This has the numeric value of {@code 5}.
+     * This has the numeric value of `5`.
      */
     MAY,
     /**
      * The singleton instance for the month of June with 30 days.
-     * This has the numeric value of {@code 6}.
+     * This has the numeric value of `6`.
      */
     JUNE,
     /**
      * The singleton instance for the month of July with 31 days.
-     * This has the numeric value of {@code 7}.
+     * This has the numeric value of `7`.
      */
     JULY,
     /**
      * The singleton instance for the month of August with 31 days.
-     * This has the numeric value of {@code 8}.
+     * This has the numeric value of `8`.
      */
     AUGUST,
     /**
      * The singleton instance for the month of September with 30 days.
-     * This has the numeric value of {@code 9}.
+     * This has the numeric value of `9`.
      */
     SEPTEMBER,
     /**
      * The singleton instance for the month of October with 31 days.
-     * This has the numeric value of {@code 10}.
+     * This has the numeric value of `10`.
      */
     OCTOBER,
     /**
      * The singleton instance for the month of November with 30 days.
-     * This has the numeric value of {@code 11}.
+     * This has the numeric value of `11`.
      */
     NOVEMBER,
     /**
      * The singleton instance for the month of December with 31 days.
-     * This has the numeric value of {@code 12}.
+     * This has the numeric value of `12`.
      */
     DECEMBER;
 
@@ -166,6 +171,45 @@ enum class Month {
                 throw DateTimeException("Invalid value for MonthOfYear: $month")
             }
             return Month.values()[month - 1]
+        }
+
+        /**
+         * Obtains an instance of `Month` from a temporal object.
+         *
+         *
+         * This obtains a month based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `Month`.
+         *
+         *
+         * The conversion extracts the {@link ChronoField#MONTH_OF_YEAR MONTH_OF_YEAR} field.
+         * The extraction is only permitted if the temporal object has an ISO
+         * chronology, or can be converted to a `LocalDate`.
+         *
+         *
+         * This method matches the signature of the functional interface [TemporalQuery]
+         * allowing it to be used as a query via method reference, `Month::from`.
+         *
+         * @param temporal  the temporal object to convert, not null
+         * @return the month-of-year, not null
+         * @throws DateTimeException if unable to convert to a `Month`
+         */
+        fun from(temporal: TemporalAccessor): Month {
+            if (temporal is Month) {
+                return temporal
+            }
+            try {
+                var temporal = temporal
+                if (IsoChronology.INSTANCE != Chronology.from(temporal)) {
+                    temporal = LocalDate.from(temporal)
+                }
+                return of(temporal.get(ChronoField.MONTH_OF_YEAR))
+            } catch (ex: DateTimeException) {
+                throw DateTimeException(
+                    "Unable to obtain Month from TemporalAccessor: " +
+                            temporal + " of type " + temporal.getKClass().qualifiedName, ex
+                )
+            }
         }
     }
 
@@ -320,5 +364,134 @@ enum class Month {
      */
     fun firstMonthOfQuarter(): Month {
         return Month.values()[ordinal / 3 * 3]
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Checks if the specified field is supported.
+     * <p>
+     * This checks if this month-of-year can be queried for the specified field.
+     * If false, then calling the {@link #range(TemporalField) range} and
+     * {@link #get(TemporalField) get} methods will throw an exception.
+     * <p>
+     * If the field is {@link ChronoField#MONTH_OF_YEAR MONTH_OF_YEAR} then
+     * this method returns true.
+     * All other `ChronoField` instances will return false.
+     * <p>
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.isSupportedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the field is supported is determined by the field.
+     *
+     * @param field  the field to check, null returns false
+     * @return true if the field is supported on this month-of-year, false if not
+     */
+    override fun isSupported(field: TemporalField): Boolean {
+        if (field is ChronoField) {
+            return field == ChronoField.MONTH_OF_YEAR
+        }
+        return field.isSupportedBy(this)
+    }
+
+    /**
+     * Gets the range of valid values for the specified field.
+     * <p>
+     * The range object expresses the minimum and maximum valid values for a field.
+     * This month is used to enhance the accuracy of the returned range.
+     * If it is not possible to return the range, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     * <p>
+     * If the field is {@link ChronoField#MONTH_OF_YEAR MONTH_OF_YEAR} then the
+     * range of the month-of-year, from 1 to 12, will be returned.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     * <p>
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.rangeRefinedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the range can be obtained is determined by the field.
+     *
+     * @param field  the field to query the range for, not null
+     * @return the range of valid values for the field, not null
+     * @throws DateTimeException if the range for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     */
+    override fun range(field: TemporalField): ValueRange {
+        if (field == ChronoField.MONTH_OF_YEAR) {
+            return field.range()
+        }
+        TODO("return TemporalAccessor.super.range(field)")
+    }
+
+    /**
+     * Gets the value of the specified field from this month-of-year as an `int`.
+     *
+     *
+     * This queries this month for the value of the specified field.
+     * The returned value will always be within the valid range of values for the field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is {@link ChronoField#MONTH_OF_YEAR MONTH_OF_YEAR} then the
+     * value of the month-of-year, from 1 to 12, will be returned.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field, within the valid range of values
+     * @throws DateTimeException if a value for the field cannot be obtained or
+     *         the value is outside the range of valid values for the field
+     * @throws UnsupportedTemporalTypeException if the field is not supported or
+     *         the range of values exceeds an `int`
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun get(field: TemporalField): Int {
+        if (field == ChronoField.MONTH_OF_YEAR) {
+            return getValue()
+        }
+        TODO("return TemporalAccessor.super.get(field)")
+    }
+
+    /**
+     * Gets the value of the specified field from this month-of-year as a `long`.
+     *
+     *
+     * This queries this month for the value of the specified field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is {@link ChronoField#MONTH_OF_YEAR MONTH_OF_YEAR} then the
+     * value of the month-of-year, from 1 to 12, will be returned.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun getLong(field: TemporalField): Long {
+        if (field == ChronoField.MONTH_OF_YEAR) {
+            return getValue().toLong()
+        } else if (field is ChronoField) {
+            throw UnsupportedTemporalTypeException("Unsupported field: $field")
+        }
+        return field.getFrom(this)
+    }
+
+    override fun getKClass(): KClass<out TemporalAccessor> {
+        return Month::class
     }
 }

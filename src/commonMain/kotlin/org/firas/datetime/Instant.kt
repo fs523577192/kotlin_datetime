@@ -61,7 +61,13 @@
  */
 package org.firas.datetime
 
+import org.firas.datetime.LocalTime.Companion.NANOS_PER_SECOND
+import org.firas.datetime.LocalTime.Companion.SECONDS_PER_DAY
+import org.firas.datetime.LocalTime.Companion.SECONDS_PER_HOUR
+import org.firas.datetime.LocalTime.Companion.SECONDS_PER_MINUTE
+import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
+import kotlin.reflect.KClass
 
 /**
  * An instantaneous point on the time-line.
@@ -189,7 +195,7 @@ import org.firas.datetime.util.MathUtils
  * @since Java 1.8
  * @author Wu Yuping
  */
-class Instant(val epochSecond: Long, val nanos: Int): Comparable<Instant> {
+class Instant(val epochSecond: Long, val nanos: Int): Temporal, Comparable<Instant> {
 
     companion object {
         /**
@@ -309,6 +315,40 @@ class Instant(val epochSecond: Long, val nanos: Int): Comparable<Instant> {
         }
 
         /**
+         * Obtains an instance of `Instant` from a temporal object.
+         *
+         *
+         * This obtains an instant based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `Instant`.
+         *
+         *
+         * The conversion extracts the {@link ChronoField#INSTANT_SECONDS INSTANT_SECONDS}
+         * and {@link ChronoField#NANO_OF_SECOND NANO_OF_SECOND} fields.
+         *
+         *
+         * This method matches the signature of the functional interface [TemporalQuery]
+         * allowing it to be used as a query via method reference, `Instant::from`.
+         *
+         * @param temporal  the temporal object to convert, not null
+         * @return the instant, not null
+         * @throws DateTimeException if unable to convert to an `Instant`
+         */
+        fun from(temporal: TemporalAccessor): Instant {
+            if (temporal is Instant) {
+                return temporal
+            }
+            try {
+                val instantSecs = temporal.getLong(ChronoField.INSTANT_SECONDS)
+                val nanoOfSecond = temporal.get(ChronoField.NANO_OF_SECOND)
+                return Instant.ofEpochSecond(instantSecs, nanoOfSecond.toLong())
+            } catch (ex: DateTimeException) {
+                throw DateTimeException ("Unable to obtain Instant from TemporalAccessor: " +
+                        temporal + " of type " + temporal.getKClass().qualifiedName, ex)
+            }
+        }
+
+        /**
          * Obtains an instance of `Instant` using seconds and nanoseconds.
          *
          * @param seconds  the length of the duration in seconds
@@ -325,6 +365,233 @@ class Instant(val epochSecond: Long, val nanos: Int): Comparable<Instant> {
             return Instant(seconds, nanoOfSecond)
         }
     } // companion object
+
+    /**
+     * Checks if the specified field is supported.
+     *
+     *
+     * This checks if this instant can be queried for the specified field.
+     * If false, then calling the [range][.range],
+     * [get][.get] and [.with]
+     * methods will throw an exception.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The supported fields are:
+     *
+     *  * `NANO_OF_SECOND`
+     *  * `MICRO_OF_SECOND`
+     *  * `MILLI_OF_SECOND`
+     *  * `INSTANT_SECONDS`
+     *
+     * All other `ChronoField` instances will return false.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.isSupportedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the field is supported is determined by the field.
+     *
+     * @param field  the field to check, null returns false
+     * @return true if the field is supported on this instant, false if not
+     */
+    override fun isSupported(field: TemporalField): Boolean {
+        return if (field is ChronoField) {
+            field == ChronoField.INSTANT_SECONDS || field == ChronoField.NANO_OF_SECOND
+                    || field == ChronoField.MICRO_OF_SECOND || field == ChronoField.MILLI_OF_SECOND
+        } else field.isSupportedBy(this)
+    }
+
+    /**
+     * Checks if the specified unit is supported.
+     *
+     *
+     * This checks if the specified unit can be added to, or subtracted from, this date-time.
+     * If false, then calling the [.plus] and
+     * [minus][.minus] methods will throw an exception.
+     *
+     *
+     * If the unit is a [ChronoUnit] then the query is implemented here.
+     * The supported units are:
+     *
+     *  * `NANOS`
+     *  * `MICROS`
+     *  * `MILLIS`
+     *  * `SECONDS`
+     *  * `MINUTES`
+     *  * `HOURS`
+     *  * `HALF_DAYS`
+     *  * `DAYS`
+     *
+     * All other `ChronoUnit` instances will return false.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.isSupportedBy(Temporal)`
+     * passing `this` as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    override fun isSupported(unit: TemporalUnit): Boolean {
+        return if (unit is ChronoUnit) {
+            unit.isTimeBased() || unit == ChronoUnit.DAYS
+        } else unit.isSupportedBy(this)
+    }
+
+    /**
+     * Gets the value of the specified field from this instant as an `int`.
+     *
+     *
+     * This queries this instant for the value of the specified field.
+     * The returned value will always be within the valid range of values for the field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The [supported fields][.isSupported] will return valid
+     * values based on this date-time, except `INSTANT_SECONDS` which is too
+     * large to fit in an `int` and throws a `DateTimeException`.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained or
+     * the value is outside the range of valid values for the field
+     * @throws UnsupportedTemporalTypeException if the field is not supported or
+     * the range of values exceeds an `int`
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun get(field: TemporalField): Int {
+        if (field is ChronoField) {
+            return when (field) {
+                ChronoField.NANO_OF_SECOND -> this.nanos
+                ChronoField.MICRO_OF_SECOND -> this.nanos / 1000
+                ChronoField.MILLI_OF_SECOND -> this.nanos / 1000000
+                else -> throw UnsupportedTemporalTypeException("Unsupported field: $field")
+            }
+        }
+        return range(field).checkValidIntValue(field.getFrom(this), field)
+    }
+
+    /**
+     * Gets the value of the specified field from this instant as a `long`.
+     *
+     *
+     * This queries this instant for the value of the specified field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The [supported fields][.isSupported] will return valid
+     * values based on this date-time.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun getLong(field: TemporalField): Long {
+        if (field is ChronoField) {
+            return when (field) {
+                ChronoField.NANO_OF_SECOND -> this.nanos.toLong()
+                ChronoField.MICRO_OF_SECOND -> nanos / 1000L
+                ChronoField.MILLI_OF_SECOND -> nanos / 1000000L
+                ChronoField.INSTANT_SECONDS -> this.epochSecond
+                else -> throw UnsupportedTemporalTypeException("Unsupported field: $field")
+            }
+        }
+        return field.getFrom(this)
+    }
+
+    /**
+     * Returns a copy of this instant with the specified field set to a new value.
+     *
+     *
+     * This returns an `Instant`, based on this one, with the value
+     * for the specified field changed.
+     * If it is not possible to set the value, because the field is not supported or for
+     * some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the adjustment is implemented here.
+     * The supported fields behave as follows:
+     *
+     *  * `NANO_OF_SECOND` -
+     * Returns an `Instant` with the specified nano-of-second.
+     * The epoch-second will be unchanged.
+     *  * `MICRO_OF_SECOND` -
+     * Returns an `Instant` with the nano-of-second replaced by the specified
+     * micro-of-second multiplied by 1,000. The epoch-second will be unchanged.
+     *  * `MILLI_OF_SECOND` -
+     * Returns an `Instant` with the nano-of-second replaced by the specified
+     * milli-of-second multiplied by 1,000,000. The epoch-second will be unchanged.
+     *  * `INSTANT_SECONDS` -
+     * Returns an `Instant` with the specified epoch-second.
+     * The nano-of-second will be unchanged.
+     *
+     *
+     *
+     * In all cases, if the new value is outside the valid range of values for the field
+     * then a `DateTimeException` will be thrown.
+     *
+     *
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.adjustInto(Temporal, long)`
+     * passing `this` as the argument. In this case, the field determines
+     * whether and how to adjust the instant.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param field  the field to set in the result, not null
+     * @param newValue  the new value of the field in the result
+     * @return an `Instant` based on `this` with the specified field set, not null
+     * @throws DateTimeException if the field cannot be set
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun with(field: TemporalField, newValue: Long): Instant {
+        if (field is ChronoField) {
+            field.checkValidValue(newValue)
+            return when (field) {
+                ChronoField.MILLI_OF_SECOND -> {
+                    val nval = newValue.toInt() * 1000000
+                    if (nval != nanos) create(this.epochSecond, nval) else this
+                }
+                ChronoField.MICRO_OF_SECOND -> {
+                    val nval = newValue.toInt() * 1000
+                    if (nval != nanos) create(this.epochSecond, nval) else this
+                }
+                ChronoField.NANO_OF_SECOND -> if (newValue != this.nanos.toLong())
+                        create(this.epochSecond, newValue.toInt()) else this
+                ChronoField.INSTANT_SECONDS -> if (newValue != this.epochSecond)
+                        create(newValue, nanos) else this
+                else -> throw UnsupportedTemporalTypeException("Unsupported field: $field")
+            }
+        }
+        return field.adjustInto(this, newValue)
+    }
 
     /**
      * Converts this instant to the number of milliseconds from the epoch
@@ -432,6 +699,114 @@ class Instant(val epochSecond: Long, val nanos: Int): Comparable<Instant> {
         return (epochSecond xor epochSecond.ushr(32)).toInt() + 51 * nanos
     }
 
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this instant with the specified amount added.
+     *
+     *
+     * This returns an `Instant`, based on this one, with the specified amount added.
+     * The amount is typically [Duration] but may be any other type implementing
+     * the [TemporalAmount] interface.
+     *
+     *
+     * The calculation is delegated to the amount object by calling
+     * [TemporalAmount.addTo]. The amount implementation is free
+     * to implement the addition in any way it wishes, however it typically
+     * calls back to [.plus]. Consult the documentation
+     * of the amount implementation to determine if it can be successfully added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount to add, not null
+     * @return an `Instant` based on this instant with the addition made, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override operator fun plus(amountToAdd: TemporalAmount): Instant {
+        return amountToAdd.addTo(this) as Instant
+    }
+
+    /**
+     * Returns a copy of this instant with the specified amount added.
+     *
+     *
+     * This returns an `Instant`, based on this one, with the amount
+     * in terms of the unit added. If it is not possible to add the amount, because the
+     * unit is not supported or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoUnit] then the addition is implemented here.
+     * The supported fields behave as follows:
+     *
+     *  * `NANOS` -
+     * Returns an `Instant` with the specified number of nanoseconds added.
+     * This is equivalent to [.plusNanos].
+     *  * `MICROS` -
+     * Returns an `Instant` with the specified number of microseconds added.
+     * This is equivalent to [.plusNanos] with the amount
+     * multiplied by 1,000.
+     *  * `MILLIS` -
+     * Returns an `Instant` with the specified number of milliseconds added.
+     * This is equivalent to [.plusNanos] with the amount
+     * multiplied by 1,000,000.
+     *  * `SECONDS` -
+     * Returns an `Instant` with the specified number of seconds added.
+     * This is equivalent to [.plusSeconds].
+     *  * `MINUTES` -
+     * Returns an `Instant` with the specified number of minutes added.
+     * This is equivalent to [.plusSeconds] with the amount
+     * multiplied by 60.
+     *  * `HOURS` -
+     * Returns an `Instant` with the specified number of hours added.
+     * This is equivalent to [.plusSeconds] with the amount
+     * multiplied by 3,600.
+     *  * `HALF_DAYS` -
+     * Returns an `Instant` with the specified number of half-days added.
+     * This is equivalent to [.plusSeconds] with the amount
+     * multiplied by 43,200 (12 hours).
+     *  * `DAYS` -
+     * Returns an `Instant` with the specified number of days added.
+     * This is equivalent to [.plusSeconds] with the amount
+     * multiplied by 86,400 (24 hours).
+     *
+     *
+     *
+     * All other `ChronoUnit` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.addTo(Temporal, long)`
+     * passing `this` as the argument. In this case, the unit determines
+     * whether and how to perform the addition.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount of the unit to add to the result, may be negative
+     * @param unit  the unit of the amount to add, not null
+     * @return an `Instant` based on this instant with the specified amount added, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun plus(amountToAdd: Long, unit: TemporalUnit): Instant {
+        if (unit is ChronoUnit) {
+            return when (unit) {
+                ChronoUnit.NANOS -> plusNanos(amountToAdd)
+                ChronoUnit.MICROS -> plus(amountToAdd / 1000000, amountToAdd % 1000000 * 1000)
+                ChronoUnit.MILLIS -> plusMillis(amountToAdd)
+                ChronoUnit.SECONDS -> plusSeconds(amountToAdd)
+                ChronoUnit.MINUTES -> plusSeconds(MathUtils.multiplyExact(amountToAdd, SECONDS_PER_MINUTE.toLong()))
+                ChronoUnit.HOURS -> plusSeconds(MathUtils.multiplyExact(amountToAdd, SECONDS_PER_HOUR.toLong()))
+                ChronoUnit.HALF_DAYS -> plusSeconds(MathUtils.multiplyExact(amountToAdd, SECONDS_PER_DAY / 2L))
+                ChronoUnit.DAYS -> plusSeconds(MathUtils.multiplyExact(amountToAdd, SECONDS_PER_DAY.toLong()))
+                else -> throw UnsupportedTemporalTypeException("Unsupported unit: $unit")
+            }
+        }
+        return unit.addTo(this, amountToAdd)
+    }
+
     /**
      * Returns a copy of this instant with the specified duration in seconds added.
      *
@@ -529,6 +904,77 @@ class Instant(val epochSecond: Long, val nanos: Int): Comparable<Instant> {
     }
 
     /**
+     * Calculates the amount of time until another instant in terms of the specified unit.
+     *
+     *
+     * This calculates the amount of time between two `Instant`
+     * objects in terms of a single `TemporalUnit`.
+     * The start and end points are `this` and the specified instant.
+     * The result will be negative if the end is before the start.
+     * The calculation returns a whole number, representing the number of
+     * complete units between the two instants.
+     * The `Temporal` passed to this method is converted to a
+     * `Instant` using [.from].
+     * For example, the amount in seconds between two dates can be calculated
+     * using `startInstant.until(endInstant, SECONDS)`.
+     *
+     *
+     * There are two equivalent ways of using this method.
+     * The first is to invoke this method.
+     * The second is to use [TemporalUnit.between]:
+     * <pre>
+     * // these two lines are equivalent
+     * amount = start.until(end, SECONDS);
+     * amount = SECONDS.between(start, end);
+    </pre> *
+     * The choice should be made based on which makes the code more readable.
+     *
+     *
+     * The calculation is implemented in this method for [ChronoUnit].
+     * The units `NANOS`, `MICROS`, `MILLIS`, `SECONDS`,
+     * `MINUTES`, `HOURS`, `HALF_DAYS` and `DAYS`
+     * are supported. Other `ChronoUnit` values will throw an exception.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.between(Temporal, Temporal)`
+     * passing `this` as the first argument and the converted input temporal
+     * as the second argument.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param endExclusive  the end date, exclusive, which is converted to an `Instant`, not null
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this instant and the end instant
+     * @throws DateTimeException if the amount cannot be calculated, or the end
+     * temporal cannot be converted to an `Instant`
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun until(endExclusive: Temporal, unit: TemporalUnit): Long {
+        val end = Instant.from(endExclusive)
+        if (unit is ChronoUnit) {
+            return when (unit) {
+                ChronoUnit.NANOS -> nanosUntil(end)
+                ChronoUnit.MICROS -> nanosUntil(end) / 1000
+                ChronoUnit.MILLIS -> MathUtils.subtractExact(end.toEpochMilli(), toEpochMilli())
+                ChronoUnit.SECONDS -> secondsUntil(end)
+                ChronoUnit.MINUTES -> secondsUntil(end) / SECONDS_PER_MINUTE
+                ChronoUnit.HOURS -> secondsUntil(end) / SECONDS_PER_HOUR
+                ChronoUnit.HALF_DAYS -> secondsUntil(end) / (12 * SECONDS_PER_HOUR)
+                ChronoUnit.DAYS -> secondsUntil(end) / SECONDS_PER_DAY
+                else -> throw UnsupportedTemporalTypeException("Unsupported unit: $unit")
+            }
+        }
+        return unit.between(this, end)
+    }
+
+    override fun getKClass(): KClass<out Temporal> {
+        return Instant::class
+    }
+
+    /**
      * Returns a copy of this instant with the specified duration added.
      *
      *
@@ -550,5 +996,22 @@ class Instant(val epochSecond: Long, val nanos: Int): Comparable<Instant> {
         nanosToAdd %= LocalTime.NANOS_PER_SECOND
         val nanoAdjustment = nanos + nanosToAdd  // safe int+NANOS_PER_SECOND
         return ofEpochSecond(epochSec, nanoAdjustment)
+    }
+
+    private fun nanosUntil(end: Instant): Long {
+        val secsDiff = MathUtils.subtractExact(end.epochSecond, this.epochSecond)
+        val totalNanos = MathUtils.multiplyExact(secsDiff, NANOS_PER_SECOND)
+        return MathUtils.addExact(totalNanos, end.nanos.toLong() - this.nanos)
+    }
+
+    private fun secondsUntil(end: Instant): Long {
+        var secsDiff = MathUtils.subtractExact(end.epochSecond, this.epochSecond)
+        val nanosDiff = end.nanos - nanos
+        if (secsDiff > 0 && nanosDiff < 0) {
+            secsDiff -= 1
+        } else if (secsDiff < 0 && nanosDiff > 0) {
+            secsDiff += 1
+        }
+        return secsDiff
     }
 }
