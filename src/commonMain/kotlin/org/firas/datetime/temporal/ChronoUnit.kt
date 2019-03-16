@@ -260,4 +260,23 @@ enum class ChronoUnit(private val _name: String, private val duration: Duration)
     override fun isTimeBased(): Boolean {
         return this < DAYS
     }
+
+    //-----------------------------------------------------------------------
+    override fun isSupportedBy(temporal: Temporal): Boolean {
+        return temporal.isSupported(this)
+    }
+
+    override fun <R : Temporal> addTo(temporal: R, amount: Long): R {
+        return temporal.plus(amount, this) as R
+    }
+
+    //-----------------------------------------------------------------------
+    override fun between(temporal1Inclusive: Temporal, temporal2Exclusive: Temporal): Long {
+        return temporal1Inclusive.until(temporal2Exclusive, this)
+    }
+
+    //-----------------------------------------------------------------------
+    override fun toString(): String {
+        return _name
+    }
 }

@@ -720,4 +720,26 @@ enum class ChronoField(
     fun checkValidIntValue(value: Long): Int {
         return range().checkValidIntValue(value, this)
     }
+
+    //-----------------------------------------------------------------------
+    override fun isSupportedBy(temporal: TemporalAccessor): Boolean {
+        return temporal.isSupported(this)
+    }
+
+    override fun rangeRefinedBy(temporal: TemporalAccessor): ValueRange {
+        return temporal.range(this)
+    }
+
+    override fun getFrom(temporal: TemporalAccessor): Long {
+        return temporal.getLong(this)
+    }
+
+    override fun <R : Temporal> adjustInto(temporal: R, newValue: Long): R {
+        return temporal.with(this, newValue) as R
+    }
+
+    //-----------------------------------------------------------------------
+    override fun toString(): String {
+        return _name
+    }
 }
