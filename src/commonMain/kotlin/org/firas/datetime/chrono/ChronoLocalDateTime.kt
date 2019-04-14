@@ -98,9 +98,9 @@ import org.firas.datetime.temporal.*
  *
  * @param <D> the concrete type for the date of this date-time
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
-interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal {
+interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
 
     /**
      * renamed from ~toLocalDate`
@@ -227,6 +227,41 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal {
         // inline TemporalAccessor.super.query(query) as an optimization
         // non-JDK classes are not permitted to make this optimization
         return query.queryFrom(this)
+    }
+
+    /**
+     * Adjusts the specified temporal object to have the same date and time as this object.
+     *
+     *
+     * This returns a temporal object of the same observable type as the input
+     * with the date and time changed to be the same as this.
+     *
+     *
+     * The adjustment is equivalent to using [Temporal.with]
+     * twice, passing [ChronoField.EPOCH_DAY] and
+     * [ChronoField.NANO_OF_DAY] as the fields.
+     *
+     *
+     * In most cases, it is clearer to reverse the calling pattern by using
+     * [Temporal.with]:
+     * <pre>
+     * // these two lines are equivalent, but the second approach is recommended
+     * temporal = thisLocalDateTime.adjustInto(temporal);
+     * temporal = temporal.with(thisLocalDateTime);
+     * </pre>
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param temporal  the target object to be adjusted, not null
+     * @return the adjusted object, not null
+     * @throws DateTimeException if unable to make the adjustment
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun adjustInto(temporal: Temporal): Temporal {
+        return temporal
+            .with(ChronoField.EPOCH_DAY, getDate().toEpochDay())
+            .with(ChronoField.NANO_OF_DAY, getTime().toNanoOfDay())
     }
 
     /**

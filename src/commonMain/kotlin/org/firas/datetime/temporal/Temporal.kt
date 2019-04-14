@@ -128,7 +128,7 @@ package org.firas.datetime.temporal
  * All implementations must be [Comparable].
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 interface Temporal: TemporalAccessor {
 
@@ -157,6 +157,50 @@ interface Temporal: TemporalAccessor {
      * @return true if the unit can be added/subtracted, false if not
      */
     fun isSupported(unit: TemporalUnit): Boolean
+
+    // ----==== with ====----
+    /**
+     * Returns an adjusted object of the same type as this object with the adjustment made.
+     *
+     *
+     * This adjusts this date-time according to the rules of the specified adjuster.
+     * A simple adjuster might simply set the one of the fields, such as the year field.
+     * A more complex adjuster might set the date to the last day of the month.
+     * A selection of common adjustments is provided in
+     * [TemporalAdjusters][java.time.temporal.TemporalAdjusters].
+     * These include finding the "last day of the month" and "next Wednesday".
+     * The adjuster is responsible for handling special cases, such as the varying
+     * lengths of month and leap years.
+     *
+     *
+     * Some example code indicating how and why this method is used:
+     * <pre>
+     * date = date.with(Month.JULY);        // most key classes implement TemporalAdjuster
+     * date = date.with(lastDayOfMonth());  // static import from Adjusters
+     * date = date.with(next(WEDNESDAY));   // static import from Adjusters and DayOfWeek
+     * </pre>
+     *
+     * @implSpec
+     *
+     *
+     * Implementations must not alter either this object or the specified temporal object.
+     * Instead, an adjusted copy of the original must be returned.
+     * This provides equivalent, safe behavior for immutable and mutable implementations.
+     *
+     *
+     * The default implementation must behave equivalent to this code:
+     * <pre>
+     * return adjuster.adjustInto(this);
+     * </pre>
+     *
+     * @param adjuster  the adjuster to use, not null
+     * @return an object of the same type with the specified adjustment made, not null
+     * @throws DateTimeException if unable to make the adjustment
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun with(adjuster: TemporalAdjuster): Temporal {
+        return adjuster.adjustInto(this)
+    }
 
     /**
      * Returns an object of the same type as this object with the specified field altered.

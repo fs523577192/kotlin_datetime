@@ -193,9 +193,9 @@ import kotlin.reflect.KClass
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
-class Instant(val epochSecond: Long, val nanos: Int): Temporal, Comparable<Instant> {
+class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster, Comparable<Instant> {
 
     companion object {
         /**
@@ -282,7 +282,7 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, Comparable<Insta
          * Instant.ofEpochSecond(3, 1);
          * Instant.ofEpochSecond(4, -999_999_999);
          * Instant.ofEpochSecond(2, 1000_000_001);
-        </pre> *
+         * </pre>
          *
          * @param epochSecond  the number of seconds from 1970-01-01T00:00:00Z
          * @param nanoAdjustment  the nanosecond adjustment to the number of seconds, positive or negative
@@ -519,6 +519,31 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, Comparable<Insta
             }
         }
         return field.getFrom(this)
+    }
+
+    /**
+     * Returns an adjusted copy of this instant.
+     *
+     *
+     * This returns an `Instant`, based on this one, with the instant adjusted.
+     * The adjustment takes place using the specified adjuster strategy object.
+     * Read the documentation of the adjuster to understand what adjustment will be made.
+     *
+     *
+     * The result of this method is obtained by invoking the
+     * [TemporalAdjuster.adjustInto] method on the
+     * specified adjuster passing `this` as the argument.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param adjuster the adjuster to use, not null
+     * @return an `Instant` based on `this` with the adjustment made, not null
+     * @throws DateTimeException if the adjustment cannot be made
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun with(adjuster: TemporalAdjuster): Instant {
+        return adjuster.adjustInto(this) as Instant
     }
 
     /**
@@ -904,6 +929,40 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, Comparable<Insta
     }
 
     /**
+     * Adjusts the specified temporal object to have this instant.
+     *
+     *
+     * This returns a temporal object of the same observable type as the input
+     * with the instant changed to be the same as this.
+     *
+     *
+     * The adjustment is equivalent to using [Temporal.with]
+     * twice, passing [ChronoField.INSTANT_SECONDS] and
+     * [ChronoField.NANO_OF_SECOND] as the fields.
+     *
+     *
+     * In most cases, it is clearer to reverse the calling pattern by using
+     * [Temporal.with]:
+     * <pre>
+     * // these two lines are equivalent, but the second approach is recommended
+     * temporal = thisInstant.adjustInto(temporal);
+     * temporal = temporal.with(thisInstant);
+    </pre> *
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param temporal  the target object to be adjusted, not null
+     * @return the adjusted object, not null
+     * @throws DateTimeException if unable to make the adjustment
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun adjustInto(temporal: Temporal): Temporal {
+        return temporal.with(ChronoField.INSTANT_SECONDS, this.epochSecond)
+            .with(ChronoField.NANO_OF_SECOND, nanos.toLong())
+    }
+
+    /**
      * Calculates the amount of time until another instant in terms of the specified unit.
      *
      *
@@ -926,7 +985,7 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, Comparable<Insta
      * // these two lines are equivalent
      * amount = start.until(end, SECONDS);
      * amount = SECONDS.between(start, end);
-    </pre> *
+     * </pre>
      * The choice should be made based on which makes the code more readable.
      *
      *

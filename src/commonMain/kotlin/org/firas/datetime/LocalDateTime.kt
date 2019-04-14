@@ -62,6 +62,8 @@
 package org.firas.datetime
 
 import org.firas.datetime.LocalTime.Companion.HOURS_PER_DAY
+import org.firas.datetime.LocalTime.Companion.MICROS_PER_DAY
+import org.firas.datetime.LocalTime.Companion.MILLIS_PER_DAY
 import org.firas.datetime.LocalTime.Companion.MINUTES_PER_DAY
 import org.firas.datetime.LocalTime.Companion.NANOS_PER_DAY
 import org.firas.datetime.LocalTime.Companion.NANOS_PER_HOUR
@@ -69,21 +71,22 @@ import org.firas.datetime.LocalTime.Companion.NANOS_PER_MINUTE
 import org.firas.datetime.LocalTime.Companion.NANOS_PER_SECOND
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_DAY
 import org.firas.datetime.chrono.ChronoLocalDateTime
-import org.firas.datetime.temporal.ChronoField
+import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.zone.getSystemZoneOffset
+import kotlin.reflect.KClass
 
 /**
  * A date-time without a time-zone in the ISO-8601 calendar system,
- * such as {@code 2007-12-03T10:15:30}.
+ * such as `2007-12-03T10:15:30`.
  * <p>
- * {@code LocalDateTime} is an immutable date-time object that represents a date-time,
+ * `LocalDateTime` is an immutable date-time object that represents a date-time,
  * often viewed as year-month-day-hour-minute-second. Other date and time fields,
  * such as day-of-year, day-of-week and week-of-year, can also be accessed.
  * Time is represented to nanosecond precision.
  * For example, the value "2nd October 2007 at 13:45.30.123456789" can be
- * stored in a {@code LocalDateTime}.
+ * stored in a `LocalDateTime`.
  * <p>
  * This class does not store or represent a time-zone.
  * Instead, it is a description of the date, as used for birthdays, combined with
@@ -101,15 +104,15 @@ import org.firas.datetime.zone.getSystemZoneOffset
  * <p>
  * This is a <a href="{@docRoot}/java.base/java/lang/doc-files/ValueBased.html">value-based</a>
  * class; use of identity-sensitive operations (including reference equality
- * ({@code ==}), identity hash code, or synchronization) on instances of
- * {@code LocalDateTime} may have unpredictable results and should be avoided.
- * The {@code equals} method should be used for comparisons.
+ * (`==`), identity hash code, or synchronization) on instances of
+ * `LocalDateTime` may have unpredictable results and should be avoided.
+ * The `equals` method should be used for comparisons.
  *
  * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class LocalDateTime private constructor(
     private val date: LocalDate,
@@ -359,6 +362,43 @@ class LocalDateTime private constructor(
             val time = LocalTime.ofNanoOfDay(secsOfDay * NANOS_PER_SECOND + nanoOfSecond)
             return LocalDateTime(date, time)
         }
+
+        /**
+         * Obtains an instance of `LocalDateTime` from a temporal object.
+         * <p>
+         * This obtains a local date-time based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `LocalDateTime`.
+         * <p>
+         * The conversion extracts and combines the `LocalDate` and the
+         * `LocalTime` from the temporal object.
+         * Implementations are permitted to perform optimizations such as accessing
+         * those fields that are equivalent to the relevant objects.
+         * <p>
+         * This method matches the signature of the functional interface {@link TemporalQuery}
+         * allowing it to be used as a query via method reference, `LocalDateTime::from`.
+         *
+         * @param temporal  the temporal object to convert, not null
+         * @return the local date-time, not null
+         * @throws DateTimeException if unable to convert to a `LocalDateTime`
+         */
+        fun from(temporal: TemporalAccessor): LocalDateTime {
+            if (temporal is LocalDateTime) {
+                return temporal
+            } else if (temporal is ZonedDateTime) {
+                return temporal.toLocalDateTime() as LocalDateTime
+            } else if (temporal is OffsetDateTime) {
+                return temporal.localDateTime
+            }
+            try {
+                val date = LocalDate.from(temporal)
+                val time = LocalTime.from(temporal)
+                return LocalDateTime(date, time)
+            } catch (ex: DateTimeException) {
+                throw DateTimeException("Unable to obtain LocalDateTime from TemporalAccessor: " +
+                        temporal + " of type " + temporal.getKClass().qualifiedName, ex)
+            }
+        }
     } // companion object
 
     /**
@@ -503,6 +543,397 @@ class LocalDateTime private constructor(
 
     //-----------------------------------------------------------------------
     /**
+     * Checks if the specified field is supported.
+     *
+     *
+     * This checks if this date-time can be queried for the specified field.
+     * If false, then calling the [range][.range],
+     * [get][.get] and [.with]
+     * methods will throw an exception.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The supported fields are:
+     *
+     *  * `NANO_OF_SECOND`
+     *  * `NANO_OF_DAY`
+     *  * `MICRO_OF_SECOND`
+     *  * `MICRO_OF_DAY`
+     *  * `MILLI_OF_SECOND`
+     *  * `MILLI_OF_DAY`
+     *  * `SECOND_OF_MINUTE`
+     *  * `SECOND_OF_DAY`
+     *  * `MINUTE_OF_HOUR`
+     *  * `MINUTE_OF_DAY`
+     *  * `HOUR_OF_AMPM`
+     *  * `CLOCK_HOUR_OF_AMPM`
+     *  * `HOUR_OF_DAY`
+     *  * `CLOCK_HOUR_OF_DAY`
+     *  * `AMPM_OF_DAY`
+     *  * `DAY_OF_WEEK`
+     *  * `ALIGNED_DAY_OF_WEEK_IN_MONTH`
+     *  * `ALIGNED_DAY_OF_WEEK_IN_YEAR`
+     *  * `DAY_OF_MONTH`
+     *  * `DAY_OF_YEAR`
+     *  * `EPOCH_DAY`
+     *  * `ALIGNED_WEEK_OF_MONTH`
+     *  * `ALIGNED_WEEK_OF_YEAR`
+     *  * `MONTH_OF_YEAR`
+     *  * `PROLEPTIC_MONTH`
+     *  * `YEAR_OF_ERA`
+     *  * `YEAR`
+     *  * `ERA`
+     *
+     * All other `ChronoField` instances will return false.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.isSupportedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the field is supported is determined by the field.
+     *
+     * @param field  the field to check, null returns false
+     * @return true if the field is supported on this date-time, false if not
+     */
+    override fun isSupported(field: TemporalField): Boolean {
+        if (field is ChronoField) {
+            return field.isDateBased() || field.isTimeBased()
+        }
+        return field.isSupportedBy(this)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Gets the range of valid values for the specified field.
+     *
+     *
+     * The range object expresses the minimum and maximum valid values for a field.
+     * This date-time is used to enhance the accuracy of the returned range.
+     * If it is not possible to return the range, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The [supported fields][.isSupported] will return
+     * appropriate range instances.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.rangeRefinedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the range can be obtained is determined by the field.
+     *
+     * @param field  the field to query the range for, not null
+     * @return the range of valid values for the field, not null
+     * @throws DateTimeException if the range for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     */
+    override fun range(field: TemporalField): ValueRange {
+        return if (field is ChronoField) {
+            if (field.isTimeBased()) time.range(field) else date.range(field)
+        } else {
+            field.rangeRefinedBy(this)
+        }
+    }
+
+    /**
+     * Gets the value of the specified field from this date-time as an `int`.
+     * <p>
+     * This queries this date-time for the value of the specified field.
+     * The returned value will always be within the valid range of values for the field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     * <p>
+     * If the field is a {@link ChronoField} then the query is implemented here.
+     * The {@link #isSupported(TemporalField) supported fields} will return valid
+     * values based on this date-time, except `NANO_OF_DAY`, `MICRO_OF_DAY`,
+     * `EPOCH_DAY` and `PROLEPTIC_MONTH` which are too large to fit in
+     * an `int` and throw an `UnsupportedTemporalTypeException`.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     * <p>
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained or
+     *         the value is outside the range of valid values for the field
+     * @throws UnsupportedTemporalTypeException if the field is not supported or
+     *         the range of values exceeds an `int`
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun get(field: TemporalField): Int {
+        if (field is ChronoField) {
+            return if (field.isTimeBased()) time.get(field) else date.get(field)
+        }
+        TODO("return ChronoLocalDateTime.super.get(field)")
+    }
+
+    /**
+     * Gets the value of the specified field from this date-time as a `long`.
+     *
+     *
+     * This queries this date-time for the value of the specified field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The [supported fields][.isSupported] will return valid
+     * values based on this date-time.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun getLong(field: TemporalField): Long {
+        return if (field is ChronoField) {
+            if (field.isTimeBased()) time.getLong(field) else date.getLong(field)
+        } else {
+            field.getFrom(this)
+        }
+    }
+
+    /**
+     * Calculates the amount of time until another date-time in terms of the specified unit.
+     *
+     *
+     * This calculates the amount of time between two `LocalDateTime`
+     * objects in terms of a single `TemporalUnit`.
+     * The start and end points are `this` and the specified date-time.
+     * The result will be negative if the end is before the start.
+     * The `Temporal` passed to this method is converted to a
+     * `LocalDateTime` using [.from].
+     * For example, the amount in days between two date-times can be calculated
+     * using `startDateTime.until(endDateTime, DAYS)`.
+     *
+     *
+     * The calculation returns a whole number, representing the number of
+     * complete units between the two date-times.
+     * For example, the amount in months between 2012-06-15T00:00 and 2012-08-14T23:59
+     * will only be one month as it is one minute short of two months.
+     *
+     *
+     * There are two equivalent ways of using this method.
+     * The first is to invoke this method.
+     * The second is to use [TemporalUnit.between]:
+     * <pre>
+     * // these two lines are equivalent
+     * amount = start.until(end, MONTHS);
+     * amount = MONTHS.between(start, end);
+    </pre> *
+     * The choice should be made based on which makes the code more readable.
+     *
+     *
+     * The calculation is implemented in this method for [ChronoUnit].
+     * The units `NANOS`, `MICROS`, `MILLIS`, `SECONDS`,
+     * `MINUTES`, `HOURS` and `HALF_DAYS`, `DAYS`,
+     * `WEEKS`, `MONTHS`, `YEARS`, `DECADES`,
+     * `CENTURIES`, `MILLENNIA` and `ERAS` are supported.
+     * Other `ChronoUnit` values will throw an exception.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.between(Temporal, Temporal)`
+     * passing `this` as the first argument and the converted input temporal
+     * as the second argument.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param endExclusive  the end date, exclusive, which is converted to a `LocalDateTime`, not null
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this date-time and the end date-time
+     * @throws DateTimeException if the amount cannot be calculated, or the end
+     * temporal cannot be converted to a `LocalDateTime`
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun until(endExclusive: Temporal, unit: TemporalUnit): Long {
+        val end = LocalDateTime.from(endExclusive)
+        if (unit is ChronoUnit) {
+            if (unit.isTimeBased()) {
+                var amount = date.daysUntil(end.date)
+                if (amount == 0L) {
+                    return time.until(end.time, unit)
+                }
+                var timePart: Long = end.time.toNanoOfDay() - time.toNanoOfDay()
+                if (amount > 0) {
+                    amount -= 1  // safe
+                    timePart += NANOS_PER_DAY  // safe
+                } else {
+                    amount += 1  // safe
+                    timePart -= NANOS_PER_DAY  // safe
+                }
+                when (unit) {
+                    ChronoUnit.NANOS ->
+                        amount = MathUtils.multiplyExact(amount, NANOS_PER_DAY)
+                    ChronoUnit.MICROS -> {
+                        amount = MathUtils.multiplyExact(amount, MICROS_PER_DAY)
+                        timePart /= 1000
+                    }
+                    ChronoUnit.MILLIS -> {
+                        amount = MathUtils.multiplyExact(amount, MILLIS_PER_DAY)
+                        timePart /= 1000000
+                    }
+                    ChronoUnit.SECONDS -> {
+                        amount = MathUtils.multiplyExact(amount, SECONDS_PER_DAY.toLong())
+                        timePart /= NANOS_PER_SECOND
+                    }
+                    ChronoUnit.MINUTES -> {
+                        amount = MathUtils.multiplyExact(amount, MINUTES_PER_DAY.toLong())
+                        timePart /= NANOS_PER_MINUTE
+                    }
+                    ChronoUnit.HOURS -> {
+                        amount = MathUtils.multiplyExact(amount, HOURS_PER_DAY.toLong())
+                        timePart /= NANOS_PER_HOUR
+                    }
+                    ChronoUnit.HALF_DAYS -> {
+                        amount = MathUtils.multiplyExact(amount, 2)
+                        timePart /= (NANOS_PER_HOUR * 12)
+                    }
+                }
+                return MathUtils.addExact(amount, timePart)
+            }
+            var endDate = end.date
+            if (endDate.isAfter(date) && end.time.isBefore(time)) {
+                endDate = endDate.minusDays(1)
+            } else if (endDate.isBefore(date) && end.time.isAfter(time)) {
+                endDate = endDate.plusDays(1)
+            }
+            return date.until(endDate, unit)
+        }
+        return unit.between(this, end)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns an adjusted copy of this date-time.
+     *
+     *
+     * This returns a `LocalDateTime`, based on this one, with the date-time adjusted.
+     * The adjustment takes place using the specified adjuster strategy object.
+     * Read the documentation of the adjuster to understand what adjustment will be made.
+     *
+     *
+     * A simple adjuster might simply set the one of the fields, such as the year field.
+     * A more complex adjuster might set the date to the last day of the month.
+     *
+     *
+     * A selection of common adjustments is provided in
+     * [TemporalAdjusters][java.time.temporal.TemporalAdjusters].
+     * These include finding the "last day of the month" and "next Wednesday".
+     * Key date-time classes also implement the `TemporalAdjuster` interface,
+     * such as [Month] and [MonthDay][java.time.MonthDay].
+     * The adjuster is responsible for handling special cases, such as the varying
+     * lengths of month and leap years.
+     *
+     *
+     * For example this code returns a date on the last day of July:
+     * <pre>
+     * import static java.time.Month.*;
+     * import static java.time.temporal.TemporalAdjusters.*;
+     *
+     * result = localDateTime.with(JULY).with(lastDayOfMonth());
+     * </pre>
+     *
+     *
+     * The classes [LocalDate] and [LocalTime] implement `TemporalAdjuster`,
+     * thus this method can be used to change the date, time or offset:
+     * <pre>
+     * result = localDateTime.with(date);
+     * result = localDateTime.with(time);
+     * </pre>
+     *
+     *
+     * The result of this method is obtained by invoking the
+     * [TemporalAdjuster.adjustInto] method on the
+     * specified adjuster passing `this` as the argument.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param adjuster the adjuster to use, not null
+     * @return a `LocalDateTime` based on `this` with the adjustment made, not null
+     * @throws DateTimeException if the adjustment cannot be made
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun with(adjuster: TemporalAdjuster): LocalDateTime {
+        // optimizations
+        if (adjuster is LocalDate) {
+            return with(adjuster, time)
+        } else if (adjuster is LocalTime) {
+            return with(date, adjuster)
+        } else if (adjuster is LocalDateTime) {
+            return adjuster
+        }
+        return adjuster.adjustInto(this) as LocalDateTime
+    }
+
+    /**
+     * Returns a copy of this date-time with the specified field set to a new value.
+     *
+     *
+     * This returns a `LocalDateTime`, based on this one, with the value
+     * for the specified field changed.
+     * This can be used to change any supported field, such as the year, month or day-of-month.
+     * If it is not possible to set the value, because the field is not supported or for
+     * some other reason, an exception is thrown.
+     *
+     *
+     * In some cases, changing the specified field can cause the resulting date-time to become invalid,
+     * such as changing the month from 31st January to February would make the day-of-month invalid.
+     * In cases like this, the field is responsible for resolving the date. Typically it will choose
+     * the previous valid date, which would be the last valid day of February in this example.
+     *
+     *
+     * If the field is a [ChronoField] then the adjustment is implemented here.
+     * The [supported fields][.isSupported] will behave as per
+     * the matching method on [LocalDate][LocalDate.with]
+     * or [LocalTime][LocalTime.with].
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.adjustInto(Temporal, long)`
+     * passing `this` as the argument. In this case, the field determines
+     * whether and how to adjust the instant.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param field  the field to set in the result, not null
+     * @param newValue  the new value of the field in the result
+     * @return a `LocalDateTime` based on `this` with the specified field set, not null
+     * @throws DateTimeException if the field cannot be set
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun with(field: TemporalField, newValue: Long): LocalDateTime {
+        if (field is ChronoField) {
+            return if (field.isTimeBased()) {
+                with(date, time.with(field, newValue))
+            } else {
+                with(date.with(field, newValue), time)
+            }
+        }
+        return field.adjustInto(this, newValue)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
      * Returns a copy of this `LocalDateTime` with the year altered.
      *
      *
@@ -634,6 +1065,118 @@ class LocalDateTime private constructor(
     fun withNano(nanoOfSecond: Int): LocalDateTime {
         val newTime = time.withNano(nanoOfSecond)
         return with(date, newTime)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this `LocalDateTime` with the time truncated.
+     *
+     *
+     * Truncation returns a copy of the original date-time with fields
+     * smaller than the specified unit set to zero.
+     * For example, truncating with the [minutes][ChronoUnit.MINUTES] unit
+     * will set the second-of-minute and nano-of-second field to zero.
+     *
+     *
+     * The unit must have a [duration][TemporalUnit.getDuration]
+     * that divides into the length of a standard day without remainder.
+     * This includes all supplied time units on [ChronoUnit] and
+     * [DAYS][ChronoUnit.DAYS]. Other units throw an exception.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param unit  the unit to truncate to, not null
+     * @return a `LocalDateTime` based on this date-time with the time truncated, not null
+     * @throws DateTimeException if unable to truncate
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     */
+    fun truncatedTo(unit: TemporalUnit): LocalDateTime {
+        return with(date, time.truncatedTo(unit))
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this date-time with the specified amount added.
+     *
+     *
+     * This returns a `LocalDateTime`, based on this one, with the specified amount added.
+     * The amount is typically [Period] or [Duration] but may be
+     * any other type implementing the [TemporalAmount] interface.
+     *
+     *
+     * The calculation is delegated to the amount object by calling
+     * [TemporalAmount.addTo]. The amount implementation is free
+     * to implement the addition in any way it wishes, however it typically
+     * calls back to [.plus]. Consult the documentation
+     * of the amount implementation to determine if it can be successfully added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount to add, not null
+     * @return a `LocalDateTime` based on this date-time with the addition made, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun plus(amountToAdd: TemporalAmount): LocalDateTime {
+        if (amountToAdd is Period) {
+            return with(date.plus(amountToAdd), time)
+        }
+        return amountToAdd.addTo(this) as LocalDateTime
+    }
+
+    /**
+     * Returns a copy of this date-time with the specified amount added.
+     *
+     *
+     * This returns a `LocalDateTime`, based on this one, with the amount
+     * in terms of the unit added. If it is not possible to add the amount, because the
+     * unit is not supported or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoUnit] then the addition is implemented here.
+     * Date units are added as per [LocalDate.plus].
+     * Time units are added as per [LocalTime.plus] with
+     * any overflow in days added equivalent to using [.plusDays].
+     *
+     *
+     * If the field is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.addTo(Temporal, long)`
+     * passing `this` as the argument. In this case, the unit determines
+     * whether and how to perform the addition.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount of the unit to add to the result, may be negative
+     * @param unit  the unit of the amount to add, not null
+     * @return a `LocalDateTime` based on this date-time with the specified amount added, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun plus(amountToAdd: Long, unit: TemporalUnit): LocalDateTime {
+        if (unit is ChronoUnit) {
+            return when (unit) {
+                ChronoUnit.NANOS ->
+                    plusNanos(amountToAdd)
+                ChronoUnit.MICROS ->
+                    plusDays(amountToAdd / MICROS_PER_DAY).plusNanos(amountToAdd % MICROS_PER_DAY * 1000)
+                ChronoUnit.MILLIS ->
+                    plusDays(amountToAdd / MILLIS_PER_DAY).plusNanos(amountToAdd % MILLIS_PER_DAY * 1000000)
+                ChronoUnit.SECONDS ->
+                    plusSeconds(amountToAdd)
+                ChronoUnit.MINUTES ->
+                    plusMinutes(amountToAdd)
+                ChronoUnit.HOURS ->
+                    plusHours(amountToAdd)
+                ChronoUnit.HALF_DAYS ->
+                    plusDays(amountToAdd / 256).plusHours(amountToAdd % 256 * 12)  // no overflow (256 is multiple of 2)
+                else -> with(date.plus(amountToAdd, unit), time)
+            }
+        }
+        return unit.addTo(this, amountToAdd)
     }
 
     //-----------------------------------------------------------------------
@@ -1013,6 +1556,10 @@ class LocalDateTime private constructor(
      */
     override fun toString(): String {
         return date.toString() + 'T' + time.toString()
+    }
+
+    override fun getKClass(): KClass<out TemporalAccessor> {
+        return LocalDateTime::class
     }
 
     /**

@@ -26,7 +26,7 @@ import org.firas.datetime.temporal.TemporalUnit
  * Subclasses should be Serializable wherever possible.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 interface ChronoPeriod: TemporalAmount {
 

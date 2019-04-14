@@ -94,7 +94,7 @@ import org.firas.datetime.chrono.ChronoZonedDateTime
  * It is recommended to use an enum where possible.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 interface TemporalUnit {
     /**

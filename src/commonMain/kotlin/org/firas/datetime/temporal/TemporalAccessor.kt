@@ -99,7 +99,7 @@ import kotlin.reflect.KClass
  * however immutability is strongly recommended.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 interface TemporalAccessor {
 

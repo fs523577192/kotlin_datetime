@@ -61,6 +61,12 @@
  */
 package org.firas.datetime
 
+import org.firas.datetime.LocalTime.Companion.MINUTES_PER_HOUR
+import org.firas.datetime.LocalTime.Companion.NANOS_PER_MILLI
+import org.firas.datetime.LocalTime.Companion.NANOS_PER_SECOND
+import org.firas.datetime.LocalTime.Companion.SECONDS_PER_DAY
+import org.firas.datetime.LocalTime.Companion.SECONDS_PER_HOUR
+import org.firas.datetime.LocalTime.Companion.SECONDS_PER_MINUTE
 import org.firas.datetime.temporal.*
 import org.firas.math.BigDecimal
 import org.firas.math.BigInteger
@@ -107,10 +113,10 @@ import org.firas.datetime.util.MathUtils
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class Duration private constructor(
-        private val seconds: Long,
+        val seconds: Long,
         private val nanos: Int): TemporalAmount, Comparable<Duration> {
 
     companion object {
@@ -297,6 +303,616 @@ class Duration private constructor(
         return UNITS
     }
 
+    //-----------------------------------------------------------------------
+    /**
+     * Gets the number of days in this duration.
+     *
+     *
+     * This returns the total number of days in the duration by dividing the
+     * number of seconds by 86400.
+     * This is based on the standard definition of a day as 24 hours.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the number of days in the duration, may be negative
+     */
+    fun toDays(): Long {
+        return seconds / SECONDS_PER_DAY
+    }
+
+    /**
+     * Gets the number of hours in this duration.
+     *
+     *
+     * This returns the total number of hours in the duration by dividing the
+     * number of seconds by 3600.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the number of hours in the duration, may be negative
+     */
+    fun toHours(): Long {
+        return seconds / SECONDS_PER_HOUR
+    }
+
+    /**
+     * Gets the number of minutes in this duration.
+     *
+     *
+     * This returns the total number of minutes in the duration by dividing the
+     * number of seconds by 60.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the number of minutes in the duration, may be negative
+     */
+    fun toMinutes(): Long {
+        return seconds / SECONDS_PER_MINUTE
+    }
+
+    /**
+     * Gets the number of seconds in this duration.
+     *
+     *
+     * This returns the total number of whole seconds in the duration.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the whole seconds part of the length of the duration, positive or negative
+     * @since 9
+     */
+    fun toSeconds(): Long {
+        return seconds
+    }
+
+    /**
+     * Converts this duration to the total length in milliseconds.
+     *
+     *
+     * If this duration is too large to fit in a `long` milliseconds, then an
+     * exception is thrown.
+     *
+     *
+     * If this duration has greater than millisecond precision, then the conversion
+     * will drop any excess precision information as though the amount in nanoseconds
+     * was subject to integer division by one million.
+     *
+     * @return the total length of the duration in milliseconds
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun toMillis(): Long {
+        var tempSeconds = seconds
+        var tempNanos = nanos.toLong()
+        if (tempSeconds < 0) {
+            // change the seconds and nano value to
+            // handle Long.MIN_VALUE case
+            tempSeconds += 1
+            tempNanos -= NANOS_PER_SECOND
+        }
+        var millis = MathUtils.multiplyExact(tempSeconds, 1000)
+        millis = MathUtils.addExact(millis, tempNanos / NANOS_PER_MILLI)
+        return millis
+    }
+
+    /**
+     * Converts this duration to the total length in nanoseconds expressed as a `long`.
+     *
+     *
+     * If this duration is too large to fit in a `long` nanoseconds, then an
+     * exception is thrown.
+     *
+     * @return the total length of the duration in nanoseconds
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun toNanos(): Long {
+        var tempSeconds = seconds
+        var tempNanos = nanos.toLong()
+        if (tempSeconds < 0) {
+            // change the seconds and nano value to
+            // handle Long.MIN_VALUE case
+            tempSeconds += 1
+            tempNanos -= NANOS_PER_SECOND
+        }
+        var totalNanos = MathUtils.multiplyExact(tempSeconds, NANOS_PER_SECOND)
+        totalNanos = MathUtils.addExact(totalNanos, tempNanos)
+        return totalNanos
+    }
+
+    /**
+     * Extracts the number of days in the duration.
+     *
+     *
+     * This returns the total number of days in the duration by dividing the
+     * number of seconds by 86400.
+     * This is based on the standard definition of a day as 24 hours.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the number of days in the duration, may be negative
+     * @since 9
+     */
+    fun toDaysPart(): Long {
+        return seconds / SECONDS_PER_DAY
+    }
+
+    /**
+     * Extracts the number of hours part in the duration.
+     *
+     *
+     * This returns the number of remaining hours when dividing [.toHours]
+     * by hours in a day.
+     * This is based on the standard definition of a day as 24 hours.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the number of hours part in the duration, may be negative
+     * @since 9
+     */
+    fun toHoursPart(): Int {
+        return (toHours() % 24).toInt()
+    }
+
+    /**
+     * Extracts the number of minutes part in the duration.
+     *
+     *
+     * This returns the number of remaining minutes when dividing [.toMinutes]
+     * by minutes in an hour.
+     * This is based on the standard definition of an hour as 60 minutes.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the number of minutes parts in the duration, may be negative
+     * @since 9
+     */
+    fun toMinutesPart(): Int {
+        return (toMinutes() % MINUTES_PER_HOUR).toInt()
+    }
+
+    /**
+     * Extracts the number of seconds part in the duration.
+     *
+     *
+     * This returns the remaining seconds when dividing [.toSeconds]
+     * by seconds in a minute.
+     * This is based on the standard definition of a minute as 60 seconds.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the number of seconds parts in the duration, may be negative
+     * @since 9
+     */
+    fun toSecondsPart(): Int {
+        return (seconds % SECONDS_PER_MINUTE).toInt()
+    }
+
+    /**
+     * Extracts the number of milliseconds part of the duration.
+     *
+     *
+     * This returns the milliseconds part by dividing the number of nanoseconds by 1,000,000.
+     * The length of the duration is stored using two fields - seconds and nanoseconds.
+     * The nanoseconds part is a value from 0 to 999,999,999 that is an adjustment to
+     * the length in seconds.
+     * The total duration is defined by calling [.getNano] and [.getSeconds].
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the number of milliseconds part of the duration.
+     * @since 9
+     */
+    fun toMillisPart(): Int {
+        return nanos / 1000000
+    }
+
+    /**
+     * Get the nanoseconds part within seconds of the duration.
+     *
+     *
+     * The length of the duration is stored using two fields - seconds and nanoseconds.
+     * The nanoseconds part is a value from 0 to 999,999,999 that is an adjustment to
+     * the length in seconds.
+     * The total duration is defined by calling [.getNano] and [.getSeconds].
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @return the nanoseconds within the second part of the length of the duration, from 0 to 999,999,999
+     * @since 9
+     */
+    fun toNanosPart(): Int {
+        return nanos
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this duration with the specified duration added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param duration  the duration to add, positive or negative, not null
+     * @return a `Duration` based on this duration with the specified duration added, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    operator fun plus(duration: Duration): Duration {
+        return plus(duration.seconds, duration.nanos.toLong())
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration added.
+     *
+     *
+     * The duration amount is measured in terms of the specified unit.
+     * Only a subset of units are accepted by this method.
+     * The unit must either have an [exact duration][TemporalUnit.isDurationEstimated] or
+     * be [ChronoUnit.DAYS] which is treated as 24 hours. Other units throw an exception.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount to add, measured in terms of the unit, positive or negative
+     * @param unit  the unit that the amount is measured in, must have an exact duration, not null
+     * @return a `Duration` based on this duration with the specified duration added, not null
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun plus(amountToAdd: Long, unit: TemporalUnit): Duration {
+        if (unit === ChronoUnit.DAYS) {
+            return plus(MathUtils.multiplyExact(amountToAdd, SECONDS_PER_DAY.toLong()), 0)
+        }
+        if (unit.isDurationEstimated()) {
+            throw UnsupportedTemporalTypeException("Unit must not have an estimated duration")
+        }
+        if (amountToAdd == 0L) {
+            return this
+        }
+        if (unit is ChronoUnit) {
+            return when (unit) {
+                ChronoUnit.NANOS -> plusNanos(amountToAdd)
+                ChronoUnit.MICROS ->
+                    plusSeconds(amountToAdd / (1000_000L * 1000) * 1000).plusNanos(amountToAdd % (1000_000L * 1000) * 1000)
+                ChronoUnit.MILLIS -> plusMillis(amountToAdd)
+                ChronoUnit.SECONDS -> plusSeconds(amountToAdd)
+                else -> plusSeconds(MathUtils.multiplyExact(unit.getDuration().seconds, amountToAdd))
+            }
+        }
+        val duration = unit.getDuration().multipliedBy(amountToAdd)
+        return plusSeconds(duration.seconds).plusNanos(duration.nanos.toLong())
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this duration with the specified duration in standard 24 hour days added.
+     *
+     *
+     * The number of days is multiplied by 86400 to obtain the number of seconds to add.
+     * This is based on the standard definition of a day as 24 hours.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param daysToAdd  the days to add, positive or negative
+     * @return a `Duration` based on this duration with the specified days added, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun plusDays(daysToAdd: Long): Duration {
+        return plus(MathUtils.multiplyExact(daysToAdd, SECONDS_PER_DAY.toLong()), 0)
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in hours added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param hoursToAdd  the hours to add, positive or negative
+     * @return a `Duration` based on this duration with the specified hours added, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun plusHours(hoursToAdd: Long): Duration {
+        return plus(MathUtils.multiplyExact(hoursToAdd, SECONDS_PER_HOUR.toLong()), 0)
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in minutes added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param minutesToAdd  the minutes to add, positive or negative
+     * @return a `Duration` based on this duration with the specified minutes added, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun plusMinutes(minutesToAdd: Long): Duration {
+        return plus(MathUtils.multiplyExact(minutesToAdd, SECONDS_PER_MINUTE.toLong()), 0)
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in seconds added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param secondsToAdd  the seconds to add, positive or negative
+     * @return a `Duration` based on this duration with the specified seconds added, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun plusSeconds(secondsToAdd: Long): Duration {
+        return plus(secondsToAdd, 0)
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in milliseconds added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param millisToAdd  the milliseconds to add, positive or negative
+     * @return a `Duration` based on this duration with the specified milliseconds added, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun plusMillis(millisToAdd: Long): Duration {
+        return plus(millisToAdd / 1000, millisToAdd % 1000 * 1000000)
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in nanoseconds added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param nanosToAdd  the nanoseconds to add, positive or negative
+     * @return a `Duration` based on this duration with the specified nanoseconds added, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun plusNanos(nanosToAdd: Long): Duration {
+        return plus(0, nanosToAdd)
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param secondsToAdd  the seconds to add, positive or negative
+     * @param nanosToAdd  the nanos to add, positive or negative
+     * @return a `Duration` based on this duration with the specified seconds added, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    private fun plus(secondsToAdd: Long, nanosToAdd: Long): Duration {
+        var nanosToAdd = nanosToAdd
+        if (secondsToAdd or nanosToAdd == 0L) {
+            return this
+        }
+        var epochSec = MathUtils.addExact(seconds, secondsToAdd)
+        epochSec = MathUtils.addExact(epochSec, nanosToAdd / NANOS_PER_SECOND)
+        nanosToAdd %= NANOS_PER_SECOND
+        val nanoAdjustment = nanos + nanosToAdd  // safe int+NANOS_PER_SECOND
+        return ofSeconds(epochSec, nanoAdjustment)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this duration with the specified duration subtracted.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param duration  the duration to subtract, positive or negative, not null
+     * @return a `Duration` based on this duration with the specified duration subtracted, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    operator fun minus(duration: Duration): Duration {
+        val secsToSubtract = duration.seconds
+        val nanosToSubtract = duration.nanos
+        return if (secsToSubtract == Long.MIN_VALUE) {
+            plus(Long.MAX_VALUE, (-nanosToSubtract).toLong()).plus(1, 0)
+        } else {
+            plus(-secsToSubtract, (-nanosToSubtract).toLong())
+        }
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration subtracted.
+     *
+     *
+     * The duration amount is measured in terms of the specified unit.
+     * Only a subset of units are accepted by this method.
+     * The unit must either have an [exact duration][TemporalUnit.isDurationEstimated] or
+     * be [ChronoUnit.DAYS] which is treated as 24 hours. Other units throw an exception.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToSubtract  the amount to subtract, measured in terms of the unit, positive or negative
+     * @param unit  the unit that the amount is measured in, must have an exact duration, not null
+     * @return a `Duration` based on this duration with the specified duration subtracted, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun minus(amountToSubtract: Long, unit: TemporalUnit): Duration {
+        return if (amountToSubtract == Long.MIN_VALUE) {
+            plus(Long.MAX_VALUE, unit).plus(1, unit)
+        } else {
+            plus(-amountToSubtract, unit)
+        }
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this duration with the specified duration in standard 24 hour days subtracted.
+     *
+     *
+     * The number of days is multiplied by 86400 to obtain the number of seconds to subtract.
+     * This is based on the standard definition of a day as 24 hours.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param daysToSubtract  the days to subtract, positive or negative
+     * @return a `Duration` based on this duration with the specified days subtracted, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun minusDays(daysToSubtract: Long): Duration {
+        return if (daysToSubtract == Long.MIN_VALUE) {
+            plusDays(Long.MAX_VALUE).plusDays(1)
+        } else {
+            plusDays(-daysToSubtract)
+        }
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in hours subtracted.
+     *
+     *
+     * The number of hours is multiplied by 3600 to obtain the number of seconds to subtract.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param hoursToSubtract  the hours to subtract, positive or negative
+     * @return a `Duration` based on this duration with the specified hours subtracted, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun minusHours(hoursToSubtract: Long): Duration {
+        return if (hoursToSubtract == Long.MIN_VALUE) {
+            plusHours(Long.MAX_VALUE).plusHours(1)
+        } else {
+            plusHours(-hoursToSubtract)
+        }
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in minutes subtracted.
+     *
+     *
+     * The number of hours is multiplied by 60 to obtain the number of seconds to subtract.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param minutesToSubtract  the minutes to subtract, positive or negative
+     * @return a `Duration` based on this duration with the specified minutes subtracted, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun minusMinutes(minutesToSubtract: Long): Duration {
+        return if (minutesToSubtract == Long.MIN_VALUE) {
+            plusMinutes(Long.MAX_VALUE).plusMinutes(1)
+        } else {
+            plusMinutes(-minutesToSubtract)
+        }
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in seconds subtracted.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param secondsToSubtract  the seconds to subtract, positive or negative
+     * @return a `Duration` based on this duration with the specified seconds subtracted, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun minusSeconds(secondsToSubtract: Long): Duration {
+        return if (secondsToSubtract == Long.MIN_VALUE) {
+            plusSeconds(Long.MAX_VALUE).plusSeconds(1)
+        } else {
+            plusSeconds(-secondsToSubtract)
+        }
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in milliseconds subtracted.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param millisToSubtract  the milliseconds to subtract, positive or negative
+     * @return a `Duration` based on this duration with the specified milliseconds subtracted, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun minusMillis(millisToSubtract: Long): Duration {
+        return if (millisToSubtract == Long.MIN_VALUE) {
+            plusMillis(Long.MAX_VALUE).plusMillis(1)
+        } else {
+            plusMillis(-millisToSubtract)
+        }
+    }
+
+    /**
+     * Returns a copy of this duration with the specified duration in nanoseconds subtracted.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param nanosToSubtract  the nanoseconds to subtract, positive or negative
+     * @return a `Duration` based on this duration with the specified nanoseconds subtracted, not null
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    fun minusNanos(nanosToSubtract: Long): Duration {
+        return if (nanosToSubtract == Long.MIN_VALUE) {
+            plusNanos(Long.MAX_VALUE).plusNanos(1)
+        } else {
+            plusNanos(-nanosToSubtract)
+        }
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this `Duration` truncated to the specified unit.
+     *
+     *
+     * Truncating the duration returns a copy of the original with conceptual fields
+     * smaller than the specified unit set to zero.
+     * For example, truncating with the [MINUTES][ChronoUnit.MINUTES] unit will
+     * round down towards zero to the nearest minute, setting the seconds and
+     * nanoseconds to zero.
+     *
+     *
+     * The unit must have a [duration][TemporalUnit.getDuration]
+     * that divides into the length of a standard day without remainder.
+     * This includes all
+     * [time-based units on ][ChronoUnit.isTimeBased]
+     * and [DAYS][ChronoUnit.DAYS]. Other ChronoUnits throw an exception.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param unit the unit to truncate to, not null
+     * @return a `Duration` based on this duration with the time truncated, not null
+     * @throws DateTimeException if the unit is invalid for truncation
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @since 9
+     */
+    fun truncatedTo(unit: TemporalUnit): Duration {
+        if (unit === ChronoUnit.SECONDS && (seconds >= 0 || nanos == 0)) {
+            return Duration(seconds, 0)
+        } else if (unit === ChronoUnit.NANOS) {
+            return this
+        }
+        val unitDur = unit.getDuration()
+        if (unitDur.seconds > LocalTime.SECONDS_PER_DAY) {
+            throw UnsupportedTemporalTypeException("Unit is too large to be used for truncation")
+        }
+        val dur = unitDur.toNanos()
+        if (LocalTime.NANOS_PER_DAY % dur != 0L) {
+            throw UnsupportedTemporalTypeException("Unit must divide into a standard day without remainder")
+        }
+        val nod = seconds % LocalTime.SECONDS_PER_DAY * LocalTime.NANOS_PER_SECOND + nanos
+        val result = nod / dur * dur
+        return plusNanos(result - nod)
+    }
+
     /**
      * Compares this duration to the specified {@code Duration}.
      * <p>
@@ -396,7 +1012,7 @@ class Duration private constructor(
         }
         return if (multiplicand == 1L) {
             this
-        } else create(toSeconds() * BigDecimal.valueOf(multiplicand))
+        } else create(toBigDecimalSeconds() * BigDecimal.valueOf(multiplicand))
     }
 
     //-------------------------------------------------------------------------
@@ -484,7 +1100,7 @@ class Duration private constructor(
      *
      * @return the total length of the duration in seconds, with a scale of 9, not null
      */
-    private fun toSeconds(): BigDecimal {
+    private fun toBigDecimalSeconds(): BigDecimal {
         return BigDecimal.valueOf(seconds) + BigDecimal.valueOf(nanos.toLong(), 9)
     }
 }

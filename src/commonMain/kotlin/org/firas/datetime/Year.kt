@@ -108,7 +108,7 @@ import kotlin.reflect.KClass
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class Year private constructor(val value: Int): Temporal, Comparable<Year> {
 

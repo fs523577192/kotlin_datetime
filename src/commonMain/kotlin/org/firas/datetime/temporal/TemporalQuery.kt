@@ -96,7 +96,7 @@ package org.firas.datetime.temporal
  * @param <R> the type returned from the query
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 interface TemporalQuery<R> {
     /**

@@ -85,7 +85,7 @@ import org.firas.datetime.format.ResolverStyle
  * An enum is as effective implementation choice.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 interface TemporalField {
 

@@ -150,7 +150,7 @@ import org.firas.datetime.zone.ZoneOffset
  * Subclasses should be Serializable wherever possible.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 interface Chronology: Comparable<Chronology> {
 
@@ -357,11 +357,13 @@ interface Chronology: Comparable<Chronology> {
 
     /**
      * Obtains a `ChronoZonedDateTime` in this chronology from another temporal object.
-     * <p>
+     *
+     *
      * This obtains a zoned date-time in this chronology based on the specified temporal.
      * A `TemporalAccessor` represents an arbitrary set of date and time information,
      * which this factory converts to an instance of `ChronoZonedDateTime`.
-     * <p>
+     *
+     *
      * The conversion will first obtain a `ZoneId` from the temporal object,
      * falling back to a `ZoneOffset` if necessary. It will then try to obtain
      * an `Instant`, falling back to a `ChronoLocalDateTime` if necessary.
@@ -370,7 +372,8 @@ interface Chronology: Comparable<Chronology> {
      * Implementations are permitted to perform optimizations such as accessing
      * those fields that are equivalent to the relevant objects.
      * The result uses this chronology.
-     * <p>
+     *
+     *
      * This method matches the signature of the functional interface {@link TemporalQuery}
      * allowing it to be used as a query via method reference, `aChronology::zonedDateTime`.
      *
@@ -397,4 +400,6 @@ interface Chronology: Comparable<Chronology> {
                     temporal.getKClass(), ex)
         }
     }
+
+    fun zonedDateTime(instant: Instant, zoneId: ZoneId): ChronoZonedDateTime<out ChronoLocalDate>
 }

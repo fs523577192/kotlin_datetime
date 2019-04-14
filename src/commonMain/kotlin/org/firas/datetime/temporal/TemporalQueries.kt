@@ -110,7 +110,7 @@ import org.firas.datetime.zone.ZoneOffset
  *
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class TemporalQueries private constructor() {
     // note that it is vital that each method supplies a constant, not a

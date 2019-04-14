@@ -103,7 +103,7 @@ import org.firas.util.Integers
  *
  * @param <D> the concrete type for the date of this date-time
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
 
@@ -116,12 +116,12 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
         } as Comparator<ChronoZonedDateTime<*>>
 
         /**
-         * Obtains an instance of {@code ChronoZonedDateTime} from a temporal object.
+         * Obtains an instance of `ChronoZonedDateTime` from a temporal object.
          *
          *
          * This creates a zoned date-time based on the specified temporal.
-         * A {@code TemporalAccessor} represents an arbitrary set of date and time information,
-         * which this factory converts to an instance of {@code ChronoZonedDateTime}.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `ChronoZonedDateTime`.
          *
          *
          * The conversion extracts and combines the chronology, date, time and zone
@@ -131,12 +131,12 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
          * those fields that are equivalent to the relevant objects.
          *
          *
-         * This method matches the signature of the functional interface {@link TemporalQuery}
-         * allowing it to be used as a query via method reference, {@code ChronoZonedDateTime::from}.
+         * This method matches the signature of the functional interface [TemporalQuery]
+         * allowing it to be used as a query via method reference, `ChronoZonedDateTime::from`.
          *
          * @param temporal  the temporal object to convert, not null
          * @return the date-time, not null
-         * @throws DateTimeException if unable to convert to a {@code ChronoZonedDateTime}
+         * @throws DateTimeException if unable to convert to a `ChronoZonedDateTime`
          * @see Chronology#zonedDateTime(TemporalAccessor)
          */
         fun from(temporal: TemporalAccessor): ChronoZonedDateTime<*> {

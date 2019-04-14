@@ -104,13 +104,13 @@ import kotlin.reflect.KClass
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class LocalDate private constructor(
     val year: Int,
     val monthValue: Short,
     val dayOfMonth: Short
-): ChronoLocalDate {
+): Temporal, TemporalAdjuster, ChronoLocalDate {
 
     companion object {
         /**
@@ -449,6 +449,57 @@ class LocalDate private constructor(
      */
     override fun lengthOfYear(): Int {
         return if (isLeapYear()) 366 else 365
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns an adjusted copy of this date.
+     *
+     *
+     * This returns a `LocalDate`, based on this one, with the date adjusted.
+     * The adjustment takes place using the specified adjuster strategy object.
+     * Read the documentation of the adjuster to understand what adjustment will be made.
+     *
+     *
+     * A simple adjuster might simply set the one of the fields, such as the year field.
+     * A more complex adjuster might set the date to the last day of the month.
+     *
+     *
+     * A selection of common adjustments is provided in
+     * [TemporalAdjusters][java.time.temporal.TemporalAdjusters].
+     * These include finding the "last day of the month" and "next Wednesday".
+     * Key date-time classes also implement the `TemporalAdjuster` interface,
+     * such as [Month] and [MonthDay][java.time.MonthDay].
+     * The adjuster is responsible for handling special cases, such as the varying
+     * lengths of month and leap years.
+     *
+     *
+     * For example this code returns a date on the last day of July:
+     * <pre>
+     * import static java.time.Month.*;
+     * import static java.time.temporal.TemporalAdjusters.*;
+     *
+     * result = localDate.with(JULY).with(lastDayOfMonth());
+    </pre> *
+     *
+     *
+     * The result of this method is obtained by invoking the
+     * [TemporalAdjuster.adjustInto] method on the
+     * specified adjuster passing `this` as the argument.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param adjuster the adjuster to use, not null
+     * @return a `LocalDate` based on `this` with the adjustment made, not null
+     * @throws DateTimeException if the adjustment cannot be made
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun with(adjuster: TemporalAdjuster): LocalDate {
+        // optimizations
+        return if (adjuster is LocalDate) {
+            adjuster as LocalDate
+        } else adjuster.adjustInto(this) as LocalDate
     }
 
     /**

@@ -68,14 +68,16 @@ import org.firas.datetime.temporal.*
 /**
  * A date without time-of-day or time-zone in an arbitrary chronology, intended
  * for advanced globalization use cases.
- * <p>
+ *
+ *
  * <b>Most applications should declare method signatures, fields and variables
- * as {@link LocalDate}, not this interface.</b>
- * <p>
+ * as [LocalDate], not this interface.</b>
+ *
+ *
  * A `ChronoLocalDate` is the abstract representation of a date where the
  * `Chronology chronology`, or calendar system, is pluggable.
- * The date is defined in terms of fields expressed by {@link TemporalField},
- * where most common implementations are defined in {@link ChronoField}.
+ * The date is defined in terms of fields expressed by [TemporalField],
+ * where most common implementations are defined in [ChronoField].
  * The chronology defines how the calendar system operates and the meaning of
  * the standard fields.
  *
@@ -83,7 +85,8 @@ import org.firas.datetime.temporal.*
  * The design of the API encourages the use of `LocalDate` rather than this
  * interface, even in the case where the application needs to deal with multiple
  * calendar systems.
- * <p>
+ *
+ *
  * This concept can seem surprising at first, as the natural way to globalize an
  * application might initially appear to be to abstract the calendar system.
  * However, as explored below, abstracting the calendar system is usually the wrong
@@ -94,7 +97,8 @@ import org.firas.datetime.temporal.*
  * <h3>Architectural issues to consider</h3>
  * These are some of the points that must be considered before using this interface
  * throughout an application.
- * <p>
+ *
+ *
  * 1) Applications using this interface, as opposed to using just `LocalDate`,
  * face a significantly higher probability of bugs. This is because the calendar system
  * in use is not known at development time. A key cause of bugs is where the developer
@@ -103,13 +107,15 @@ import org.firas.datetime.temporal.*
  * The section below outlines how those assumptions can cause problems
  * The primary mechanism for reducing this increased risk of bugs is a strong code review process.
  * This should also be considered a extra cost in maintenance for the lifetime of the code.
- * <p>
+ *
+ *
  * 2) This interface does not enforce immutability of implementations.
  * While the implementation notes indicate that all implementations must be immutable
  * there is nothing in the code or type system to enforce this. Any method declared
  * to accept a `ChronoLocalDate` could therefore be passed a poorly or
  * maliciously written mutable implementation.
- * <p>
+ *
+ *
  * 3) Applications using this interface  must consider the impact of eras.
  * `LocalDate` shields users from the concept of eras, by ensuring that `getYear()`
  * returns the proleptic year. That decision ensures that developers can think of
@@ -119,49 +125,60 @@ import org.firas.datetime.temporal.*
  * forgotten, yet it is of vital importance to dates in an arbitrary calendar system.
  * For example, in the Japanese calendar system, the era represents the reign of an Emperor.
  * Whenever one reign ends and another starts, the year-of-era is reset to one.
- * <p>
+ *
+ *
  * 4) The only agreed international standard for passing a date between two systems
  * is the ISO-8601 standard which requires the ISO calendar system. Using this interface
  * throughout the application will inevitably lead to the requirement to pass the date
  * across a network or component boundary, requiring an application specific protocol or format.
- * <p>
+ *
+ *
  * 5) Long term persistence, such as a database, will almost always only accept dates in the
  * ISO-8601 calendar system (or the related Julian-Gregorian). Passing around dates in other
  * calendar systems increases the complications of interacting with persistence.
- * <p>
+ *
+ *
  * 6) Most of the time, passing a `ChronoLocalDate` throughout an application
  * is unnecessary, as discussed in the last section below.
  *
  * <h3>False assumptions causing bugs in multi-calendar system code</h3>
  * As indicated above, there are many issues to consider when try to use and manipulate a
  * date in an arbitrary calendar system. These are some of the key issues.
- * <p>
+ *
+ *
  * Code that queries the day-of-month and assumes that the value will never be more than
  * 31 is invalid. Some calendar systems have more than 31 days in some months.
- * <p>
+ *
+ *
  * Code that adds 12 months to a date and assumes that a year has been added is invalid.
  * Some calendar systems have a different number of months, such as 13 in the Coptic or Ethiopic.
- * <p>
+ *
+ *
  * Code that adds one month to a date and assumes that the month-of-year value will increase
  * by one or wrap to the next year is invalid. Some calendar systems have a variable number
  * of months in a year, such as the Hebrew.
- * <p>
+ *
+ *
  * Code that adds one month, then adds a second one month and assumes that the day-of-month
  * will remain close to its original value is invalid. Some calendar systems have a large difference
  * between the length of the longest month and the length of the shortest month.
  * For example, the Coptic or Ethiopic have 12 months of 30 days and 1 month of 5 days.
- * <p>
+ *
+ *
  * Code that adds seven days and assumes that a week has been added is invalid.
  * Some calendar systems have weeks of other than seven days, such as the French Revolutionary.
- * <p>
+ *
+ *
  * Code that assumes that because the year of `date1` is greater than the year of `date2`
  * then `date1` is after `date2` is invalid. This is invalid for all calendar systems
  * when referring to the year-of-era, and especially untrue of the Japanese calendar system
  * where the year-of-era restarts with the reign of every new Emperor.
- * <p>
+ *
+ *
  * Code that treats month-of-year one and day-of-month one as the start of the year is invalid.
  * Not all calendar systems start the year when the month value is one.
- * <p>
+ *
+ *
  * In general, manipulating a date, and even querying a date, is wide open to bugs when the
  * calendar system is unknown at development time. This is why it is essential that code using
  * this interface is subjected to additional code reviews. It is also why an architectural
@@ -179,18 +196,21 @@ import org.firas.datetime.temporal.*
  * This approach treats the problem of globalized calendar systems as a localization issue
  * and confines it to the UI layer. This approach is in keeping with other localization
  * issues in the java platform.
- * <p>
+ *
+ *
  * As discussed above, performing calculations on a date where the rules of the calendar system
  * are pluggable requires skill and is not recommended.
  * Fortunately, the need to perform calculations on a date in an arbitrary calendar system
  * is extremely rare. For example, it is highly unlikely that the business rules of a library
  * book rental scheme will allow rentals to be for one month, where meaning of the month
  * is dependent on the user's preferred calendar system.
- * <p>
+ *
+ *
  * A key use case for calculations on a date in an arbitrary calendar system is producing
  * a month-by-month calendar for display and user interaction. Again, this is a UI issue,
  * and use of this interface solely within a few methods of the UI layer may be justified.
- * <p>
+ *
+ *
  * In any other part of the system, where a date must be manipulated in a calendar system
  * other than ISO, the use case will generally specify the calendar system to use.
  * For example, an application may need to calculate the next Islamic or Hebrew holiday
@@ -205,21 +225,22 @@ import org.firas.datetime.temporal.*
  * </ul>
  * Developers writing low-level frameworks or libraries should also avoid this interface.
  * Instead, one of the two general purpose access interfaces should be used.
- * Use {@link TemporalAccessor} if read-only access is required, or use {@link Temporal}
+ * Use [TemporalAccessor] if read-only access is required, or use [Temporal]
  * if read-write access is required.
  *
  * @implSpec
  * This interface must be implemented with care to ensure other classes operate correctly.
  * All implementations that can be instantiated must be final, immutable and thread-safe.
  * Subclasses should be Serializable wherever possible.
- * <p>
+ *
+ *
  * Additional calendar systems may be added to the system.
- * See {@link Chronology} for more details.
+ * See [Chronology] for more details.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
-interface ChronoLocalDate: Temporal, Comparable<ChronoLocalDate> {
+interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDate> {
 
     companion object {
         /**
@@ -298,11 +319,13 @@ interface ChronoLocalDate: Temporal, Comparable<ChronoLocalDate> {
 
     /**
      * Checks if the year is a leap year, as defined by the calendar system.
-     * <p>
+     *
+     *
      * A leap-year is a year of a longer length than normal.
      * The exact meaning is determined by the chronology with the constraint that
      * a leap-year must imply a year-length longer than a non leap-year.
-     * <p>
+     *
+     *
      * This default implementation uses {@link Chronology#isLeapYear(long)}.
      *
      * @return true if this date is in a leap year, false otherwise
@@ -321,9 +344,11 @@ interface ChronoLocalDate: Temporal, Comparable<ChronoLocalDate> {
 
     /**
      * Returns the length of the year represented by this date, as defined by the calendar system.
-     * <p>
+     *
+     *
      * This returns the length of the year in days.
-     * <p>
+     *
+     *
      * The default implementation uses {@link #isLeapYear()} and returns 365 or 366.
      *
      * @return the length of the year in days
@@ -334,11 +359,13 @@ interface ChronoLocalDate: Temporal, Comparable<ChronoLocalDate> {
 
     /**
      * Converts this date to the Epoch Day.
-     * <p>
+     *
+     *
      * The {@link ChronoField#EPOCH_DAY Epoch Day count} is a simple
      * incrementing count of days where day 0 is 1970-01-01 (ISO).
      * This definition is the same for all chronologies, enabling conversion.
-     * <p>
+     *
+     *
      * This default implementation queries the `EPOCH_DAY` field.
      *
      * @return the Epoch Day equivalent to this date
@@ -398,6 +425,75 @@ interface ChronoLocalDate: Temporal, Comparable<ChronoLocalDate> {
         return if (unit is ChronoUnit) {
             unit.isDateBased()
         } else unit.isSupportedBy(this)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Queries this date using the specified query.
+     *
+     *
+     * This queries this date using the specified query strategy object.
+     * The `TemporalQuery` object defines the logic to be used to
+     * obtain the result. Read the documentation of the query to understand
+     * what the result of this method will be.
+     *
+     *
+     * The result of this method is obtained by invoking the
+     * [TemporalQuery.queryFrom] method on the
+     * specified query passing `this` as the argument.
+     *
+     * @param <R> the type of the result
+     * @param query  the query to invoke, not null
+     * @return the query result, null may be returned (defined by the query)
+     * @throws DateTimeException if unable to query (defined by the query)
+     * @throws ArithmeticException if numeric overflow occurs (defined by the query)
+     */
+    override fun <R> query(query: TemporalQuery<R>): R? {
+        if (query === TemporalQueries.ZONE_ID || query === TemporalQueries.ZONE
+                || query === TemporalQueries.OFFSET) {
+            return null
+        } else if (query === TemporalQueries.LOCAL_TIME) {
+            return null
+        } else if (query === TemporalQueries.CHRONO) {
+            return getChronology() as R
+        } else if (query === TemporalQueries.PRECISION) {
+            return ChronoUnit.DAYS as R
+        }
+        // inline TemporalAccessor.super.query(query) as an optimization
+        // non-JDK classes are not permitted to make this optimization
+        return query.queryFrom(this)
+    }
+
+    /**
+     * Adjusts the specified temporal object to have the same date as this object.
+     *
+     *
+     * This returns a temporal object of the same observable type as the input
+     * with the date changed to be the same as this.
+     *
+     *
+     * The adjustment is equivalent to using [Temporal.with]
+     * passing [ChronoField.EPOCH_DAY] as the field.
+     *
+     *
+     * In most cases, it is clearer to reverse the calling pattern by using
+     * [Temporal.with]:
+     * <pre>
+     * // these two lines are equivalent, but the second approach is recommended
+     * temporal = thisLocalDate.adjustInto(temporal);
+     * temporal = temporal.with(thisLocalDate);
+     * </pre>
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param temporal  the target object to be adjusted, not null
+     * @return the adjusted object, not null
+     * @throws DateTimeException if unable to make the adjustment
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun adjustInto(temporal: Temporal): Temporal {
+        return temporal.with(ChronoField.EPOCH_DAY, toEpochDay())
     }
 
     //-----------------------------------------------------------------------

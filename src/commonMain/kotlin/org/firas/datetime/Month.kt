@@ -89,7 +89,7 @@ import kotlin.reflect.KClass
  * This is an immutable and thread-safe enum.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 enum class Month: TemporalAccessor {
     /**

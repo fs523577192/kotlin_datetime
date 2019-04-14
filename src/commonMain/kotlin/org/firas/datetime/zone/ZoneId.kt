@@ -165,7 +165,7 @@ import org.firas.datetime.temporal.TemporalQueries
  * offset-based IDs. This difference is visible in serialization.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 abstract class ZoneId internal constructor() {
 

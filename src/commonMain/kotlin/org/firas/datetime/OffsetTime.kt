@@ -86,7 +86,7 @@ import org.firas.datetime.temporal.ChronoField
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class OffsetTime private constructor(
     val localTime: LocalTime,

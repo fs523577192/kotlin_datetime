@@ -82,7 +82,7 @@ import org.firas.datetime.DateTimeException
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class ValueRange private constructor(
     private val minSmallest: Long,

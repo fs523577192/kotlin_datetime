@@ -73,7 +73,7 @@ import org.firas.datetime.Duration
  * This is a final, immutable and thread-safe enum.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 enum class ChronoUnit(private val _name: String, private val duration: Duration): TemporalUnit {
     /**

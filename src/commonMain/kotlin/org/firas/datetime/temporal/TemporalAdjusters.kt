@@ -103,7 +103,7 @@ import org.firas.datetime.DayOfWeek
  *
  * @see TemporalAdjuster
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class TemporalAdjusters private constructor() {
 

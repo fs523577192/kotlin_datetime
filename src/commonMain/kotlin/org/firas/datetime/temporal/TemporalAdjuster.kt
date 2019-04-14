@@ -104,7 +104,7 @@ package org.firas.datetime.temporal
  *
  * @see TemporalAdjusters
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 interface TemporalAdjuster {
     /**
