@@ -275,7 +275,7 @@ class OffsetDateTime private constructor(
                 }
             } catch (ex: DateTimeException) {
                 throw DateTimeException("Unable to obtain OffsetDateTime from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getKClass().qualifiedName, ex)
+                        temporal + " of type " + temporal.getClassName(), ex)
             }
         }
 
@@ -1740,10 +1740,6 @@ class OffsetDateTime private constructor(
 
     override fun toString(): String {
         return this.localDateTime.toString() + offset.toString()
-    }
-
-    override fun getKClass(): KClass<out TemporalAccessor> {
-        return OffsetDateTime::class
     }
 
     /**

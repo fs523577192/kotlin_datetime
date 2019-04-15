@@ -300,7 +300,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
             val chrono = temporal.query(TemporalQueries.CHRONO)
             if (chrono == null) {
                 throw DateTimeException("Unable to obtain ChronoLocalDate from TemporalAccessor: " +
-                        temporal.getKClass())
+                        temporal.getClassName())
             }
             return chrono.date(temporal)
         }

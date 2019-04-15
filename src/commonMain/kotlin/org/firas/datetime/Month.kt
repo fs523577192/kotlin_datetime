@@ -207,7 +207,7 @@ enum class Month: TemporalAccessor {
             } catch (ex: DateTimeException) {
                 throw DateTimeException(
                     "Unable to obtain Month from TemporalAccessor: " +
-                            temporal + " of type " + temporal.getKClass().qualifiedName, ex
+                            temporal + " of type " + temporal.getClassName(), ex
                 )
             }
         }
@@ -489,9 +489,5 @@ enum class Month: TemporalAccessor {
             throw UnsupportedTemporalTypeException("Unsupported field: $field")
         }
         return field.getFrom(this)
-    }
-
-    override fun getKClass(): KClass<out TemporalAccessor> {
-        return Month::class
     }
 }

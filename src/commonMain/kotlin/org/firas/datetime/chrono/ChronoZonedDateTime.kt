@@ -147,7 +147,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
             if (chrono == null) {
                 throw DateTimeException(
                     "Unable to obtain ChronoZonedDateTime from TemporalAccessor: " +
-                            temporal.getKClass()
+                            temporal.getClassName()
                 )
             }
             return chrono.zonedDateTime(temporal)

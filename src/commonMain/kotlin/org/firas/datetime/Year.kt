@@ -207,7 +207,7 @@ class Year private constructor(val value: Int): Temporal, Comparable<Year> {
                 return of(temporal.get(ChronoField.YEAR))
             } catch (ex: DateTimeException) {
                 throw DateTimeException ("Unable to obtain Year from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getKClass().qualifiedName, ex)
+                        temporal + " of type " + temporal.getClassName(), ex)
             }
         }
     } // companion object
@@ -737,9 +737,5 @@ class Year private constructor(val value: Int): Temporal, Comparable<Year> {
      */
     override fun toString(): String {
         return this.value.toString()
-    }
-
-    override fun getKClass(): KClass<out Temporal> {
-        return Year::class
     }
 }

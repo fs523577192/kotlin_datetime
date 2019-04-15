@@ -326,7 +326,7 @@ class LocalTime private constructor(
         fun from(temporal: TemporalAccessor): LocalTime {
             return temporal.query(TemporalQueries.LOCAL_TIME) ?:
                     throw DateTimeException("Unable to obtain LocalTime from TemporalAccessor: " +
-                            temporal + " of type " + temporal.getKClass().qualifiedName)
+                            temporal + " of type " + temporal.getClassName())
         }
 
         /**
@@ -1220,10 +1220,6 @@ class LocalTime private constructor(
         total += second * NANOS_PER_SECOND
         total += nano
         return total
-    }
-
-    override fun getKClass(): KClass<out Temporal> {
-        return LocalTime::class
     }
 
     private fun get0(field: TemporalField): Int {

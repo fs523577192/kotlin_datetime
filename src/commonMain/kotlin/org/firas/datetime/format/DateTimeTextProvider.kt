@@ -78,11 +78,12 @@ class DateTimeTextProvider internal constructor() {
 
     companion object {
         /** Comparator.  */
-        private val COMPARATOR = object : Comparator<Map.Entry<String, Long>> {
-            override fun compare(obj1: Map.Entry<String, Long>, obj2: Map.Entry<String, Long>): Int {
-                return obj2.key.length - obj1.key.length  // longest to shortest
+        private class _Comparator: Comparator<Map.Entry<String, Long>> {
+            override fun compare(a: Map.Entry<String, Long>, b: Map.Entry<String, Long>): Int {
+                return b.key.length - a.key.length  // longest to shortest
             }
         }
+        private val COMPARATOR = _Comparator()
 
         // Singleton instance
         private val INSTANCE = DateTimeTextProvider()

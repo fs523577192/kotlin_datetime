@@ -344,7 +344,7 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
                 return Instant.ofEpochSecond(instantSecs, nanoOfSecond.toLong())
             } catch (ex: DateTimeException) {
                 throw DateTimeException ("Unable to obtain Instant from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getKClass().qualifiedName, ex)
+                        temporal + " of type " + temporal.getClassName(), ex)
             }
         }
 
@@ -1027,10 +1027,6 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
             }
         }
         return unit.between(this, end)
-    }
-
-    override fun getKClass(): KClass<out Temporal> {
-        return Instant::class
     }
 
     /**

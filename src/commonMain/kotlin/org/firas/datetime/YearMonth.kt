@@ -173,7 +173,7 @@ class YearMonth private constructor(
                 return of(temporal.get(ChronoField.YEAR), temporal.get(ChronoField.MONTH_OF_YEAR))
             } catch (ex: DateTimeException) {
                 throw DateTimeException ("Unable to obtain YearMonth from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getKClass().qualifiedName, ex)
+                        temporal + " of type " + temporal.getClassName(), ex)
             }
         }
     } // companion object
@@ -923,10 +923,6 @@ class YearMonth private constructor(
         return buf.append(if (this.monthValue < 10) "-0" else "-")
                 .append(this.monthValue)
                 .toString()
-    }
-
-    override fun getKClass(): KClass<out Temporal> {
-        return YearMonth::class
     }
 
     /**

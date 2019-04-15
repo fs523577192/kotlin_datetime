@@ -396,7 +396,7 @@ class LocalDateTime private constructor(
                 return LocalDateTime(date, time)
             } catch (ex: DateTimeException) {
                 throw DateTimeException("Unable to obtain LocalDateTime from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getKClass().qualifiedName, ex)
+                        temporal + " of type " + temporal.getClassName(), ex)
             }
         }
     } // companion object
@@ -1556,10 +1556,6 @@ class LocalDateTime private constructor(
      */
     override fun toString(): String {
         return date.toString() + 'T' + time.toString()
-    }
-
-    override fun getKClass(): KClass<out TemporalAccessor> {
-        return LocalDateTime::class
     }
 
     /**

@@ -1,5 +1,5 @@
 plugins {
-    id 'kotlin-multiplatform' version '1.3.11'
+    id 'kotlin-multiplatform' version '1.3.30'
 }
 repositories {
     mavenLocal()
@@ -9,7 +9,7 @@ repositories {
 }
 
 group 'org.firas.date_time'
-version '0.3.0'
+version '0.4.0'
 
 apply plugin: 'maven-publish'
 kotlin {
@@ -23,6 +23,10 @@ kotlin {
     }
     sourceSets {
         commonMain {
+            languageSettings {
+                languageVersion = '1.3' // possible values: '1.0', '1.1', '1.2', '1.3'
+                apiVersion = '1.3' // possible values: '1.0', '1.1', '1.2', '1.3'
+            }
             dependencies {
                 implementation 'org.jetbrains.kotlin:kotlin-stdlib-common'
                 api 'org.firas.big_number:big_number:0.5.2'

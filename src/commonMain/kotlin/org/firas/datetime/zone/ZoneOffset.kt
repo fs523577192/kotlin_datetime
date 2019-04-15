@@ -343,7 +343,7 @@ class ZoneOffset private constructor(
         fun from(temporal: TemporalAccessor): ZoneOffset {
             return temporal.query(TemporalQueries.OFFSET) ?: throw DateTimeException(
                     "Unable to obtain ZoneOffset from TemporalAccessor: " +
-                    temporal + " of type " + temporal.getKClass().qualifiedName)
+                    temporal + " of type " + temporal.getClassName())
         }
 
         private fun buildId(totalSeconds: Int): String {
@@ -672,10 +672,6 @@ class ZoneOffset private constructor(
      */
     override fun toString(): String {
         return this.id
-    }
-
-    override fun getKClass(): KClass<out TemporalAccessor> {
-        return ZoneOffset::class
     }
 }
 

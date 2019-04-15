@@ -285,7 +285,7 @@ class LocalDate private constructor(
         fun from(temporal: TemporalAccessor): LocalDate {
             return temporal.query(TemporalQueries.LOCAL_DATE) ?:
                     throw DateTimeException ("Unable to obtain LocalDate from TemporalAccessor: " +
-                            temporal + " of type " + temporal.getKClass().qualifiedName)
+                            temporal + " of type " + temporal.getClassName())
         }
 
         //-----------------------------------------------------------------------
@@ -1400,10 +1400,6 @@ class LocalDate private constructor(
             return get0(field).toLong()
         }
         return field.getFrom(this)
-    }
-
-    override fun getKClass(): KClass<out Temporal> {
-        return LocalDate::class
     }
 
     internal fun daysUntil(end: LocalDate): Long {

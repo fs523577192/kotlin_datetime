@@ -67,6 +67,7 @@ import org.firas.datetime.LocalTime
 import org.firas.datetime.temporal.ChronoField
 import org.firas.datetime.temporal.TemporalAccessor
 import org.firas.datetime.temporal.TemporalQueries
+import org.firas.datetime.temporal.getClassName
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
@@ -351,7 +352,7 @@ interface Chronology: Comparable<Chronology> {
             return date(temporal).atTime(LocalTime.from(temporal))
         } catch (ex: DateTimeException) {
             throw DateTimeException("Unable to obtain ChronoLocalDateTime from TemporalAccessor: " +
-                    temporal.getKClass(), ex)
+                    temporal.getClassName(), ex)
         }
     }
 
@@ -397,7 +398,7 @@ interface Chronology: Comparable<Chronology> {
             */
         } catch (ex: DateTimeException) {
             throw DateTimeException("Unable to obtain ChronoZonedDateTime from TemporalAccessor: " +
-                    temporal.getKClass(), ex)
+                    temporal.getClassName(), ex)
         }
     }
 

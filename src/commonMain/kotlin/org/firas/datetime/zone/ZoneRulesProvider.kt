@@ -175,18 +175,52 @@ open class ZoneRulesProvider {
             return provider
         }
 
+        private val offsets = HashMap<Int, ZoneOffset>(14 + 12 + 1, 1f)
+        init {
+            for (i in -14..12) {
+                offsets[i] = ZoneOffset.ofHours(i)
+            }
+        }
+        private val emptyTransitionList = listOf<ZoneOffsetTransition>()
+        private val emptyTransitionRuleList = listOf<ZoneOffsetTransitionRule>()
+        private val transitionListPRC = listOf(
+            ZoneOffsetTransition(LocalDateTime.of(1986, 5, 4, 2, 0), offsets[8]!!, offsets[9]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1986, 9, 14, 2, 0), offsets[9]!!, offsets[8]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1987, 4, 12, 2, 0), offsets[8]!!, offsets[9]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1987, 9, 13, 2, 0), offsets[9]!!, offsets[8]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1988, 4, 10, 2, 0), offsets[8]!!, offsets[9]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1988, 9, 11, 2, 0), offsets[9]!!, offsets[8]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1989, 4, 16, 2, 0), offsets[8]!!, offsets[9]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1989, 9, 17, 2, 0), offsets[9]!!, offsets[8]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1990, 4, 15, 2, 0), offsets[8]!!, offsets[9]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1990, 9, 16, 2, 0), offsets[9]!!, offsets[8]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1991, 4, 14, 2, 0), offsets[8]!!, offsets[9]!!),
+            ZoneOffsetTransition(LocalDateTime.of(1991, 9, 15, 2, 0), offsets[9]!!, offsets[8]!!)
+        )
+        private val gmtZoneIdPattern = Regex("Etc/GMT((\\+|-)?\\d{1,2})")
         init {
             val instance = ZoneRulesProvider()
-            ZONES.put("PRC", instance)
-            ZONES.put("Singapore", instance)
-            ZONES.put("Hongkong", instance)
-            ZONES.put("Etc/GMT+8", instance)
-            ZONES.put("Asia/Shanghai", instance)
-            ZONES.put("Asia/Chongqing", instance)
-            ZONES.put("Asia/Chungking", instance)
-            ZONES.put("Asia/Asia/Urumqi", instance)
-            ZONES.put("Asia/Hong_Kong", instance)
-            ZONES.put("Asia/Singapore", instance)
+            ZONES["PRC"] = instance
+            ZONES["Singapore"] = instance
+            ZONES["Hongkong"] = instance
+            ZONES["Asia/Shanghai"] = instance
+            ZONES["Asia/Chongqing"] = instance
+            ZONES["Asia/Chungking"] = instance
+            ZONES["Asia/Asia/Urumqi"] = instance
+            ZONES["Asia/Hong_Kong"] = instance
+            ZONES["Asia/Singapore"] = instance
+
+            ZONES["UTC"] = instance
+            ZONES["Etc/UTC"] = instance
+            ZONES["Etc/GMT"] = instance
+            ZONES["Etc/GMT0"] = instance
+            ZONES["Etc/GMT-0"] = instance
+            for (i in -14..-1) {
+                ZONES["Etc/GMT$i"] = instance
+            }
+            for (i in 0..12) {
+                ZONES["Etc/GMT+$i"] = instance
+            }
         }
     }
 
@@ -220,41 +254,32 @@ open class ZoneRulesProvider {
      * @throws ZoneRulesException if rules cannot be obtained for the zone ID
      */
     protected open fun provideRules(zoneId: String, forCaching: Boolean): ZoneRules {
-        if (zoneId == "PRC" || zoneId == "Asia/Shanghai") {
-            return ZoneRules(offsetPlus8, offsetPlus8, transitionListPRC, emptyTransitionList, listOf())
+        val gmtZoneIdMatcher = gmtZoneIdPattern.matchEntire(zoneId)
+        if (null != gmtZoneIdMatcher && gmtZoneIdMatcher.groups.size == 3) {
+            val offsetNumber = gmtZoneIdMatcher.groups[1]!!.value.toInt()
+            if (offsets.containsKey(offsetNumber)) {
+                return ZoneRules(offsets[offsetNumber]!!, offsets[offsetNumber]!!,
+                        emptyTransitionList, emptyTransitionList, emptyTransitionRuleList)
+            }
+        } else if (zoneId == "PRC" || zoneId == "Asia/Shanghai") {
+            return ZoneRules(offsets[8]!!, offsets[8]!!, transitionListPRC, emptyTransitionList, emptyTransitionRuleList)
         } else if (zoneId == "Asia/Hong_Kong" || zoneId == "Hongkong") {
             // TODO: daylight saving
-            return ZoneRules(offsetPlus8, offsetPlus8, emptyTransitionList, emptyTransitionList, listOf())
+            return ZoneRules(offsets[8]!!, offsets[8]!!, emptyTransitionList, emptyTransitionList, emptyTransitionRuleList)
         } else if (zoneId == "Asia/Chongqing" || zoneId == "Asia/Chungking") {
-            // TODO: offsetPlus7?
-            return ZoneRules(offsetPlus8, offsetPlus8, transitionListPRC, emptyTransitionList, listOf())
+            // TODO: offsets[7] ?
+            return ZoneRules(offsets[8]!!, offsets[8]!!, transitionListPRC, emptyTransitionList, emptyTransitionRuleList)
         } else if (zoneId == "Asia/Asia/Urumqi") {
-            // TODO: offsetPlus6?
-            return ZoneRules(offsetPlus8, offsetPlus8, transitionListPRC, emptyTransitionList, listOf())
-        } else if (zoneId == "Asia/Singapore" || zoneId == "Singapore" || zoneId == "Etc/GMT+8") {
-            return ZoneRules(offsetPlus8, offsetPlus8, emptyTransitionList, emptyTransitionList, listOf())
+            // TODO: offsets[6] ?
+            return ZoneRules(offsets[8]!!, offsets[8]!!, transitionListPRC, emptyTransitionList, emptyTransitionRuleList)
+        } else if (zoneId == "Asia/Singapore" || zoneId == "Singapore") {
+            return ZoneRules(offsets[8]!!, offsets[8]!!, emptyTransitionList, emptyTransitionList, emptyTransitionRuleList)
+        } else if (zoneId == "UTC" || zoneId == "Etc/UTC"
+                || zoneId == "Etc/GMT" || zoneId == "Etc/GMT0") {
+            return ZoneRules(offsets[0]!!, offsets[0]!!, emptyTransitionList, emptyTransitionList, emptyTransitionRuleList)
         }
         throw ZoneRulesException("Unsupported time-zone ID: $zoneId")
     }
-    private val offsetPlus6 = ZoneOffset.ofHours(6)
-    private val offsetPlus7 = ZoneOffset.ofHours(7)
-    private val offsetPlus8 = ZoneOffset.ofHours(8)
-    private val offsetPlus9 = ZoneOffset.ofHours(9)
-    private val emptyTransitionList = listOf<ZoneOffsetTransition>()
-    private val transitionListPRC = listOf(
-        ZoneOffsetTransition(LocalDateTime.of(1986, 5, 4, 2, 0), offsetPlus8, offsetPlus9),
-        ZoneOffsetTransition(LocalDateTime.of(1986, 9, 14, 2, 0), offsetPlus9, offsetPlus8),
-        ZoneOffsetTransition(LocalDateTime.of(1987, 4, 12, 2, 0), offsetPlus8, offsetPlus9),
-        ZoneOffsetTransition(LocalDateTime.of(1987, 9, 13, 2, 0), offsetPlus9, offsetPlus8),
-        ZoneOffsetTransition(LocalDateTime.of(1988, 4, 10, 2, 0), offsetPlus8, offsetPlus9),
-        ZoneOffsetTransition(LocalDateTime.of(1988, 9, 11, 2, 0), offsetPlus9, offsetPlus8),
-        ZoneOffsetTransition(LocalDateTime.of(1989, 4, 16, 2, 0), offsetPlus8, offsetPlus9),
-        ZoneOffsetTransition(LocalDateTime.of(1989, 9, 17, 2, 0), offsetPlus9, offsetPlus8),
-        ZoneOffsetTransition(LocalDateTime.of(1990, 4, 15, 2, 0), offsetPlus8, offsetPlus9),
-        ZoneOffsetTransition(LocalDateTime.of(1990, 9, 16, 2, 0), offsetPlus9, offsetPlus8),
-        ZoneOffsetTransition(LocalDateTime.of(1991, 4, 14, 2, 0), offsetPlus8, offsetPlus9),
-        ZoneOffsetTransition(LocalDateTime.of(1991, 9, 15, 2, 0), offsetPlus9, offsetPlus8)
-    )
 }
 
 /**

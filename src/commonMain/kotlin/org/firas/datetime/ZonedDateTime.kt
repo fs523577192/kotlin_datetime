@@ -435,7 +435,7 @@ class ZonedDateTime(
                 }
             } catch (ex: DateTimeException) {
                 throw DateTimeException("Unable to obtain ZonedDateTime from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getKClass().qualifiedName, ex)
+                        temporal + " of type " + temporal.getClassName(), ex)
             }
         }
 
@@ -2089,10 +2089,6 @@ class ZonedDateTime(
         } else {
             str
         }
-    }
-
-    override fun getKClass(): KClass<out TemporalAccessor> {
-        return ZonedDateTime::class
     }
 
     /**

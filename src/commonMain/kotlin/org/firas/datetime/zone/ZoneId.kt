@@ -65,6 +65,7 @@ import org.firas.datetime.DateTimeException
 import org.firas.datetime.Instant
 import org.firas.datetime.temporal.TemporalAccessor
 import org.firas.datetime.temporal.TemporalQueries
+import org.firas.datetime.temporal.getClassName
 
 /**
  * A time-zone ID, such as `Europe/Paris`.
@@ -311,7 +312,7 @@ abstract class ZoneId internal constructor() {
         fun from(temporal: TemporalAccessor): ZoneId {
             return temporal.query(TemporalQueries.ZONE) ?: throw DateTimeException(
                 "Unable to obtain ZoneId from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getKClass().qualifiedName
+                        temporal + " of type " + temporal.getClassName()
             )
         }
 
