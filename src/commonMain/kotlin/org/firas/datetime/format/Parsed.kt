@@ -84,7 +84,7 @@ import org.firas.datetime.zone.ZoneId
  * is automatically created for each parse and parsing is single-threaded
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 internal class Parsed internal constructor() {
     // some fields are accessed using package scope from DateTimeParseContext

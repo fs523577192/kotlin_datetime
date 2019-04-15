@@ -72,7 +72,7 @@ import org.firas.datetime.DateTimeException
  * This class is intended for use in a single thread.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class DateTimeParseException: DateTimeException {
 

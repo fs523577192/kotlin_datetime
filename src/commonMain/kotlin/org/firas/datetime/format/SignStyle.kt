@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -62,87 +62,88 @@
 package org.firas.datetime.format
 
 /**
- * Enumeration of the style of text formatting and parsing.
- * <p>
- * Text styles define three sizes for the formatted text - 'full', 'short' and 'narrow'.
- * Each of these three sizes is available in both 'standard' and 'stand-alone' variations.
- * <p>
- * The difference between the three sizes is obvious in most languages.
- * For example, in English the 'full' month is 'January', the 'short' month is 'Jan'
- * and the 'narrow' month is 'J'. Note that the narrow size is often not unique.
- * For example, 'January', 'June' and 'July' all have the 'narrow' text 'J'.
- * <p>
- * The difference between the 'standard' and 'stand-alone' forms is trickier to describe
- * as there is no difference in English. However, in other languages there is a difference
- * in the word used when the text is used alone, as opposed to in a complete date.
- * For example, the word used for a month when used alone in a date picker is different
- * to the word used for month in association with a day and year in a date.
+ * Enumeration of ways to handle the positive/negative sign.
+ *
+ *
+ * The formatting engine allows the positive and negative signs of numbers
+ * to be controlled using this enum.
+ * See [DateTimeFormatterBuilder] for usage.
  *
  * @implSpec
- * This is immutable and thread-safe enum.
+ * This is an immutable and thread-safe enum.
  *
  * @since Java 1.8
  * @author Wu Yuping (migrate to Kotlin)
  */
-enum class TextStyle(
-    val zoneNameStyleIndex: Int
-) {
-    // ordered from large to small
-    // ordered so that bit 0 of the ordinal indicates stand-alone.
-
+enum class SignStyle {
     /**
-     * Full text, typically the full description.
-     * For example, day-of-week Monday might output "Monday".
-     */
-    FULL(0),
-    /**
-     * Full text for stand-alone use, typically the full description.
-     * For example, day-of-week Monday might output "Monday".
-     */
-    FULL_STANDALONE(0),
-    /**
-     * Short text, typically an abbreviation.
-     * For example, day-of-week Monday might output "Mon".
-     */
-    SHORT(1),
-    /**
-     * Short text for stand-alone use, typically an abbreviation.
-     * For example, day-of-week Monday might output "Mon".
-     */
-    SHORT_STANDALONE(1),
-    /**
-     * Narrow text, typically a single letter.
-     * For example, day-of-week Monday might output "M".
-     */
-    NARROW(1),
-    /**
-     * Narrow text for stand-alone use, typically a single letter.
-     * For example, day-of-week Monday might output "M".
-     */
-    NARROW_STANDALONE(1);
-
-    /**
-     * Returns true if the Style is a stand-alone style.
-     * @return true if the style is a stand-alone style.
-     */
-    fun isStandalone(): Boolean {
-        return ordinal and 1 == 1
-    }
-
-    /**
-     * Returns the stand-alone style with the same size.
-     * @return the stand-alone style with the same size
-     */
-    fun asStandalone(): TextStyle {
-        return TextStyle.values()[ordinal or 1]
-    }
-
-    /**
-     * Returns the normal style with the same size.
+     * Style to output the sign only if the value is negative.
      *
-     * @return the normal style with the same size
+     *
+     * In strict parsing, the negative sign will be accepted and the positive sign rejected.
+     * In lenient parsing, any sign will be accepted.
      */
-    fun asNormal(): TextStyle {
-        return TextStyle.values()[ordinal and 1.inv()]
+    NORMAL,
+
+    /**
+     * Style to always output the sign, where zero will output '+'.
+     *
+     *
+     * In strict parsing, the absence of a sign will be rejected.
+     * In lenient parsing, any sign will be accepted, with the absence
+     * of a sign treated as a positive number.
+     */
+    ALWAYS,
+
+    /**
+     * Style to never output sign, only outputting the absolute value.
+     *
+     *
+     * In strict parsing, any sign will be rejected.
+     * In lenient parsing, any sign will be accepted unless the width is fixed.
+     */
+    NEVER,
+
+    /**
+     * Style to block negative values, throwing an exception on printing.
+     *
+     *
+     * In strict parsing, any sign will be rejected.
+     * In lenient parsing, any sign will be accepted unless the width is fixed.
+     */
+    NOT_NEGATIVE,
+
+    /**
+     * Style to always output the sign if the value exceeds the pad width.
+     * A negative value will always output the '-' sign.
+     *
+     *
+     * In strict parsing, the sign will be rejected unless the pad width is exceeded.
+     * In lenient parsing, any sign will be accepted, with the absence
+     * of a sign treated as a positive number.
+     */
+    EXCEEDS_PAD;
+
+    /**
+     * Parse helper.
+     *
+     * @param positive  true if positive sign parsed, false for negative sign
+     * @param strict  true if strict, false if lenient
+     * @param fixedWidth  true if fixed width, false if not
+     * @return
+     */
+    internal fun parse(positive: Boolean, strict: Boolean, fixedWidth: Boolean): Boolean {
+        return when (ordinal) {
+            0 // NORMAL
+            ->
+                // valid if negative or (positive and lenient)
+                !positive || !strict
+            1 // ALWAYS
+                , 4 // EXCEEDS_PAD
+            -> true
+            else ->
+                // valid if lenient and not fixed width
+                !strict && !fixedWidth
+        }
     }
 }
