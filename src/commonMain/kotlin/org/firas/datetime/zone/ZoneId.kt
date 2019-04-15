@@ -62,6 +62,7 @@
 package org.firas.datetime.zone
 
 import org.firas.datetime.DateTimeException
+import org.firas.datetime.Instant
 import org.firas.datetime.temporal.TemporalAccessor
 import org.firas.datetime.temporal.TemporalQueries
 
@@ -269,7 +270,7 @@ abstract class ZoneId internal constructor() {
          */
         fun ofOffset(prefix: String, offset: ZoneOffset): ZoneId {
             var prefix = prefix
-            if (prefix.length == 0) {
+            if (prefix.isEmpty()) {
                 return offset
             }
 
@@ -278,9 +279,9 @@ abstract class ZoneId internal constructor() {
             }
 
             if (offset.totalSeconds != 0) {
-                prefix = prefix + offset.id
+                prefix = prefix + offset.getId()
             }
-            return ZoneRegion(prefix /*, offset.getRules() */)
+            return ZoneRegion(prefix, offset.getRules())
         }
 
         /**
@@ -373,4 +374,57 @@ abstract class ZoneId internal constructor() {
      * @return the time-zone unique ID, not null
      */
     abstract fun getId(): String
+
+    /**
+     * Gets the time-zone rules for this ID allowing calculations to be performed.
+     *
+     *
+     * The rules provide the functionality associated with a time-zone,
+     * such as finding the offset for a given instant or local date-time.
+     *
+     *
+     * A time-zone can be invalid if it is deserialized in a Java Runtime which
+     * does not have the same rules loaded as the Java Runtime that stored it.
+     * In this case, calling this method will throw a `ZoneRulesException`.
+     *
+     *
+     * The rules are supplied by [ZoneRulesProvider]. An advanced provider may
+     * support dynamic updates to the rules without restarting the Java Runtime.
+     * If so, then the result of this method may change over time.
+     * Each individual call will be still remain thread-safe.
+     *
+     *
+     * [ZoneOffset] will always return a set of rules where the offset never changes.
+     *
+     * @return the rules, not null
+     * @throws ZoneRulesException if no rules are available for this ID
+     */
+    abstract fun getRules(): ZoneRules?
+
+    /**
+     * Normalizes the time-zone ID, returning a `ZoneOffset` where possible.
+     *
+     *
+     * The returns a normalized `ZoneId` that can be used in place of this ID.
+     * The result will have `ZoneRules` equivalent to those returned by this object,
+     * however the ID returned by `getId()` may be different.
+     *
+     *
+     * The normalization checks if the rules of this `ZoneId` have a fixed offset.
+     * If they do, then the `ZoneOffset` equal to that offset is returned.
+     * Otherwise `this` is returned.
+     *
+     * @return the time-zone unique ID, not null
+     */
+    fun normalized(): ZoneId? {
+        try {
+            val rules = getRules()!!
+            if (rules.isFixedOffset()) {
+                return rules.getOffset(Instant.EPOCH)
+            }
+        } catch (ex: ZoneRulesException) {
+            // invalid ZoneRegion is not important to this method
+        }
+        return this
+    }
 }

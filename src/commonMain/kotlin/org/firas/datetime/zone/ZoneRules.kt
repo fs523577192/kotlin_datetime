@@ -265,7 +265,41 @@ class ZoneRules {
          * The zero-length ldt array.
          */
         private val EMPTY_LDT_ARRAY = arrayOf<LocalDateTime>()
-    }
+
+        /**
+         * Obtains an instance of ZoneRules that has fixed zone rules.
+         *
+         * @param offset  the offset this fixed zone rules is based on, not null
+         * @return the zone rules, not null
+         * @see .isFixedOffset
+         */
+        fun of(offset: ZoneOffset): ZoneRules {
+            return ZoneRules(offset)
+        }
+
+        /**
+         * Obtains an instance of a ZoneRules.
+         *
+         * @param baseStandardOffset  the standard offset to use before legal rules were set, not null
+         * @param baseWallOffset  the wall offset to use before legal rules were set, not null
+         * @param standardOffsetTransitionList  the list of changes to the standard offset, not null
+         * @param transitionList  the list of transitions, not null
+         * @param lastRules  the recurring last rules, size 16 or less, not null
+         * @return the zone rules, not null
+         */
+        fun of(
+            baseStandardOffset: ZoneOffset,
+            baseWallOffset: ZoneOffset,
+            standardOffsetTransitionList: List<ZoneOffsetTransition>,
+            transitionList: List<ZoneOffsetTransition>,
+            lastRules: List<ZoneOffsetTransitionRule>
+        ): ZoneRules {
+            return ZoneRules(
+                baseStandardOffset, baseWallOffset,
+                standardOffsetTransitionList, transitionList, lastRules
+            )
+        }
+    } // companion object
 
     /**
      * Checks of the zone rules are fixed, such that the offset never varies.
@@ -386,7 +420,7 @@ class ZoneRules {
      * // Gap or Overlap: determine what to do from transition (which will be non-null)
      * ZoneOffsetTransition trans = rules.getTransition(localDT);
      * }
-    </pre> *
+     * </pre>
      *
      *
      * In theory, it is possible for there to be more than two valid offsets.

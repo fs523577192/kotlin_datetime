@@ -61,10 +61,12 @@
  */
 package org.firas.datetime
 
-import org.firas.datetime.temporal.ChronoField
+import org.firas.datetime.chrono.IsoChronology
+import org.firas.datetime.temporal.*
+import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.zone.getSystemZoneOffset
-
+import kotlin.reflect.KClass
 
 /**
  * A date-time with an offset from UTC/Greenwich in the ISO-8601 calendar system,
@@ -97,12 +99,12 @@ import org.firas.datetime.zone.getSystemZoneOffset
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class OffsetDateTime private constructor(
     val localDateTime: LocalDateTime,
     val offset: ZoneOffset
-): Comparable<OffsetDateTime> {
+): Temporal, TemporalAdjuster, Comparable<OffsetDateTime> {
 
     companion object {
         /**
@@ -123,7 +125,7 @@ class OffsetDateTime private constructor(
         val MAX = LocalDateTime.MAX.atOffset(ZoneOffset.MIN)
 
         /**
-         * Compares this {@code OffsetDateTime} to another date-time.
+         * Compares this `OffsetDateTime` to another date-time.
          * The comparison is based on the instant.
          *
          * @param datetime1  the first date-time to compare, not null
@@ -214,6 +216,67 @@ class OffsetDateTime private constructor(
         ): OffsetDateTime {
             val dt = LocalDateTime.of(year, month, dayOfMonth, hour, minute, second, nanoOfSecond)
             return OffsetDateTime(dt, offset)
+        }
+
+        /**
+         * Obtains an instance of `OffsetDateTime` from an `Instant` and zone ID.
+         *
+         *
+         * This creates an offset date-time with the same instant as that specified.
+         * Finding the offset from UTC/Greenwich is simple as there is only one valid
+         * offset for each instant.
+         *
+         * @param instant  the instant to create the date-time from, not null
+         * @param zone  the time-zone, which may be an offset, not null
+         * @return the offset date-time, not null
+         * @throws DateTimeException if the result exceeds the supported range
+         */
+        fun ofInstant(instant: Instant, zone: ZoneId): OffsetDateTime {
+            val rules = zone.getRules()
+            val offset = rules!!.getOffset(instant)!!
+            val ldt = LocalDateTime.ofEpochSecond(instant.epochSecond, instant.nanos, offset)
+            return OffsetDateTime(ldt, offset)
+        }
+
+        /**
+         * Obtains an instance of `OffsetDateTime` from a temporal object.
+         * <p>
+         * This obtains an offset date-time based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `OffsetDateTime`.
+         * <p>
+         * The conversion will first obtain a `ZoneOffset` from the temporal object.
+         * It will then try to obtain a `LocalDateTime`, falling back to an `Instant` if necessary.
+         * The result will be the combination of `ZoneOffset` with either
+         * with `LocalDateTime` or `Instant`.
+         * Implementations are permitted to perform optimizations such as accessing
+         * those fields that are equivalent to the relevant objects.
+         * <p>
+         * This method matches the signature of the functional interface {@link TemporalQuery}
+         * allowing it to be used as a query via method reference, `OffsetDateTime::from`.
+         *
+         * @param temporal  the temporal object to convert, not null
+         * @return the offset date-time, not null
+         * @throws DateTimeException if unable to convert to an `OffsetDateTime`
+         */
+        fun from(temporal: TemporalAccessor): OffsetDateTime {
+            if (temporal is OffsetDateTime) {
+                return temporal
+            }
+            try {
+                val offset = ZoneOffset.from(temporal)
+                val date = temporal.query(TemporalQueries.LOCAL_DATE)
+                val time = temporal.query(TemporalQueries.LOCAL_TIME)
+                return if (date != null && time != null) {
+                    OffsetDateTime.of(date, time, offset)
+                } else {
+                    val instant = Instant.from(temporal)
+                    OffsetDateTime.ofInstant(instant, offset)
+                }
+            } catch (ex: DateTimeException) {
+                throw DateTimeException("Unable to obtain OffsetDateTime from TemporalAccessor: " +
+                        temporal + " of type " + temporal.getKClass().qualifiedName, ex)
+            }
         }
 
         /**
@@ -589,6 +652,102 @@ class OffsetDateTime private constructor(
      */
     fun withNano(nanoOfSecond: Int): OffsetDateTime {
         return with(localDateTime.withNano(nanoOfSecond), offset)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this `OffsetDateTime` with the time truncated.
+     *
+     *
+     * Truncation returns a copy of the original date-time with fields
+     * smaller than the specified unit set to zero.
+     * For example, truncating with the [minutes][ChronoUnit.MINUTES] unit
+     * will set the second-of-minute and nano-of-second field to zero.
+     *
+     *
+     * The unit must have a [duration][TemporalUnit.getDuration]
+     * that divides into the length of a standard day without remainder.
+     * This includes all supplied time units on [ChronoUnit] and
+     * [DAYS][ChronoUnit.DAYS]. Other units throw an exception.
+     *
+     *
+     * The offset does not affect the calculation and will be the same in the result.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param unit  the unit to truncate to, not null
+     * @return an `OffsetDateTime` based on this date-time with the time truncated, not null
+     * @throws DateTimeException if unable to truncate
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     */
+    fun truncatedTo(unit: TemporalUnit): OffsetDateTime {
+        return with(this.localDateTime.truncatedTo(unit), this.offset)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this date-time with the specified amount added.
+     *
+     *
+     * This returns an `OffsetDateTime`, based on this one, with the specified amount added.
+     * The amount is typically [Period] or [Duration] but may be
+     * any other type implementing the [TemporalAmount] interface.
+     *
+     *
+     * The calculation is delegated to the amount object by calling
+     * [TemporalAmount.addTo]. The amount implementation is free
+     * to implement the addition in any way it wishes, however it typically
+     * calls back to [.plus]. Consult the documentation
+     * of the amount implementation to determine if it can be successfully added.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount to add, not null
+     * @return an `OffsetDateTime` based on this date-time with the addition made, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun plus(amountToAdd: TemporalAmount): OffsetDateTime {
+        return amountToAdd.addTo(this) as OffsetDateTime
+    }
+
+    /**
+     * Returns a copy of this date-time with the specified amount added.
+     *
+     *
+     * This returns an `OffsetDateTime`, based on this one, with the amount
+     * in terms of the unit added. If it is not possible to add the amount, because the
+     * unit is not supported or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoUnit] then the addition is implemented by
+     * [LocalDateTime.plus].
+     * The offset is not part of the calculation and will be unchanged in the result.
+     *
+     *
+     * If the field is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.addTo(Temporal, long)`
+     * passing `this` as the argument. In this case, the unit determines
+     * whether and how to perform the addition.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param amountToAdd  the amount of the unit to add to the result, may be negative
+     * @param unit  the unit of the amount to add, not null
+     * @return an `OffsetDateTime` based on this date-time with the specified amount added, not null
+     * @throws DateTimeException if the addition cannot be made
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun plus(amountToAdd: Long, unit: TemporalUnit): OffsetDateTime {
+        return if (unit is ChronoUnit) {
+            with(this.localDateTime.plus(amountToAdd, unit), this.offset)
+        } else {
+            unit.addTo(this, amountToAdd)
+        }
     }
 
     //-----------------------------------------------------------------------
@@ -991,6 +1150,600 @@ class OffsetDateTime private constructor(
     fun isEqual(other: OffsetDateTime): Boolean {
         return this.toEpochSecond() == other.toEpochSecond() &&
                 this.toLocalTime().nano == other.toLocalTime().nano
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Checks if the specified field is supported.
+     *
+     *
+     * This checks if this date-time can be queried for the specified field.
+     * If false, then calling the [range][.range],
+     * [get][.get] and [.with]
+     * methods will throw an exception.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The supported fields are:
+     *
+     *  * `NANO_OF_SECOND`
+     *  * `NANO_OF_DAY`
+     *  * `MICRO_OF_SECOND`
+     *  * `MICRO_OF_DAY`
+     *  * `MILLI_OF_SECOND`
+     *  * `MILLI_OF_DAY`
+     *  * `SECOND_OF_MINUTE`
+     *  * `SECOND_OF_DAY`
+     *  * `MINUTE_OF_HOUR`
+     *  * `MINUTE_OF_DAY`
+     *  * `HOUR_OF_AMPM`
+     *  * `CLOCK_HOUR_OF_AMPM`
+     *  * `HOUR_OF_DAY`
+     *  * `CLOCK_HOUR_OF_DAY`
+     *  * `AMPM_OF_DAY`
+     *  * `DAY_OF_WEEK`
+     *  * `ALIGNED_DAY_OF_WEEK_IN_MONTH`
+     *  * `ALIGNED_DAY_OF_WEEK_IN_YEAR`
+     *  * `DAY_OF_MONTH`
+     *  * `DAY_OF_YEAR`
+     *  * `EPOCH_DAY`
+     *  * `ALIGNED_WEEK_OF_MONTH`
+     *  * `ALIGNED_WEEK_OF_YEAR`
+     *  * `MONTH_OF_YEAR`
+     *  * `PROLEPTIC_MONTH`
+     *  * `YEAR_OF_ERA`
+     *  * `YEAR`
+     *  * `ERA`
+     *  * `INSTANT_SECONDS`
+     *  * `OFFSET_SECONDS`
+     *
+     * All other `ChronoField` instances will return false.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.isSupportedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the field is supported is determined by the field.
+     *
+     * @param field  the field to check, null returns false
+     * @return true if the field is supported on this date-time, false if not
+     */
+    override fun isSupported(field: TemporalField): Boolean {
+        return field is ChronoField || field.isSupportedBy(this)
+    }
+
+    /**
+     * Checks if the specified unit is supported.
+     *
+     *
+     * This checks if the specified unit can be added to, or subtracted from, this date-time.
+     * If false, then calling the [.plus] and
+     * [minus][.minus] methods will throw an exception.
+     *
+     *
+     * If the unit is a [ChronoUnit] then the query is implemented here.
+     * The supported units are:
+     *
+     *  * `NANOS`
+     *  * `MICROS`
+     *  * `MILLIS`
+     *  * `SECONDS`
+     *  * `MINUTES`
+     *  * `HOURS`
+     *  * `HALF_DAYS`
+     *  * `DAYS`
+     *  * `WEEKS`
+     *  * `MONTHS`
+     *  * `YEARS`
+     *  * `DECADES`
+     *  * `CENTURIES`
+     *  * `MILLENNIA`
+     *  * `ERAS`
+     *
+     * All other `ChronoUnit` instances will return false.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.isSupportedBy(Temporal)`
+     * passing `this` as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    override fun isSupported(unit: TemporalUnit): Boolean {
+        return if (unit is ChronoUnit) {
+            unit !== ChronoUnit.FOREVER
+        } else {
+            unit.isSupportedBy(this)
+        }
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Gets the range of valid values for the specified field.
+     *
+     *
+     * The range object expresses the minimum and maximum valid values for a field.
+     * This date-time is used to enhance the accuracy of the returned range.
+     * If it is not possible to return the range, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The [supported fields][.isSupported] will return
+     * appropriate range instances.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.rangeRefinedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the range can be obtained is determined by the field.
+     *
+     * @param field  the field to query the range for, not null
+     * @return the range of valid values for the field, not null
+     * @throws DateTimeException if the range for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     */
+    override fun range(field: TemporalField): ValueRange {
+        return if (field is ChronoField) {
+            if (field === ChronoField.INSTANT_SECONDS || field === ChronoField.OFFSET_SECONDS) {
+                field.range()
+            } else {
+                this.localDateTime.range(field)
+            }
+        } else field.rangeRefinedBy(this)
+    }
+
+    /**
+     * Gets the value of the specified field from this date-time as an `int`.
+     * <p>
+     * This queries this date-time for the value of the specified field.
+     * The returned value will always be within the valid range of values for the field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     * <p>
+     * If the field is a {@link ChronoField} then the query is implemented here.
+     * The {@link #isSupported(TemporalField) supported fields} will return valid
+     * values based on this date-time, except `NANO_OF_DAY`, `MICRO_OF_DAY`,
+     * `EPOCH_DAY`, `PROLEPTIC_MONTH` and `INSTANT_SECONDS` which are too
+     * large to fit in an `int` and throw an `UnsupportedTemporalTypeException`.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     * <p>
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained or
+     *         the value is outside the range of valid values for the field
+     * @throws UnsupportedTemporalTypeException if the field is not supported or
+     *         the range of values exceeds an `int`
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun get(field: TemporalField): Int {
+        if (field is ChronoField) {
+            return when (field) {
+                ChronoField.INSTANT_SECONDS ->
+                    throw UnsupportedTemporalTypeException("Invalid field 'InstantSeconds' for get() method, use getLong() instead")
+                ChronoField.OFFSET_SECONDS ->
+                    return this.offset.totalSeconds
+                else -> this.localDateTime.get(field)
+            }
+        }
+        TODO("return Temporal.super.get(field)")
+    }
+
+    /**
+     * Gets the value of the specified field from this date-time as a `long`.
+     *
+     *
+     * This queries this date-time for the value of the specified field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The [supported fields][.isSupported] will return valid
+     * values based on this date-time.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun getLong(field: TemporalField): Long {
+        if (field is ChronoField) {
+            return when (field) {
+                ChronoField.INSTANT_SECONDS -> toEpochSecond()
+                ChronoField.OFFSET_SECONDS -> offset.totalSeconds.toLong()
+                else -> this.localDateTime.getLong(field)
+            }
+        }
+        return field.getFrom(this)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Returns a copy of this date-time with the specified field set to a new value.
+     *
+     *
+     * This returns an `OffsetDateTime`, based on this one, with the value
+     * for the specified field changed.
+     * This can be used to change any supported field, such as the year, month or day-of-month.
+     * If it is not possible to set the value, because the field is not supported or for
+     * some other reason, an exception is thrown.
+     *
+     *
+     * In some cases, changing the specified field can cause the resulting date-time to become invalid,
+     * such as changing the month from 31st January to February would make the day-of-month invalid.
+     * In cases like this, the field is responsible for resolving the date. Typically it will choose
+     * the previous valid date, which would be the last valid day of February in this example.
+     *
+     *
+     * If the field is a [ChronoField] then the adjustment is implemented here.
+     *
+     *
+     * The `INSTANT_SECONDS` field will return a date-time with the specified instant.
+     * The offset and nano-of-second are unchanged.
+     * If the new instant value is outside the valid range then a `DateTimeException` will be thrown.
+     *
+     *
+     * The `OFFSET_SECONDS` field will return a date-time with the specified offset.
+     * The local date-time is unaltered. If the new offset value is outside the valid range
+     * then a `DateTimeException` will be thrown.
+     *
+     *
+     * The other [supported fields][.isSupported] will behave as per
+     * the matching method on [LocalDateTime][LocalDateTime.with].
+     * In this case, the offset is not part of the calculation and will be unchanged.
+     *
+     *
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.adjustInto(Temporal, long)`
+     * passing `this` as the argument. In this case, the field determines
+     * whether and how to adjust the instant.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param field  the field to set in the result, not null
+     * @param newValue  the new value of the field in the result
+     * @return an `OffsetDateTime` based on `this` with the specified field set, not null
+     * @throws DateTimeException if the field cannot be set
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun with(field: TemporalField, newValue: Long): OffsetDateTime {
+        if (field is ChronoField) {
+            return when (field) {
+                ChronoField.INSTANT_SECONDS ->
+                    ofInstant(Instant.ofEpochSecond(newValue, getNano().toLong()), offset)
+                ChronoField.OFFSET_SECONDS ->
+                    with(localDateTime, ZoneOffset.ofTotalSeconds(field.checkValidIntValue(newValue)))
+                else ->
+                    with(localDateTime.with(field, newValue), offset)
+            }
+        }
+        return field.adjustInto(this, newValue)
+    }
+
+    /**
+     * Returns an adjusted copy of this date-time.
+     *
+     *
+     * This returns an `OffsetDateTime`, based on this one, with the date-time adjusted.
+     * The adjustment takes place using the specified adjuster strategy object.
+     * Read the documentation of the adjuster to understand what adjustment will be made.
+     *
+     *
+     * A simple adjuster might simply set the one of the fields, such as the year field.
+     * A more complex adjuster might set the date to the last day of the month.
+     * A selection of common adjustments is provided in
+     * [TemporalAdjusters][java.time.temporal.TemporalAdjusters].
+     * These include finding the "last day of the month" and "next Wednesday".
+     * Key date-time classes also implement the `TemporalAdjuster` interface,
+     * such as [Month] and [MonthDay][java.time.MonthDay].
+     * The adjuster is responsible for handling special cases, such as the varying
+     * lengths of month and leap years.
+     *
+     *
+     * For example this code returns a date on the last day of July:
+     * <pre>
+     * import static java.time.Month.*;
+     * import static java.time.temporal.TemporalAdjusters.*;
+     *
+     * result = offsetDateTime.with(JULY).with(lastDayOfMonth());
+     * </pre>
+     *
+     *
+     * The classes [LocalDate], [LocalTime] and [ZoneOffset] implement
+     * `TemporalAdjuster`, thus this method can be used to change the date, time or offset:
+     * <pre>
+     * result = offsetDateTime.with(date);
+     * result = offsetDateTime.with(time);
+     * result = offsetDateTime.with(offset);
+     * </pre>
+     *
+     *
+     * The result of this method is obtained by invoking the
+     * [TemporalAdjuster.adjustInto] method on the
+     * specified adjuster passing `this` as the argument.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param adjuster the adjuster to use, not null
+     * @return an `OffsetDateTime` based on `this` with the adjustment made, not null
+     * @throws DateTimeException if the adjustment cannot be made
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun with(adjuster: TemporalAdjuster): OffsetDateTime {
+        // optimizations
+        return if (adjuster is LocalDate || adjuster is LocalTime || adjuster is LocalDateTime) {
+            with(this.localDateTime.with(adjuster), offset)
+        } else if (adjuster is Instant) {
+            ofInstant(adjuster, offset)
+        } else if (adjuster is ZoneOffset) {
+            with(this.localDateTime, adjuster)
+        } else if (adjuster is OffsetDateTime) {
+            adjuster
+        } else {
+            adjuster.adjustInto(this) as OffsetDateTime
+        }
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Queries this date-time using the specified query.
+     *
+     *
+     * This queries this date-time using the specified query strategy object.
+     * The `TemporalQuery` object defines the logic to be used to
+     * obtain the result. Read the documentation of the query to understand
+     * what the result of this method will be.
+     *
+     *
+     * The result of this method is obtained by invoking the
+     * [TemporalQuery#queryFrom(TemporalAccessor)] method on the
+     * specified query passing `this` as the argument.
+     *
+     * @param <R> the type of the result
+     * @param query  the query to invoke, not null
+     * @return the query result, null may be returned (defined by the query)
+     * @throws DateTimeException if unable to query (defined by the query)
+     * @throws ArithmeticException if numeric overflow occurs (defined by the query)
+     */
+    override fun <R> query(query: TemporalQuery<R>): R? {
+        if (query == TemporalQueries.OFFSET || query == TemporalQueries.ZONE) {
+            return offset as R
+        } else if (query == TemporalQueries.ZONE_ID) {
+            return null
+        } else if (query == TemporalQueries.LOCAL_DATE) {
+            return toLocalDate() as R
+        } else if (query == TemporalQueries.LOCAL_TIME) {
+            return toLocalTime() as R
+        } else if (query == TemporalQueries.CHRONO) {
+            return IsoChronology.INSTANCE as R
+        } else if (query == TemporalQueries.PRECISION) {
+            return ChronoUnit.NANOS as R
+        }
+        // inline TemporalAccessor.super.query(query) as an optimization
+        // non-JDK classes are not permitted to make this optimization
+        return query.queryFrom(this)
+    }
+
+    /**
+     * Adjusts the specified temporal object to have the same offset, date
+     * and time as this object.
+     *
+     *
+     * This returns a temporal object of the same observable type as the input
+     * with the offset, date and time changed to be the same as this.
+     *
+     *
+     * The adjustment is equivalent to using [Temporal#with(TemporalField, long)]
+     * three times, passing [ChronoField#EPOCH_DAY],
+     * [ChronoField#NANO_OF_DAY] and [ChronoField#OFFSET_SECONDS] as the fields.
+     *
+     *
+     * In most cases, it is clearer to reverse the calling pattern by using
+     * {@link Temporal#with(TemporalAdjuster)}:
+     * <pre>
+     *   // these two lines are equivalent, but the second approach is recommended
+     *   temporal = thisOffsetDateTime.adjustInto(temporal);
+     *   temporal = temporal.with(thisOffsetDateTime);
+     * </pre>
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param temporal  the target object to be adjusted, not null
+     * @return the adjusted object, not null
+     * @throws DateTimeException if unable to make the adjustment
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun adjustInto(temporal: Temporal): Temporal {
+        // OffsetDateTime is treated as three separate fields, not an instant
+        // this produces the most consistent set of results overall
+        // the offset is set after the date and time, as it is typically a small
+        // tweak to the result, with ZonedDateTime frequently ignoring the offset
+        return temporal
+                .with(ChronoField.EPOCH_DAY, toLocalDate().toEpochDay())
+                .with(ChronoField.NANO_OF_DAY, toLocalTime().toNanoOfDay())
+                .with(ChronoField.OFFSET_SECONDS, this.offset.totalSeconds.toLong())
+    }
+
+    /**
+     * Calculates the amount of time until another date-time in terms of the specified unit.
+     *
+     *
+     * This calculates the amount of time between two `OffsetDateTime`
+     * objects in terms of a single `TemporalUnit`.
+     * The start and end points are `this` and the specified date-time.
+     * The result will be negative if the end is before the start.
+     * For example, the amount in days between two date-times can be calculated
+     * using `startDateTime.until(endDateTime, DAYS)`.
+     *
+     *
+     * The `Temporal` passed to this method is converted to a
+     * `OffsetDateTime` using [.from].
+     * If the offset differs between the two date-times, the specified
+     * end date-time is normalized to have the same offset as this date-time.
+     *
+     *
+     * The calculation returns a whole number, representing the number of
+     * complete units between the two date-times.
+     * For example, the amount in months between 2012-06-15T00:00Z and 2012-08-14T23:59Z
+     * will only be one month as it is one minute short of two months.
+     *
+     *
+     * There are two equivalent ways of using this method.
+     * The first is to invoke this method.
+     * The second is to use [TemporalUnit.between]:
+     * <pre>
+     * // these two lines are equivalent
+     * amount = start.until(end, MONTHS);
+     * amount = MONTHS.between(start, end);
+     * </pre>
+     * The choice should be made based on which makes the code more readable.
+     *
+     *
+     * The calculation is implemented in this method for [ChronoUnit].
+     * The units `NANOS`, `MICROS`, `MILLIS`, `SECONDS`,
+     * `MINUTES`, `HOURS` and `HALF_DAYS`, `DAYS`,
+     * `WEEKS`, `MONTHS`, `YEARS`, `DECADES`,
+     * `CENTURIES`, `MILLENNIA` and `ERAS` are supported.
+     * Other `ChronoUnit` values will throw an exception.
+     *
+     *
+     * If the unit is not a `ChronoUnit`, then the result of this method
+     * is obtained by invoking `TemporalUnit.between(Temporal, Temporal)`
+     * passing `this` as the first argument and the converted input temporal
+     * as the second argument.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param endExclusive  the end date, exclusive, which is converted to an `OffsetDateTime`, not null
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this date-time and the end date-time
+     * @throws DateTimeException if the amount cannot be calculated, or the end
+     * temporal cannot be converted to an `OffsetDateTime`
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun until(endExclusive: Temporal, unit: TemporalUnit): Long {
+        var end = OffsetDateTime.from(endExclusive)
+        if (unit is ChronoUnit) {
+            end = end.withOffsetSameInstant(this.offset)
+            return this.localDateTime.until(end.localDateTime, unit)
+        }
+        return unit.between(this, end)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Combines this date-time with a time-zone to create a `ZonedDateTime`
+     * ensuring that the result has the same instant.
+     *
+     *
+     * This returns a `ZonedDateTime` formed from this date-time and the specified time-zone.
+     * This conversion will ignore the visible local date-time and use the underlying instant instead.
+     * This avoids any problems with local time-line gaps or overlaps.
+     * The result might have different values for fields such as hour, minute an even day.
+     *
+     *
+     * To attempt to retain the values of the fields, use [.atZoneSimilarLocal].
+     * To use the offset as the zone ID, use [.toZonedDateTime].
+     *
+     * @param zone  the time-zone to use, not null
+     * @return the zoned date-time formed from this date-time, not null
+     */
+    fun atZoneSameInstant(zone: ZoneId): ZonedDateTime {
+        return ZonedDateTime.ofInstant(this.localDateTime, this.offset, zone)
+    }
+
+    /**
+     * Combines this date-time with a time-zone to create a `ZonedDateTime`
+     * trying to keep the same local date and time.
+     *
+     *
+     * This returns a `ZonedDateTime` formed from this date-time and the specified time-zone.
+     * Where possible, the result will have the same local date-time as this object.
+     *
+     *
+     * Time-zone rules, such as daylight savings, mean that not every time on the
+     * local time-line exists. If the local date-time is in a gap or overlap according to
+     * the rules then a resolver is used to determine the resultant local time and offset.
+     * This method uses [ZonedDateTime.ofLocal]
+     * to retain the offset from this instance if possible.
+     *
+     *
+     * Finer control over gaps and overlaps is available in two ways.
+     * If you simply want to use the later offset at overlaps then call
+     * [ZonedDateTime.withLaterOffsetAtOverlap] immediately after this method.
+     *
+     *
+     * To create a zoned date-time at the same instant irrespective of the local time-line,
+     * use [.atZoneSameInstant].
+     * To use the offset as the zone ID, use [.toZonedDateTime].
+     *
+     * @param zone  the time-zone to use, not null
+     * @return the zoned date-time formed from this date and the earliest valid time for the zone, not null
+     */
+    fun atZoneSimilarLocal(zone: ZoneId): ZonedDateTime {
+        return ZonedDateTime.ofLocal(this.localDateTime, zone, this.offset)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Converts this date-time to an `OffsetTime`.
+     *
+     *
+     * This returns an offset time with the same local time and offset.
+     *
+     * @return an OffsetTime representing the time and offset, not null
+     */
+    fun toOffsetTime(): OffsetTime {
+        return OffsetTime.of(this.localDateTime.getTime(), offset)
+    }
+
+    //-----------------------------------------------------------------------
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other is OffsetDateTime) {
+            return this.localDateTime == other.localDateTime && this.offset == other.offset
+        }
+        return false
+    }
+
+    override fun hashCode(): Int {
+        return this.localDateTime.hashCode() xor this.offset.hashCode()
+    }
+
+    override fun toString(): String {
+        return this.localDateTime.toString() + offset.toString()
+    }
+
+    override fun getKClass(): KClass<out TemporalAccessor> {
+        return OffsetDateTime::class
     }
 
     /**

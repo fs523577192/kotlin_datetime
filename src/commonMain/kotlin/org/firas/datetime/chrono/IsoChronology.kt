@@ -61,11 +61,11 @@
  */
 package org.firas.datetime.chrono
 
-import org.firas.datetime.DateTimeException
-import org.firas.datetime.LocalDate
-import org.firas.datetime.Month
+import org.firas.datetime.*
 import org.firas.datetime.temporal.ChronoField
+import org.firas.datetime.temporal.TemporalAccessor
 import org.firas.datetime.util.MathUtils
+import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
 
 
@@ -96,7 +96,7 @@ import org.firas.datetime.zone.ZoneOffset
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class IsoChronology private constructor(): Chronology {
 
@@ -191,6 +191,21 @@ class IsoChronology private constructor(): Chronology {
         return LocalDate.ofEpochDay(epochDay)
     }
 
+    //-----------------------------------------------------------------------
+    /**
+     * Obtains an ISO local date from another date-time object.
+     *
+     *
+     * This is equivalent to [LocalDate.from].
+     *
+     * @param temporal  the date-time object to convert, not null
+     * @return the ISO local date, not null
+     * @throws DateTimeException if unable to create the date
+     */
+    override fun date(temporal: TemporalAccessor): LocalDate {
+        return LocalDate.from(temporal)
+    }
+
     /**
      * Gets the number of seconds from the epoch of 1970-01-01T00:00:00Z.
      *
@@ -208,7 +223,7 @@ class IsoChronology private constructor(): Chronology {
      * @return the number of seconds relative to 1970-01-01T00:00:00Z, may be negative
      * @throws DateTimeException if the value of any argument is out of range,
      * or if the day-of-month is invalid for the month-of-year
-     * @since 9
+     * @since Java 9
      */
     override fun epochSecond(
         prolepticYear: Int, month: Int, dayOfMonth: Int,
@@ -250,6 +265,49 @@ class IsoChronology private constructor(): Chronology {
         val timeinSec = (hour * 60 + minute) * 60 + second
         return MathUtils.addExact(MathUtils.multiplyExact(totalDays, 86400L),
                 (timeinSec - zoneOffset.totalSeconds).toLong())
+    }
+
+    /**
+     * Obtains an ISO local date-time from another date-time object.
+     *
+     *
+     * This is equivalent to [LocalDateTime.from].
+     *
+     * @param temporal  the date-time object to convert, not null
+     * @return the ISO local date-time, not null
+     * @throws DateTimeException if unable to create the date-time
+     */
+    override fun localDateTime(temporal: TemporalAccessor): LocalDateTime {
+        return LocalDateTime.from(temporal)
+    }
+
+    /**
+     * Obtains an ISO zoned date-time from another date-time object.
+     *
+     *
+     * This is equivalent to [ZonedDateTime.from].
+     *
+     * @param temporal  the date-time object to convert, not null
+     * @return the ISO zoned date-time, not null
+     * @throws DateTimeException if unable to create the date-time
+     */
+    override fun zonedDateTime(temporal: TemporalAccessor): ZonedDateTime {
+        return ZonedDateTime.from(temporal)
+    }
+
+    /**
+     * Obtains an ISO zoned date-time in this chronology from an `Instant`.
+     *
+     *
+     * This is equivalent to [ZonedDateTime.ofInstant].
+     *
+     * @param instant  the instant to create the date-time from, not null
+     * @param zone  the time-zone, not null
+     * @return the zoned date-time, not null
+     * @throws DateTimeException if the result exceeds the supported range
+     */
+    override fun zonedDateTime(instant: Instant, zone: ZoneId): ZonedDateTime {
+        return ZonedDateTime.ofInstant(instant, zone)
     }
 
     /**

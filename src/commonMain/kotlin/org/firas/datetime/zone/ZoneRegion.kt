@@ -77,9 +77,11 @@ import org.firas.datetime.DateTimeException
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
-class ZoneRegion internal constructor(val id: String): ZoneId() {
+class ZoneRegion internal constructor(
+    private val id: String,
+    private val rules: ZoneRules?): ZoneId() {
 
     companion object {
         /**
@@ -98,7 +100,6 @@ class ZoneRegion internal constructor(val id: String): ZoneId() {
          */
         internal fun ofId(zoneId: String, checkAvailable: Boolean): ZoneRegion {
             checkName(zoneId)
-            /*
             var rules: ZoneRules? = null
             try {
                 // always attempt load for better behavior after deserialization
@@ -108,8 +109,7 @@ class ZoneRegion internal constructor(val id: String): ZoneId() {
                     throw ex
                 }
             }
-            */
-            return ZoneRegion(zoneId /*, rules */)
+            return ZoneRegion(zoneId, rules)
         }
 
         /**
@@ -135,5 +135,13 @@ class ZoneRegion internal constructor(val id: String): ZoneId() {
                 throw DateTimeException("Invalid ID for region-based ZoneId, invalid format: $zoneId")
             }
         }
+    }
+
+    override fun getId(): String {
+        return this.id
+    }
+
+    override fun getRules(): ZoneRules? {
+        return rules
     }
 }

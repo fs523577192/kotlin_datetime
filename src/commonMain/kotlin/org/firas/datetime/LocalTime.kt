@@ -97,14 +97,14 @@ import kotlin.reflect.KClass
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class LocalTime private constructor(
     val hour: Byte,
     val minute: Byte,
     val second: Byte,
     val nano: Int
-): Temporal, Comparable<LocalTime> {
+): Temporal, TemporalAdjuster, Comparable<LocalTime> {
 
     companion object {
         /**
@@ -170,6 +170,10 @@ class LocalTime private constructor(
          * Microseconds per day.
          */
         internal const val MICROS_PER_DAY = SECONDS_PER_DAY * 1000_000L
+        /**
+         * Nanos per millisecond.
+         */
+        internal const val NANOS_PER_MILLI = 1000_000L
         /**
          * Nanos per second.
          */
@@ -708,6 +712,46 @@ class LocalTime private constructor(
 
     //-----------------------------------------------------------------------
     /**
+     * Returns a copy of this `LocalTime` with the time truncated.
+     *
+     *
+     * Truncation returns a copy of the original time with fields
+     * smaller than the specified unit set to zero.
+     * For example, truncating with the [minutes][ChronoUnit.MINUTES] unit
+     * will set the second-of-minute and nano-of-second field to zero.
+     *
+     *
+     * The unit must have a [duration][TemporalUnit.getDuration]
+     * that divides into the length of a standard day without remainder.
+     * This includes all supplied time units on [ChronoUnit] and
+     * [DAYS][ChronoUnit.DAYS]. Other units throw an exception.
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param unit  the unit to truncate to, not null
+     * @return a `LocalTime` based on this time with the time truncated, not null
+     * @throws DateTimeException if unable to truncate
+     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     */
+    fun truncatedTo(unit: TemporalUnit): LocalTime {
+        if (unit === ChronoUnit.NANOS) {
+            return this
+        }
+        val unitDur = unit.getDuration()
+        if (unitDur.seconds > SECONDS_PER_DAY) {
+            throw UnsupportedTemporalTypeException("Unit is too large to be used for truncation")
+        }
+        val dur = unitDur.toNanos()
+        if (NANOS_PER_DAY % dur != 0L) {
+            throw UnsupportedTemporalTypeException("Unit must divide into a standard day without remainder")
+        }
+        val nod = toNanoOfDay()
+        return ofNanoOfDay(nod / dur * dur)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
      * Returns a copy of this time with the specified amount added.
      *
      *
@@ -980,7 +1024,7 @@ class LocalTime private constructor(
      * @throws DateTimeException if unable to make the adjustment
      * @throws ArithmeticException if numeric overflow occurs
      */
-    fun adjustInto(temporal: Temporal): Temporal {
+    override fun adjustInto(temporal: Temporal): Temporal {
         return temporal.with(ChronoField.NANO_OF_DAY, toNanoOfDay())
     }
 

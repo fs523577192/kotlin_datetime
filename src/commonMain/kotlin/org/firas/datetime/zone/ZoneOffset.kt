@@ -65,38 +65,47 @@ import org.firas.datetime.DateTimeException
 import org.firas.datetime.LocalTime.Companion.MINUTES_PER_HOUR
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_HOUR
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_MINUTE
+import org.firas.datetime.temporal.*
 import kotlin.math.absoluteValue
+import kotlin.reflect.KClass
 
 /**
  * A time-zone offset from Greenwich/UTC, such as `+02:00`.
- * <p>
+ *
+ *
  * A time-zone offset is the amount of time that a time-zone differs from Greenwich/UTC.
  * This is usually a fixed number of hours and minutes.
- * <p>
+ *
+ *
  * Different parts of the world have different time-zone offsets.
  * The rules for how offsets vary by place and time of year are captured in the
- * {@link ZoneId} class.
- * <p>
+ * [ZoneId] class.
+ *
+ *
  * For example, Paris is one hour ahead of Greenwich/UTC in winter and two hours
  * ahead in summer. The `ZoneId` instance for Paris will reference two
  * `ZoneOffset` instances - a `+01:00` instance for winter,
  * and a `+02:00` instance for summer.
- * <p>
+ *
+ *
  * In 2008, time-zone offsets around the world extended from -12:00 to +14:00.
  * To prevent any problems with that range being extended, yet still provide
  * validation, the range of offsets is restricted to -18:00 to 18:00 inclusive.
- * <p>
+ *
+ *
  * This class is designed for use with the ISO calendar system.
  * The fields of hours, minutes and seconds make assumptions that are valid for the
  * standard ISO definitions of those fields. This class may be used with other
  * calendar systems providing the definition of the time fields matches those
  * of the ISO calendar system.
- * <p>
+ *
+ *
  * Instances of `ZoneOffset` must be compared using {@link #equals}.
  * Implementations may choose to cache certain common offsets, however
  * applications must not rely on such caching.
  *
- * <p>
+ *
+ *
  * This is a <a href="{@docRoot}/java.base/java/lang/doc-files/ValueBased.html">value-based</a>
  * class; use of identity-sensitive operations (including reference equality
  * (`==`), identity hash code, or synchronization) on instances of
@@ -107,13 +116,13 @@ import kotlin.math.absoluteValue
  * This class is immutable and thread-safe.
  *
  * @since Java 1.8
- * @author Wu Yuping
+ * @author Wu Yuping (migrate to Kotlin)
  */
 class ZoneOffset private constructor(
     val totalSeconds: Int
-): ZoneId(), Comparable<ZoneOffset> {
+): ZoneId(), TemporalAccessor, TemporalAdjuster, Comparable<ZoneOffset> {
 
-    val id: String = buildId(this.totalSeconds)
+    private val id: String = buildId(this.totalSeconds)
 
     companion object {
         /**
@@ -307,6 +316,36 @@ class ZoneOffset private constructor(
             }
         }
 
+        /**
+         * Obtains an instance of `ZoneOffset` from a temporal object.
+         *
+         *
+         * This obtains an offset based on the specified temporal.
+         * A `TemporalAccessor` represents an arbitrary set of date and time information,
+         * which this factory converts to an instance of `ZoneOffset`.
+         *
+         *
+         * A `TemporalAccessor` represents some form of date and time information.
+         * This factory converts the arbitrary temporal object to an instance of `ZoneOffset`.
+         *
+         *
+         * The conversion uses the {@link TemporalQueries#offset()} query, which relies
+         * on extracting the {@link ChronoField#OFFSET_SECONDS OFFSET_SECONDS} field.
+         *
+         *
+         * This method matches the signature of the functional interface {@link TemporalQuery}
+         * allowing it to be used as a query via method reference, `ZoneOffset::from`.
+         *
+         * @param temporal  the temporal object to convert, not null
+         * @return the zone-offset, not null
+         * @throws DateTimeException if unable to convert to an `ZoneOffset`
+         */
+        fun from(temporal: TemporalAccessor): ZoneOffset {
+            return temporal.query(TemporalQueries.OFFSET) ?: throw DateTimeException(
+                    "Unable to obtain ZoneOffset from TemporalAccessor: " +
+                    temporal + " of type " + temporal.getKClass().qualifiedName)
+        }
+
         private fun buildId(totalSeconds: Int): String {
             if (totalSeconds == 0) {
                 return "Z"
@@ -398,6 +437,186 @@ class ZoneOffset private constructor(
         }
     } // companion object
 
+    override fun getId(): String {
+        return this.id
+    }
+
+    /**
+     * Gets the associated time-zone rules.
+     *
+     *
+     * The rules will always return this offset when queried.
+     * The implementation class is immutable, thread-safe and serializable.
+     *
+     * @return the rules, not null
+     */
+    override fun getRules(): ZoneRules {
+        return ZoneRules.of(this)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Checks if the specified field is supported.
+     *
+     *
+     * This checks if this offset can be queried for the specified field.
+     * If false, then calling the [range][.range] and
+     * [get][.get] methods will throw an exception.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The `OFFSET_SECONDS` field returns true.
+     * All other `ChronoField` instances will return false.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.isSupportedBy(TemporalAccessor)`
+     * passing `this` as the argument.
+     * Whether the field is supported is determined by the field.
+     *
+     * @param field  the field to check, null returns false
+     * @return true if the field is supported on this offset, false if not
+     */
+    override fun isSupported(field: TemporalField): Boolean {
+        return if (field is ChronoField) {
+            field === ChronoField.OFFSET_SECONDS
+        } else {
+            field.isSupportedBy(this)
+        }
+    }
+
+    /**
+     * Gets the value of the specified field from this offset as an `int`.
+     *
+     *
+     * This queries this offset for the value of the specified field.
+     * The returned value will always be within the valid range of values for the field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The `OFFSET_SECONDS` field returns the value of the offset.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained or
+     * the value is outside the range of valid values for the field
+     * @throws UnsupportedTemporalTypeException if the field is not supported or
+     * the range of values exceeds an `int`
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun get(field: TemporalField): Int {
+        if (field === ChronoField.OFFSET_SECONDS) {
+            return this.totalSeconds
+        } else if (field is ChronoField) {
+            throw UnsupportedTemporalTypeException("Unsupported field: $field")
+        }
+        return range(field).checkValidIntValue(getLong(field), field)
+    }
+
+    /**
+     * Gets the value of the specified field from this offset as a `long`.
+     *
+     *
+     * This queries this offset for the value of the specified field.
+     * If it is not possible to return the value, because the field is not supported
+     * or for some other reason, an exception is thrown.
+     *
+     *
+     * If the field is a [ChronoField] then the query is implemented here.
+     * The `OFFSET_SECONDS` field returns the value of the offset.
+     * All other `ChronoField` instances will throw an `UnsupportedTemporalTypeException`.
+     *
+     *
+     * If the field is not a `ChronoField`, then the result of this method
+     * is obtained by invoking `TemporalField.getFrom(TemporalAccessor)`
+     * passing `this` as the argument. Whether the value can be obtained,
+     * and what the value represents, is determined by the field.
+     *
+     * @param field  the field to get, not null
+     * @return the value for the field
+     * @throws DateTimeException if a value for the field cannot be obtained
+     * @throws UnsupportedTemporalTypeException if the field is not supported
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun getLong(field: TemporalField): Long {
+        if (field === ChronoField.OFFSET_SECONDS) {
+            return totalSeconds.toLong()
+        } else if (field is ChronoField) {
+            throw UnsupportedTemporalTypeException("Unsupported field: $field")
+        }
+        return field.getFrom(this)
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Queries this offset using the specified query.
+     *
+     *
+     * This queries this offset using the specified query strategy object.
+     * The `TemporalQuery` object defines the logic to be used to
+     * obtain the result. Read the documentation of the query to understand
+     * what the result of this method will be.
+     *
+     *
+     * The result of this method is obtained by invoking the
+     * [TemporalQuery.queryFrom] method on the
+     * specified query passing `this` as the argument.
+     *
+     * @param <R> the type of the result
+     * @param query  the query to invoke, not null
+     * @return the query result, null may be returned (defined by the query)
+     * @throws DateTimeException if unable to query (defined by the query)
+     * @throws ArithmeticException if numeric overflow occurs (defined by the query)
+     */
+    override fun <R> query(query: TemporalQuery<R>): R {
+        return if (query === TemporalQueries.OFFSET || query === TemporalQueries.ZONE) {
+            this as R
+        } else {
+            TODO("super@TemporalAccessor.query(query)")
+        }
+    }
+
+    /**
+     * Adjusts the specified temporal object to have the same offset as this object.
+     *
+     *
+     * This returns a temporal object of the same observable type as the input
+     * with the offset changed to be the same as this.
+     *
+     *
+     * The adjustment is equivalent to using [Temporal.with]
+     * passing [ChronoField.OFFSET_SECONDS] as the field.
+     *
+     *
+     * In most cases, it is clearer to reverse the calling pattern by using
+     * [Temporal.with]:
+     * <pre>
+     * // these two lines are equivalent, but the second approach is recommended
+     * temporal = thisOffset.adjustInto(temporal);
+     * temporal = temporal.with(thisOffset);
+     * </pre>
+     *
+     *
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param temporal  the target object to be adjusted, not null
+     * @return the adjusted object, not null
+     * @throws DateTimeException if unable to make the adjustment
+     * @throws ArithmeticException if numeric overflow occurs
+     */
+    override fun adjustInto(temporal: Temporal): Temporal {
+        return temporal.with(ChronoField.OFFSET_SECONDS, this.totalSeconds.toLong())
+    }
+
     /**
      * Compares this offset to another offset in descending order.
      *
@@ -453,6 +672,10 @@ class ZoneOffset private constructor(
      */
     override fun toString(): String {
         return this.id
+    }
+
+    override fun getKClass(): KClass<out TemporalAccessor> {
+        return ZoneOffset::class
     }
 }
 
