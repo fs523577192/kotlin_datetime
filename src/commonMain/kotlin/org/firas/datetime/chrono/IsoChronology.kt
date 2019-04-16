@@ -62,8 +62,9 @@
 package org.firas.datetime.chrono
 
 import org.firas.datetime.*
-import org.firas.datetime.temporal.ChronoField
-import org.firas.datetime.temporal.TemporalAccessor
+import org.firas.datetime.format.ResolverStyle
+import org.firas.datetime.temporal.*
+import org.firas.datetime.temporal.TemporalAdjusters.Companion.nextOrSame
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
@@ -335,6 +336,357 @@ class IsoChronology private constructor(): Chronology {
     override fun isLeapYear(prolepticYear: Long): Boolean {
         return prolepticYear and 3 == 0L && (prolepticYear % 100 != 0L || prolepticYear % 400 == 0L)
         // prolepticYear % 4 == 0
+    }
+
+    /**
+     * Resolves parsed `ChronoField` values into a date during parsing.
+     *
+     *
+     * Most `TemporalField` implementations are resolved using the
+     * resolve method on the field. By contrast, the `ChronoField` class
+     * defines fields that only have meaning relative to the chronology.
+     * As such, `ChronoField` date fields are resolved here in the
+     * context of a specific chronology.
+     *
+     *
+     * `ChronoField` instances are resolved by this method, which may
+     * be overridden in subclasses.
+     *
+     *  * `EPOCH_DAY` - If present, this is converted to a date and
+     * all other date fields are then cross-checked against the date.
+     *  * `PROLEPTIC_MONTH` - If present, then it is split into the
+     * `YEAR` and `MONTH_OF_YEAR`. If the mode is strict or smart
+     * then the field is validated.
+     *  * `YEAR_OF_ERA` and `ERA` - If both are present, then they
+     * are combined to form a `YEAR`. In lenient mode, the `YEAR_OF_ERA`
+     * range is not validated, in smart and strict mode it is. The `ERA` is
+     * validated for range in all three modes. If only the `YEAR_OF_ERA` is
+     * present, and the mode is smart or lenient, then the last available era
+     * is assumed. In strict mode, no era is assumed and the `YEAR_OF_ERA` is
+     * left untouched. If only the `ERA` is present, then it is left untouched.
+     *  * `YEAR`, `MONTH_OF_YEAR` and `DAY_OF_MONTH` -
+     * If all three are present, then they are combined to form a date.
+     * In all three modes, the `YEAR` is validated.
+     * If the mode is smart or strict, then the month and day are validated.
+     * If the mode is lenient, then the date is combined in a manner equivalent to
+     * creating a date on the first day of the first month in the requested year,
+     * then adding the difference in months, then the difference in days.
+     * If the mode is smart, and the day-of-month is greater than the maximum for
+     * the year-month, then the day-of-month is adjusted to the last day-of-month.
+     * If the mode is strict, then the three fields must form a valid date.
+     *  * `YEAR` and `DAY_OF_YEAR` -
+     * If both are present, then they are combined to form a date.
+     * In all three modes, the `YEAR` is validated.
+     * If the mode is lenient, then the date is combined in a manner equivalent to
+     * creating a date on the first day of the requested year, then adding
+     * the difference in days.
+     * If the mode is smart or strict, then the two fields must form a valid date.
+     *  * `YEAR`, `MONTH_OF_YEAR`, `ALIGNED_WEEK_OF_MONTH` and
+     * `ALIGNED_DAY_OF_WEEK_IN_MONTH` -
+     * If all four are present, then they are combined to form a date.
+     * In all three modes, the `YEAR` is validated.
+     * If the mode is lenient, then the date is combined in a manner equivalent to
+     * creating a date on the first day of the first month in the requested year, then adding
+     * the difference in months, then the difference in weeks, then in days.
+     * If the mode is smart or strict, then the all four fields are validated to
+     * their outer ranges. The date is then combined in a manner equivalent to
+     * creating a date on the first day of the requested year and month, then adding
+     * the amount in weeks and days to reach their values. If the mode is strict,
+     * the date is additionally validated to check that the day and week adjustment
+     * did not change the month.
+     *  * `YEAR`, `MONTH_OF_YEAR`, `ALIGNED_WEEK_OF_MONTH` and
+     * `DAY_OF_WEEK` - If all four are present, then they are combined to
+     * form a date. The approach is the same as described above for
+     * years, months and weeks in `ALIGNED_DAY_OF_WEEK_IN_MONTH`.
+     * The day-of-week is adjusted as the next or same matching day-of-week once
+     * the years, months and weeks have been handled.
+     *  * `YEAR`, `ALIGNED_WEEK_OF_YEAR` and `ALIGNED_DAY_OF_WEEK_IN_YEAR` -
+     * If all three are present, then they are combined to form a date.
+     * In all three modes, the `YEAR` is validated.
+     * If the mode is lenient, then the date is combined in a manner equivalent to
+     * creating a date on the first day of the requested year, then adding
+     * the difference in weeks, then in days.
+     * If the mode is smart or strict, then the all three fields are validated to
+     * their outer ranges. The date is then combined in a manner equivalent to
+     * creating a date on the first day of the requested year, then adding
+     * the amount in weeks and days to reach their values. If the mode is strict,
+     * the date is additionally validated to check that the day and week adjustment
+     * did not change the year.
+     *  * `YEAR`, `ALIGNED_WEEK_OF_YEAR` and `DAY_OF_WEEK` -
+     * If all three are present, then they are combined to form a date.
+     * The approach is the same as described above for years and weeks in
+     * `ALIGNED_DAY_OF_WEEK_IN_YEAR`. The day-of-week is adjusted as the
+     * next or same matching day-of-week once the years and weeks have been handled.
+     *
+     *
+     *
+     * The default implementation is suitable for most calendar systems.
+     * If [java.time.temporal.ChronoField.YEAR_OF_ERA] is found without an [java.time.temporal.ChronoField.ERA]
+     * then the last era in [.eras] is used.
+     * The implementation assumes a 7 day week, that the first day-of-month
+     * has the value 1, that first day-of-year has the value 1, and that the
+     * first of the month and year always exists.
+     *
+     * @param fieldValues  the map of fields to values, which can be updated, not null
+     * @param resolverStyle  the requested type of resolve, not null
+     * @return the resolved date, null if insufficient information to create a date
+     * @throws java.time.DateTimeException if the date cannot be resolved, typically
+     * because of a conflict in the input data
+     */
+    override fun resolveDate(fieldValues: MutableMap<TemporalField, Long>, resolverStyle: ResolverStyle): ChronoLocalDate? {
+        // check epoch-day before inventing era
+        if (fieldValues.containsKey(ChronoField.EPOCH_DAY)) {
+            return dateEpochDay(fieldValues.remove(ChronoField.EPOCH_DAY)!!)
+        }
+
+        // fix proleptic month before inventing era
+        resolveProlepticMonth(fieldValues, resolverStyle)
+
+        // invent era if necessary to resolve year-of-era
+        val resolved = resolveYearOfEra(fieldValues, resolverStyle)
+        if (resolved != null) {
+            return resolved
+        }
+
+        // build date
+        if (fieldValues.containsKey(ChronoField.YEAR)) {
+            if (fieldValues.containsKey(ChronoField.MONTH_OF_YEAR)) {
+                if (fieldValues.containsKey(ChronoField.DAY_OF_MONTH)) {
+                    return resolveYMD(fieldValues, resolverStyle)
+                }
+                if (fieldValues.containsKey(ChronoField.ALIGNED_WEEK_OF_MONTH)) {
+                    if (fieldValues.containsKey(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH)) {
+                        return resolveYMAA(fieldValues, resolverStyle)
+                    }
+                    if (fieldValues.containsKey(ChronoField.DAY_OF_WEEK)) {
+                        return resolveYMAD(fieldValues, resolverStyle)
+                    }
+                }
+            }
+            if (fieldValues.containsKey(ChronoField.DAY_OF_YEAR)) {
+                return resolveYD(fieldValues, resolverStyle)
+            }
+            if (fieldValues.containsKey(ChronoField.ALIGNED_WEEK_OF_YEAR)) {
+                if (fieldValues.containsKey(ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR)) {
+                    return resolveYAA(fieldValues, resolverStyle)
+                }
+                if (fieldValues.containsKey(ChronoField.DAY_OF_WEEK)) {
+                    return resolveYAD(fieldValues, resolverStyle)
+                }
+            }
+        }
+        return null
+    }
+
+    internal fun resolveProlepticMonth(fieldValues: MutableMap<TemporalField, Long>, resolverStyle: ResolverStyle) {
+        val pMonth = fieldValues.remove(ChronoField.PROLEPTIC_MONTH)
+        if (pMonth != null) {
+            if (resolverStyle !== ResolverStyle.LENIENT) {
+                ChronoField.PROLEPTIC_MONTH.checkValidValue(pMonth)
+            }
+            addFieldValue(fieldValues, ChronoField.MONTH_OF_YEAR, MathUtils.floorMod(pMonth, 12) + 1)
+            addFieldValue(fieldValues, ChronoField.YEAR, MathUtils.floorDiv(pMonth, 12))
+        }
+    }
+
+    internal fun resolveYearOfEra(
+        fieldValues: MutableMap<TemporalField, Long>,
+        resolverStyle: ResolverStyle
+    ): LocalDate? {
+        val yoeLong = fieldValues.remove(ChronoField.YEAR_OF_ERA)
+        if (yoeLong != null) {
+            if (resolverStyle !== ResolverStyle.LENIENT) {
+                ChronoField.YEAR_OF_ERA.checkValidValue(yoeLong)
+            }
+            val era = fieldValues.remove(ChronoField.ERA)
+            if (era == null) {
+                val year = fieldValues[ChronoField.YEAR]
+                if (resolverStyle === ResolverStyle.STRICT) {
+                    // do not invent era if strict, but do cross-check with year
+                    if (year != null) {
+                        addFieldValue(fieldValues,
+                            ChronoField.YEAR, if (year > 0) yoeLong else MathUtils.subtractExact(1, yoeLong))
+                    } else {
+                        // reinstate the field removed earlier, no cross-check issues
+                        fieldValues[ChronoField.YEAR_OF_ERA] = yoeLong
+                    }
+                } else {
+                    // invent era
+                    addFieldValue(
+                        fieldValues, ChronoField.YEAR,
+                        if (year == null || year > 0) yoeLong else MathUtils.subtractExact(1, yoeLong)
+                    )
+                }
+            } else if (era.toLong() == 1L) {
+                addFieldValue(fieldValues, ChronoField.YEAR, yoeLong)
+            } else if (era.toLong() == 0L) {
+                addFieldValue(fieldValues, ChronoField.YEAR, MathUtils.subtractExact(1, yoeLong))
+            } else {
+                throw DateTimeException("Invalid value for era: $era")
+            }
+        } else if (fieldValues.containsKey(ChronoField.ERA)) {
+            ChronoField.ERA.checkValidValue(fieldValues[ChronoField.ERA]!!)  // always validated
+        }
+        return null
+    }
+
+    internal fun resolveYMD(
+        fieldValues: MutableMap<TemporalField, Long>,
+        resolverStyle: ResolverStyle
+    ): LocalDate {
+        val y = ChronoField.YEAR.checkValidIntValue(fieldValues.remove(ChronoField.YEAR)!!)
+        if (resolverStyle === ResolverStyle.LENIENT) {
+            val months = MathUtils.subtractExact(fieldValues.remove(ChronoField.MONTH_OF_YEAR)!!, 1)
+            val days = MathUtils.subtractExact(fieldValues.remove(ChronoField.DAY_OF_MONTH)!!, 1)
+            return LocalDate.of(y, 1, 1).plusMonths(months).plusDays(days)
+        }
+        val moy = ChronoField.MONTH_OF_YEAR.checkValidIntValue(fieldValues.remove(ChronoField.MONTH_OF_YEAR)!!)
+        var dom = ChronoField.DAY_OF_MONTH.checkValidIntValue(fieldValues.remove(ChronoField.DAY_OF_MONTH)!!)
+        if (resolverStyle === ResolverStyle.SMART) {  // previous valid
+            if (moy == 4 || moy == 6 || moy == 9 || moy == 11) {
+                dom = minOf(dom, 30)
+            } else if (moy == 2) {
+                dom = minOf(dom, Month.FEBRUARY.length(Year.isLeap(y)))
+            }
+        }
+        return LocalDate.of(y, moy, dom)
+    }
+
+    internal fun resolveYD(fieldValues: MutableMap<TemporalField, Long>, resolverStyle: ResolverStyle): ChronoLocalDate {
+        val y = range(ChronoField.YEAR).checkValidIntValue(fieldValues.remove(ChronoField.YEAR)!!, ChronoField.YEAR)
+        if (resolverStyle === ResolverStyle.LENIENT) {
+            val days = MathUtils.subtractExact(fieldValues.remove(ChronoField.DAY_OF_YEAR)!!, 1)
+            return dateYearDay(y, 1).plus(days, ChronoUnit.DAYS)
+        }
+        val doy = range(ChronoField.DAY_OF_YEAR).checkValidIntValue(fieldValues.remove(ChronoField.DAY_OF_YEAR)!!, ChronoField.DAY_OF_YEAR)
+        return dateYearDay(y, doy)  // smart is same as strict
+    }
+
+    internal fun resolveYMAA(fieldValues: MutableMap<TemporalField, Long>, resolverStyle: ResolverStyle): ChronoLocalDate {
+        val y = range(ChronoField.YEAR).checkValidIntValue(fieldValues.remove(ChronoField.YEAR)!!, ChronoField.YEAR)
+        if (resolverStyle === ResolverStyle.LENIENT) {
+            val months = MathUtils.subtractExact(fieldValues.remove(ChronoField.MONTH_OF_YEAR)!!, 1)
+            val weeks = MathUtils.subtractExact(fieldValues.remove(ChronoField.ALIGNED_WEEK_OF_MONTH)!!, 1)
+            val days = MathUtils.subtractExact(fieldValues.remove(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH)!!, 1)
+            return date(y, 1, 1).plus(months, ChronoUnit.MONTHS)
+                    .plus(weeks, ChronoUnit.WEEKS).plus(days, ChronoUnit.DAYS)
+        }
+        val moy = range(ChronoField.MONTH_OF_YEAR).checkValidIntValue(fieldValues.remove(ChronoField.MONTH_OF_YEAR)!!,
+            ChronoField.MONTH_OF_YEAR
+        )
+        val aw = range(ChronoField.ALIGNED_WEEK_OF_MONTH).checkValidIntValue(
+            fieldValues.remove(ChronoField.ALIGNED_WEEK_OF_MONTH)!!,
+            ChronoField.ALIGNED_WEEK_OF_MONTH
+        )
+        val ad = range(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH).checkValidIntValue(
+            fieldValues.remove(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH)!!,
+            ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH
+        )
+        val date = date(y, moy, 1).plus(((aw - 1) * 7 + (ad - 1)).toLong(), ChronoUnit.DAYS)
+        if (resolverStyle === ResolverStyle.STRICT && date[ChronoField.MONTH_OF_YEAR] != moy) {
+            throw DateTimeException("Strict mode rejected resolved date as it is in a different month")
+        }
+        return date
+    }
+
+    internal fun resolveYMAD(fieldValues: MutableMap<TemporalField, Long>, resolverStyle: ResolverStyle): ChronoLocalDate {
+        val y = range(ChronoField.YEAR).checkValidIntValue(fieldValues.remove(ChronoField.YEAR)!!, ChronoField.YEAR)
+        if (resolverStyle === ResolverStyle.LENIENT) {
+            val months = MathUtils.subtractExact(fieldValues.remove(ChronoField.MONTH_OF_YEAR)!!, 1)
+            val weeks = MathUtils.subtractExact(fieldValues.remove(ChronoField.ALIGNED_WEEK_OF_MONTH)!!, 1)
+            val dow = MathUtils.subtractExact(fieldValues.remove(ChronoField.DAY_OF_WEEK)!!, 1)
+            return resolveAligned(date(y, 1, 1), months, weeks, dow)
+        }
+        val moy = range(ChronoField.MONTH_OF_YEAR).checkValidIntValue(fieldValues.remove(ChronoField.MONTH_OF_YEAR)!!, ChronoField.MONTH_OF_YEAR)
+        val aw = range(ChronoField.ALIGNED_WEEK_OF_MONTH).checkValidIntValue(
+            fieldValues.remove(ChronoField.ALIGNED_WEEK_OF_MONTH)!!,
+            ChronoField.ALIGNED_WEEK_OF_MONTH
+        )
+        val dow = range(ChronoField.DAY_OF_WEEK).checkValidIntValue(fieldValues.remove(ChronoField.DAY_OF_WEEK)!!, ChronoField.DAY_OF_WEEK)
+        val date = date(y, moy, 1).plus(((aw - 1) * 7).toLong(), ChronoUnit.DAYS).with(nextOrSame(DayOfWeek.of(dow)))
+        if (resolverStyle === ResolverStyle.STRICT && date[ChronoField.MONTH_OF_YEAR] != moy) {
+            throw DateTimeException("Strict mode rejected resolved date as it is in a different month")
+        }
+        return date
+    }
+
+    internal fun resolveYAA(fieldValues: MutableMap<TemporalField, Long>, resolverStyle: ResolverStyle): ChronoLocalDate {
+        val y = range(ChronoField.YEAR).checkValidIntValue(fieldValues.remove(ChronoField.YEAR)!!, ChronoField.YEAR)
+        if (resolverStyle === ResolverStyle.LENIENT) {
+            val weeks = MathUtils.subtractExact(fieldValues.remove(ChronoField.ALIGNED_WEEK_OF_YEAR)!!, 1)
+            val days = MathUtils.subtractExact(fieldValues.remove(ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR)!!, 1)
+            return dateYearDay(y, 1).plus(weeks, ChronoUnit.WEEKS).plus(days, ChronoUnit.DAYS)
+        }
+        val aw = range(ChronoField.ALIGNED_WEEK_OF_YEAR).checkValidIntValue(
+            fieldValues.remove(ChronoField.ALIGNED_WEEK_OF_YEAR)!!,
+            ChronoField.ALIGNED_WEEK_OF_YEAR
+        )
+        val ad = range(ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR).checkValidIntValue(
+            fieldValues.remove(ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR)!!,
+            ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR
+        )
+        val date = dateYearDay(y, 1).plus(((aw - 1) * 7 + (ad - 1)).toLong(), ChronoUnit.DAYS)
+        if (resolverStyle === ResolverStyle.STRICT && date[ChronoField.YEAR] != y) {
+            throw DateTimeException("Strict mode rejected resolved date as it is in a different year")
+        }
+        return date
+    }
+
+    internal fun resolveYAD(fieldValues: MutableMap<TemporalField, Long>, resolverStyle: ResolverStyle): ChronoLocalDate {
+        val y = range(ChronoField.YEAR).checkValidIntValue(fieldValues.remove(ChronoField.YEAR)!!, ChronoField.YEAR)
+        if (resolverStyle === ResolverStyle.LENIENT) {
+            val weeks = MathUtils.subtractExact(fieldValues.remove(ChronoField.ALIGNED_WEEK_OF_YEAR)!!, 1)
+            val dow = MathUtils.subtractExact(fieldValues.remove(ChronoField.DAY_OF_WEEK)!!, 1)
+            return resolveAligned(dateYearDay(y, 1), 0, weeks, dow)
+        }
+        val aw = range(ChronoField.ALIGNED_WEEK_OF_YEAR).checkValidIntValue(
+            fieldValues.remove(ChronoField.ALIGNED_WEEK_OF_YEAR)!!,
+            ChronoField.ALIGNED_WEEK_OF_YEAR
+        )
+        val dow = range(ChronoField.DAY_OF_WEEK).checkValidIntValue(fieldValues.remove(ChronoField.DAY_OF_WEEK)!!, ChronoField.DAY_OF_WEEK)
+        val date = dateYearDay(y, 1).plus(((aw - 1) * 7).toLong(), ChronoUnit.DAYS).with(nextOrSame(DayOfWeek.of(dow)))
+        if (resolverStyle === ResolverStyle.STRICT && date[ChronoField.YEAR] != y) {
+            throw DateTimeException("Strict mode rejected resolved date as it is in a different year")
+        }
+        return date
+    }
+
+    internal fun resolveAligned(base: ChronoLocalDate, months: Long, weeks: Long, dow: Long): ChronoLocalDate {
+        var dow = dow
+        var date: ChronoLocalDate = base.plus(months, ChronoUnit.MONTHS).plus(weeks, ChronoUnit.WEEKS) as ChronoLocalDate
+        if (dow > 7) {
+            date = date.plus((dow - 1) / 7, ChronoUnit.WEEKS) as ChronoLocalDate
+            dow = (dow - 1) % 7 + 1
+        } else if (dow < 1) {
+            date = date.plus(MathUtils.subtractExact(dow, 7) / 7, ChronoUnit.WEEKS) as ChronoLocalDate
+            dow = (dow + 6) % 7 + 1
+        }
+        return date.with(nextOrSame( DayOfWeek.of(dow.toInt()) )) as ChronoLocalDate
+    }
+
+    /**
+     * Adds a field-value pair to the map, checking for conflicts.
+     *
+     *
+     * If the field is not already present, then the field-value pair is added to the map.
+     * If the field is already present and it has the same value as that specified, no action occurs.
+     * If the field is already present and it has a different value to that specified, then
+     * an exception is thrown.
+     *
+     * @param field  the field to add, not null
+     * @param value  the value to add, not null
+     * @throws java.time.DateTimeException if the field is already present with a different value
+     */
+    internal fun addFieldValue(fieldValues: MutableMap<TemporalField, Long>, field: ChronoField, value: Long) {
+        val old = fieldValues.get(field)  // check first for better error message
+        if (old != null && old != value) {
+            throw DateTimeException("Conflict found: $field $old differs from $field $value")
+        }
+        fieldValues.put(field, value)
+    }
+
+    override fun range(field: ChronoField): ValueRange {
+        return field.range()
     }
 
     /**

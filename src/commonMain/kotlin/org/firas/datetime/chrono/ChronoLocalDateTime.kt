@@ -65,6 +65,7 @@ import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.Instant
 import org.firas.datetime.LocalTime
 import org.firas.datetime.temporal.*
+import org.firas.datetime.zone.ZoneId
 
 /**
  * A date-time without a time-zone in an arbitrary chronology, intended
@@ -124,6 +125,40 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
     fun getChronology(): Chronology {
         return getDate().getChronology()
     }
+
+    /**
+     * Combines this time with a time-zone to create a `ChronoZonedDateTime`.
+     *
+     *
+     * This returns a `ChronoZonedDateTime` formed from this date-time at the
+     * specified time-zone. The result will match this date-time as closely as possible.
+     * Time-zone rules, such as daylight savings, mean that not every local date-time
+     * is valid for the specified zone, thus the local date-time may be adjusted.
+     *
+     *
+     * The local date-time is resolved to a single instant on the time-line.
+     * This is achieved by finding a valid offset from UTC/Greenwich for the local
+     * date-time as defined by the [rules][ZoneRules] of the zone ID.
+     *
+     *
+     * In most cases, there is only one valid offset for a local date-time.
+     * In the case of an overlap, where clocks are set back, there are two valid offsets.
+     * This method uses the earlier offset typically corresponding to "summer".
+     *
+     *
+     * In the case of a gap, where clocks jump forward, there is no valid offset.
+     * Instead, the local date-time is adjusted to be later by the length of the gap.
+     * For a typical one hour daylight savings change, the local date-time will be
+     * moved one hour later into the offset typically corresponding to "summer".
+     *
+     *
+     * To obtain the later offset during an overlap, call
+     * [ChronoZonedDateTime.withLaterOffsetAtOverlap] on the result of this method.
+     *
+     * @param zone  the time-zone to use, not null
+     * @return the zoned date-time formed from this date-time, not null
+     */
+    fun atZone(zone: ZoneId): ChronoZonedDateTime<D>
 
     /**
      * Converts this date-time to an `Instant`.

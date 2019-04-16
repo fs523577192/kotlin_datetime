@@ -64,10 +64,8 @@ package org.firas.datetime.chrono
 import org.firas.datetime.DateTimeException
 import org.firas.datetime.Instant
 import org.firas.datetime.LocalTime
-import org.firas.datetime.temporal.ChronoField
-import org.firas.datetime.temporal.TemporalAccessor
-import org.firas.datetime.temporal.TemporalQueries
-import org.firas.datetime.temporal.getClassName
+import org.firas.datetime.format.ResolverStyle
+import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
@@ -269,6 +267,49 @@ interface Chronology: Comparable<Chronology> {
      * @return true if the year is a leap year
      */
     fun isLeapYear(prolepticYear: Long): Boolean
+
+    /**
+     * Gets the range of valid values for the specified field.
+     *
+     *
+     * All fields can be expressed as a `long` integer.
+     * This method returns an object that describes the valid range for that value.
+     *
+     *
+     * Note that the result only describes the minimum and maximum valid values
+     * and it is important not to read too much into them. For example, there
+     * could be values within the range that are invalid for the field.
+     *
+     *
+     * This method will return a result whether or not the chronology supports the field.
+     *
+     * @param field  the field to get the range for, not null
+     * @return the range of valid values for the field, not null
+     * @throws DateTimeException if the range for the field cannot be obtained
+     */
+    fun range(field: ChronoField): ValueRange
+
+    /**
+     * Resolves parsed `ChronoField` values into a date during parsing.
+     *
+     *
+     * Most `TemporalField` implementations are resolved using the
+     * resolve method on the field. By contrast, the `ChronoField` class
+     * defines fields that only have meaning relative to the chronology.
+     * As such, `ChronoField` date fields are resolved here in the
+     * context of a specific chronology.
+     *
+     *
+     * The default implementation, which explains typical resolve behaviour,
+     * is provided in [AbstractChronology].
+     *
+     * @param fieldValues  the map of fields to values, which can be updated, not null
+     * @param resolverStyle  the requested type of resolve, not null
+     * @return the resolved date, null if insufficient information to create a date
+     * @throws DateTimeException if the date cannot be resolved, typically
+     * because of a conflict in the input data
+     */
+    fun resolveDate(fieldValues: MutableMap<TemporalField, Long>, resolverStyle: ResolverStyle): ChronoLocalDate?
 
     /**
      * Gets the number of seconds from the epoch of 1970-01-01T00:00:00Z.
