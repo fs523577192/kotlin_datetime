@@ -62,6 +62,8 @@
 package org.firas.datetime.temporal
 
 import org.firas.datetime.DateTimeException
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * The range of valid values for a date-time field.
@@ -94,6 +96,7 @@ class ValueRange private constructor(
         /**
          * Serialization version.
          */
+        @JvmStatic
         private const val serialVersionUID = -7317881728594519368L
 
         /**
@@ -108,6 +111,8 @@ class ValueRange private constructor(
          * @return the ValueRange for min, max, not null
          * @throws IllegalArgumentException if the minimum is greater than the maximum
          */
+        @JsName("ofMinAndMax")
+        @JvmStatic
         fun of(min: Long, max: Long): ValueRange {
             if (min > max) {
                 throw IllegalArgumentException("Minimum value must be less than maximum value")
@@ -130,6 +135,8 @@ class ValueRange private constructor(
          * the minimum is greater than the smallest maximum,
          * or the smallest maximum is greater than the largest maximum
          */
+        @JsName("ofMinAndMaxRange")
+        @JvmStatic
         fun of(min: Long, maxSmallest: Long, maxLargest: Long): ValueRange {
             return of(min, min, maxSmallest, maxLargest)
         }
@@ -150,6 +157,8 @@ class ValueRange private constructor(
          * or the smallest maximum is greater than the largest maximum
          * or the largest minimum is greater than the largest maximum
          */
+        @JsName("ofMinRangeAndMaxRange")
+        @JvmStatic
         fun of(minSmallest: Long, minLargest: Long, maxSmallest: Long, maxLargest: Long): ValueRange {
             if (minSmallest > minLargest) {
                 throw IllegalArgumentException("Smallest minimum value must be less than largest minimum value")
@@ -174,6 +183,7 @@ class ValueRange private constructor(
      *
      * @return true if the set of values is fixed
      */
+    @JsName("isFixed")
     fun isFixed(): Boolean {
         return this.minSmallest == this.minLargest && this.maxSmallest == this.maxLargest
     }
@@ -187,6 +197,7 @@ class ValueRange private constructor(
      *
      * @return the minimum value for this field
      */
+    @JsName("getMinimum")
     fun getMinimum(): Long {
         return this.minSmallest
     }
@@ -200,6 +211,7 @@ class ValueRange private constructor(
      *
      * @return the largest possible minimum value for this field
      */
+    @JsName("getLargestMinimum")
     fun getLargestMinimum(): Long {
         return this.minLargest
     }
@@ -213,6 +225,7 @@ class ValueRange private constructor(
      *
      * @return the smallest possible maximum value for this field
      */
+    @JsName("getSmallestMaximum")
     fun getSmallestMaximum(): Long {
         return this.maxSmallest
     }
@@ -226,6 +239,7 @@ class ValueRange private constructor(
      *
      * @return the maximum value for this field
      */
+    @JsName("getMaximum")
     fun getMaximum(): Long {
         return this.maxLargest
     }
@@ -246,6 +260,7 @@ class ValueRange private constructor(
      *
      * @return true if a valid value always fits in an `int`
      */
+    @JsName("isIntValue")
     fun isIntValue(): Boolean {
         return getMinimum() >= Int.MIN_VALUE && getMaximum() <= Int.MAX_VALUE
     }
@@ -259,6 +274,7 @@ class ValueRange private constructor(
      * @param value  the value to check
      * @return true if the value is valid
      */
+    @JsName("isValidValue")
     fun isValidValue(value: Long): Boolean {
         return value >= getMinimum() && value <= getMaximum()
     }
@@ -273,6 +289,7 @@ class ValueRange private constructor(
      * @param value  the value to check
      * @return true if the value is valid and fits in an `int`
      */
+    @JsName("isValidIntValue")
     fun isValidIntValue(value: Long): Boolean {
         return isIntValue() && isValidValue(value)
     }
@@ -289,6 +306,7 @@ class ValueRange private constructor(
      * @return the value that was passed in
      * @see .isValidValue
      */
+    @JsName("checkValidValue")
     fun checkValidValue(value: Long, field: TemporalField): Long {
         if (!isValidValue(value)) {
             throw DateTimeException(genInvalidFieldMessage(field, value))
@@ -309,6 +327,7 @@ class ValueRange private constructor(
      * @return the value that was passed in
      * @see .isValidIntValue
      */
+    @JsName("checkValidIntValue")
     fun checkValidIntValue(value: Long, field: TemporalField): Int {
         if (!isValidIntValue(value)) {
             throw DateTimeException(genInvalidFieldMessage(field, value))

@@ -61,6 +61,8 @@
  */
 package org.firas.datetime.temporal
 
+import kotlin.js.JsName
+
 /**
  * Strategy for adjusting a temporal object.
  *
@@ -154,5 +156,6 @@ interface TemporalAdjuster {
      * @throws DateTimeException if unable to make the adjustment
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("adjustInto")
     fun adjustInto(temporal: Temporal): Temporal
 }

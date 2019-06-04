@@ -65,6 +65,7 @@ import org.firas.datetime.DateTimeException
 import org.firas.datetime.LocalTime
 import org.firas.datetime.temporal.*
 import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * A date without time-of-day or time-zone in an arbitrary chronology, intended
@@ -262,6 +263,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
          *
          * @see .isEqual
          */
+        @JvmStatic
         val timeLineOrder: Comparator<ChronoLocalDate> =
             { date1: ChronoLocalDate, date2: ChronoLocalDate ->
                 val a = date1.toEpochDay()
@@ -295,6 +297,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
          * @see Chronology#date(TemporalAccessor)
          */
         @JsName("from")
+        @JvmStatic
         fun from(temporal: TemporalAccessor): ChronoLocalDate {
             if (temporal is ChronoLocalDate) {
                 return temporal

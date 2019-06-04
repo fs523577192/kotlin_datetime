@@ -66,6 +66,7 @@ import org.firas.datetime.LocalTime
 import org.firas.datetime.chrono.Chronology
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
+import kotlin.jvm.JvmStatic
 
 /**
  * Common implementations of `TemporalQuery`.
@@ -122,6 +123,7 @@ class TemporalQueries private constructor() {
         /**
          * A strict query for the `ZoneId`.
          */
+        @JvmStatic
         val ZONE_ID: TemporalQuery<ZoneId?> = object : TemporalQuery<ZoneId?> {
             override fun queryFrom(temporal: TemporalAccessor): ZoneId? {
                 return temporal.query(TemporalQueries.ZONE_ID)
@@ -135,6 +137,7 @@ class TemporalQueries private constructor() {
         /**
          * A query for the `Chronology`.
          */
+        @JvmStatic
         val CHRONO: TemporalQuery<Chronology?> = object : TemporalQuery<Chronology?> {
             override fun queryFrom(temporal: TemporalAccessor): Chronology? {
                 return temporal.query(TemporalQueries.CHRONO)
@@ -149,6 +152,7 @@ class TemporalQueries private constructor() {
         /**
          * A query for the smallest supported unit.
          */
+        @JvmStatic
         val PRECISION: TemporalQuery<TemporalUnit?> = object : TemporalQuery<TemporalUnit?> {
             override fun queryFrom(temporal: TemporalAccessor): TemporalUnit? {
                 return temporal.query(TemporalQueries.PRECISION)
@@ -163,6 +167,7 @@ class TemporalQueries private constructor() {
         /**
          * A query for `ZoneOffset` returning null if not found.
          */
+        @JvmStatic
         val OFFSET: TemporalQuery<ZoneOffset?> = object : TemporalQuery<ZoneOffset?> {
             override fun queryFrom(temporal: TemporalAccessor): ZoneOffset? {
                 return if (temporal.isSupported(ChronoField.OFFSET_SECONDS)) {
@@ -178,6 +183,7 @@ class TemporalQueries private constructor() {
         /**
          * A lenient query for the `ZoneId`, falling back to the `ZoneOffset`.
          */
+        @JvmStatic
         val ZONE: TemporalQuery<ZoneId?> = object : TemporalQuery<ZoneId?> {
             override fun queryFrom(temporal: TemporalAccessor): ZoneId? {
                 val zone = temporal.query(ZONE_ID)
@@ -192,6 +198,7 @@ class TemporalQueries private constructor() {
         /**
          * A query for `LocalDate` returning null if not found.
          */
+        @JvmStatic
         val LOCAL_DATE: TemporalQuery<LocalDate?> = object : TemporalQuery<LocalDate?> {
             override fun queryFrom(temporal: TemporalAccessor): LocalDate? {
                 return if (temporal.isSupported(ChronoField.EPOCH_DAY)) {
@@ -207,6 +214,7 @@ class TemporalQueries private constructor() {
         /**
          * A query for `LocalTime` returning null if not found.
          */
+        @JvmStatic
         val LOCAL_TIME: TemporalQuery<LocalTime?> = object : TemporalQuery<LocalTime?> {
             override fun queryFrom(temporal: TemporalAccessor): LocalTime? {
                 return if (temporal.isSupported(ChronoField.NANO_OF_DAY)) {

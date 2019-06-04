@@ -70,6 +70,7 @@ import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
 import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * A calendar system, used to organize and identify dates.
@@ -176,6 +177,7 @@ interface Chronology: Comparable<Chronology> {
          * @throws DateTimeException if unable to convert to a `Chronology`
          */
         @JsName("from")
+        @JvmStatic
         fun from(temporal: TemporalAccessor): Chronology {
             val obj = temporal.query(TemporalQueries.CHRONO)
             return obj?:IsoChronology.INSTANCE

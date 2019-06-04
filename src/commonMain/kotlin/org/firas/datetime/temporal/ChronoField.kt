@@ -57,6 +57,7 @@
 package org.firas.datetime.temporal
 
 import org.firas.datetime.Year
+import kotlin.js.JsName
 
 /**
  * A standard set of fields.
@@ -717,6 +718,7 @@ enum class ChronoField(
      * @param value  the value to check
      * @return the value that was passed in
      */
+    @JsName("checkValidIntValue")
     fun checkValidIntValue(value: Long): Int {
         return range().checkValidIntValue(value, this)
     }

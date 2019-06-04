@@ -62,6 +62,8 @@
 package org.firas.datetime.temporal
 
 import org.firas.datetime.DateTimeException
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * UnsupportedTemporalTypeException indicates that a ChronoField or ChronoUnit is
@@ -80,6 +82,7 @@ class UnsupportedTemporalTypeException: DateTimeException {
      *
      * @param message  the message to use for this exception, may be null
      */
+    @JsName("UnsupportedTemporalTypeException_initWithMessage")
     constructor(message: String): super(message)
 
     /**
@@ -88,12 +91,14 @@ class UnsupportedTemporalTypeException: DateTimeException {
      * @param message  the message to use for this exception, may be null
      * @param cause  the cause of the exception, may be null
      */
+    @JsName("UnsupportedTemporalTypeException_initWithMessageAndCause")
     constructor(message: String, cause: Throwable): super(message, cause)
 
     companion object {
         /**
          * Serialization version.
          */
+        @JvmStatic
         private const val serialVersionUID = -6158898438688206006L
     }
 }

@@ -68,6 +68,7 @@ import org.firas.datetime.temporal.TemporalAdjusters.Companion.nextOrSame
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
+import kotlin.jvm.JvmStatic
 
 
 /**
@@ -105,13 +106,16 @@ class IsoChronology private constructor(): Chronology {
         /**
          * Singleton instance of the ISO chronology.
          */
+        @JvmStatic
         val INSTANCE = IsoChronology()
 
         /**
          * Serialization version.
          */
+        @JvmStatic
         private const val serialVersionUID = -1440403870442975015L
 
+        @JvmStatic
         private const val DAYS_0000_TO_1970 = 146097 * 5L - (30L * 365L + 7L) // taken from LocalDate
     }
 

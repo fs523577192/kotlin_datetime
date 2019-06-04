@@ -69,6 +69,7 @@ import org.firas.datetime.temporal.*
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.util.Integers
+import kotlin.js.JsName
 
 /**
  * A date-time with a time-zone in an arbitrary chronology,
@@ -139,6 +140,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
          * @throws DateTimeException if unable to convert to a `ChronoZonedDateTime`
          * @see Chronology#zonedDateTime(TemporalAccessor)
          */
+        @JsName("from")
         fun from(temporal: TemporalAccessor): ChronoZonedDateTime<*> {
             if (temporal is ChronoZonedDateTime<*>) {
                 return temporal

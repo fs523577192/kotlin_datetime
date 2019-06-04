@@ -4,6 +4,7 @@ import org.firas.datetime.temporal.Temporal
 import org.firas.datetime.temporal.TemporalAmount
 import org.firas.datetime.temporal.TemporalUnit
 import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * A date-based amount of time, such as '3 years, 4 months and 5 days' in an
@@ -55,6 +56,7 @@ interface ChronoPeriod: TemporalAmount {
          * @see ChronoLocalDate.until
          */
         @JsName("between")
+        @JvmStatic
         fun between(startDateInclusive: ChronoLocalDate, endDateExclusive: ChronoLocalDate): ChronoPeriod {
             TODO()
             // return startDateInclusive.until(endDateExclusive)

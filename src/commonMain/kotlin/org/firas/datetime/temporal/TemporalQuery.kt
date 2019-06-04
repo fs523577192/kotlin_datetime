@@ -61,6 +61,8 @@
  */
 package org.firas.datetime.temporal
 
+import kotlin.js.JsName
+
 /**
  * Strategy for querying a temporal object.
  *
@@ -141,5 +143,6 @@ interface TemporalQuery<R> {
      * @throws DateTimeException if unable to query
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("queryFrom")
     fun queryFrom(temporal: TemporalAccessor): R
 }

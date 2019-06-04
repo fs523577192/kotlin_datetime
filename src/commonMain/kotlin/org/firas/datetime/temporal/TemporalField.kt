@@ -62,6 +62,7 @@
 package org.firas.datetime.temporal
 
 import org.firas.datetime.format.ResolverStyle
+import kotlin.js.JsName
 
 /**
  * A field of date-time, such as month-of-year or hour-of-minute.
@@ -99,6 +100,7 @@ interface TemporalField {
      *
      * @return the unit defining the base unit of the field, not null
      */
+    @JsName("getBaseUnit")
     fun getBaseUnit(): TemporalUnit
 
     /**
@@ -115,6 +117,7 @@ interface TemporalField {
      *
      * @return the unit defining the range of the field, not null
      */
+    @JsName("getRangeUnit")
     fun getRangeUnit(): TemporalUnit
 
     /**
@@ -132,6 +135,7 @@ interface TemporalField {
      *
      * @return the range of valid values for the field, not null
      */
+    @JsName("range")
     fun range(): ValueRange
 
     //-----------------------------------------------------------------------
@@ -146,6 +150,7 @@ interface TemporalField {
      *
      * @return true if this field is a component of a date
      */
+    @JsName("isDateBased")
     fun isDateBased(): Boolean
 
     /**
@@ -159,6 +164,7 @@ interface TemporalField {
      *
      * @return true if this field is a component of a time
      */
+    @JsName("isTimeBased")
     fun isTimeBased(): Boolean
 
     //-----------------------------------------------------------------------
@@ -188,6 +194,7 @@ interface TemporalField {
      * @param temporal  the temporal object to query, not null
      * @return true if the date-time can be queried for this field, false if not
      */
+    @JsName("isSupportedByAccessor")
     fun isSupportedBy(temporal: TemporalAccessor): Boolean
 
     /**
@@ -224,6 +231,7 @@ interface TemporalField {
      * @throws DateTimeException if the range for the field cannot be obtained
      * @throws UnsupportedTemporalTypeException if the field is not supported by the temporal
      */
+    @JsName("rangeRefinedBy")
     fun rangeRefinedBy(temporal: TemporalAccessor): ValueRange
 
     /**
@@ -256,6 +264,7 @@ interface TemporalField {
      * @throws UnsupportedTemporalTypeException if the field is not supported by the temporal
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("getFrom")
     fun getFrom(temporal: TemporalAccessor): Long
 
     /**
@@ -304,6 +313,7 @@ interface TemporalField {
      * @throws UnsupportedTemporalTypeException if the field is not supported by the temporal
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("adjustInfo")
     fun <R: Temporal> adjustInto(temporal: R, newValue: Long): R
 
     /**
@@ -382,6 +392,7 @@ interface TemporalField {
      * @throws DateTimeException if resolving results in an error. This must not be thrown
      * by querying a field on the temporal without first checking if it is supported
      */
+    @JsName("resolve")
     fun resolve(
         fieldValues: Map<TemporalField, Long>,
         partialTemporal: TemporalAccessor,

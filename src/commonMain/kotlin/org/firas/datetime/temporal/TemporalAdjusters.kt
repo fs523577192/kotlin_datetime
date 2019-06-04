@@ -62,6 +62,8 @@
 package org.firas.datetime.temporal
 
 import org.firas.datetime.DayOfWeek
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * Common and useful TemporalAdjusters.
@@ -127,6 +129,8 @@ class TemporalAdjusters private constructor() {
          * @param dayOfWeek  the day-of-week to check for or move the date to, not null
          * @return the next-or-same day-of-week adjuster, not null
          */
+        @JsName("nextOrSame")
+        @JvmStatic
         fun nextOrSame(dayOfWeek: DayOfWeek): TemporalAdjuster {
             val dowValue = dayOfWeek.getValue()
             return { temporal: Temporal ->
@@ -156,6 +160,8 @@ class TemporalAdjusters private constructor() {
          * @param dayOfWeek  the day-of-week to check for or move the date to, not null
          * @return the previous-or-same day-of-week adjuster, not null
          */
+        @JsName("previousOrSame")
+        @JvmStatic
         fun previousOrSame(dayOfWeek: DayOfWeek): TemporalAdjuster {
             val dowValue = dayOfWeek.getValue()
             return { temporal: Temporal ->

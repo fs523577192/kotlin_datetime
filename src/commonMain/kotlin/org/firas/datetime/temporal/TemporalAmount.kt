@@ -63,6 +63,7 @@ package org.firas.datetime.temporal
 
 import org.firas.datetime.Duration
 import org.firas.datetime.Period
+import kotlin.js.JsName
 
 /**
  * Framework-level interface defining an amount of time, such as
@@ -133,6 +134,7 @@ interface TemporalAmount {
      *
      * @return the List of `TemporalUnits`; not null
      */
+    @JsName("getUnits")
     fun getUnits(): List<TemporalUnit>
 
     /**
@@ -180,6 +182,7 @@ interface TemporalAmount {
      * @throws DateTimeException if unable to add
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("addTo")
     fun addTo(temporal: Temporal): Temporal
 
     /**
@@ -227,5 +230,6 @@ interface TemporalAmount {
      * @throws DateTimeException if unable to subtract
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("subtractFrom")
     fun subtractFrom(temporal: Temporal): Temporal
 }

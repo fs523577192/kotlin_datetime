@@ -66,6 +66,7 @@ import org.firas.datetime.LocalTime
 import org.firas.datetime.chrono.ChronoLocalDate
 import org.firas.datetime.chrono.ChronoLocalDateTime
 import org.firas.datetime.chrono.ChronoZonedDateTime
+import kotlin.js.JsName
 
 /**
  * A unit of date-time, such as Days or Hours.
@@ -113,6 +114,7 @@ interface TemporalUnit {
      *
      * @return the duration of this unit, which may be an estimate, not null
      */
+    @JsName("getDuration")
     fun getDuration(): Duration
 
     /**
@@ -127,6 +129,7 @@ interface TemporalUnit {
      *
      * @return true if the duration is estimated, false if accurate
      */
+    @JsName("isDurationEstimated")
     fun isDurationEstimated(): Boolean
 
     //-----------------------------------------------------------------------
@@ -142,6 +145,7 @@ interface TemporalUnit {
      *
      * @return true if this unit is a component of a date
      */
+    @JsName("isDateBased")
     fun isDateBased(): Boolean
 
     /**
@@ -156,6 +160,7 @@ interface TemporalUnit {
      *
      * @return true if this unit is a component of a time
      */
+    @JsName("isTimeBased")
     fun isTimeBased(): Boolean
 
     //-----------------------------------------------------------------------
@@ -173,6 +178,7 @@ interface TemporalUnit {
      * @param temporal  the temporal object to check, not null
      * @return true if the unit is supported
      */
+    @JsName("isSupportedBy")
     fun isSupportedBy(temporal: Temporal): Boolean {
         if (temporal is LocalTime) {
             return isTimeBased()
@@ -236,6 +242,7 @@ interface TemporalUnit {
      * @throws DateTimeException if the amount cannot be added
      * @throws UnsupportedTemporalTypeException if the unit is not supported by the temporal
      */
+    @JsName("addTo")
     fun <R: Temporal> addTo(temporal: R, amount: Long): R
 
     //-----------------------------------------------------------------------
@@ -298,5 +305,6 @@ interface TemporalUnit {
      * @throws UnsupportedTemporalTypeException if the unit is not supported by the temporal
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("between")
     fun between(temporal1Inclusive: Temporal, temporal2Exclusive: Temporal): Long
 }
