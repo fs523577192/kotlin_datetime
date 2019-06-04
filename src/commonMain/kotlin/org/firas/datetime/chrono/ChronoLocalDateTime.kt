@@ -66,6 +66,7 @@ import org.firas.datetime.Instant
 import org.firas.datetime.LocalTime
 import org.firas.datetime.temporal.*
 import org.firas.datetime.zone.ZoneId
+import kotlin.js.JsName
 
 /**
  * A date-time without a time-zone in an arbitrary chronology, intended
@@ -106,11 +107,13 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
     /**
      * renamed from ~toLocalDate`
      */
+    @JsName("getDate")
     fun getDate(): D
 
     /**
      * renamed from `toLocalTime`
      */
+    @JsName("getTime")
     fun getTime(): LocalTime
 
     /**
@@ -122,6 +125,7 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
      *
      * @return the chronology, not null
      */
+    @JsName("getChronology")
     fun getChronology(): Chronology {
         return getDate().getChronology()
     }
@@ -158,6 +162,7 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
      * @param zone  the time-zone to use, not null
      * @return the zoned date-time formed from this date-time, not null
      */
+    @JsName("atZone")
     fun atZone(zone: ZoneId): ChronoZonedDateTime<D>
 
     /**
@@ -174,6 +179,7 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
      * @param offset  the offset to use for the conversion, not null
      * @return an `Instant` representing the same instant, not null
      */
+    @JsName("toInstant")
     fun toInstant(offset: ZoneOffset): Instant {
         return Instant.ofEpochSecond(toEpochSecond(offset), getTime().nano.toLong())
     }
@@ -194,6 +200,7 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
      * @param offset  the offset to use for the conversion, not null
      * @return the number of seconds from the epoch of 1970-01-01T00:00:00Z
      */
+    @JsName("toEpochSecond")
     fun toEpochSecond(offset: ZoneOffset): Long {
         val epochDay = getDate().toEpochDay()
         var secs = epochDay * 86400 + getTime().toSecondOfDay()
@@ -356,6 +363,7 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
      * @param other  the other date-time to compare to, not null
      * @return true if this is after the specified date-time
      */
+    @JsName("isAfter")
     fun isAfter(other: ChronoLocalDateTime<*>): Boolean {
         val thisEpDay = this.getDate().toEpochDay()
         val otherEpDay = other.getDate().toEpochDay()
@@ -379,6 +387,7 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
      * @param other  the other date-time to compare to, not null
      * @return true if this is before the specified date-time
      */
+    @JsName("isBefore")
     fun isBefore(other: ChronoLocalDateTime<*>): Boolean {
         val thisEpDay = this.getDate().toEpochDay()
         val otherEpDay = other.getDate().toEpochDay()
@@ -402,6 +411,7 @@ interface ChronoLocalDateTime<D: ChronoLocalDate>: Temporal, TemporalAdjuster {
      * @param other  the other date-time to compare to, not null
      * @return true if the underlying date-time is equal to the specified date-time on the timeline
      */
+    @JsName("isEqual")
     fun isEqual(other: ChronoLocalDateTime<*>): Boolean {
         // Do the time check first, it is cheaper than computing EPOCH day.
         return this.getTime().toNanoOfDay() == other.getTime().toNanoOfDay() &&

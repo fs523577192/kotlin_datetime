@@ -3,6 +3,7 @@ package org.firas.datetime.chrono
 import org.firas.datetime.temporal.Temporal
 import org.firas.datetime.temporal.TemporalAmount
 import org.firas.datetime.temporal.TemporalUnit
+import kotlin.js.JsName
 
 /**
  * A date-based amount of time, such as '3 years, 4 months and 5 days' in an
@@ -53,6 +54,7 @@ interface ChronoPeriod: TemporalAmount {
          * @return the period between this date and the end date, not null
          * @see ChronoLocalDate.until
          */
+        @JsName("between")
         fun between(startDateInclusive: ChronoLocalDate, endDateExclusive: ChronoLocalDate): ChronoPeriod {
             TODO()
             // return startDateInclusive.until(endDateExclusive)
@@ -102,6 +104,7 @@ interface ChronoPeriod: TemporalAmount {
      *
      * @return the chronology defining the period, not null
      */
+    @JsName("getChronology")
     fun getChronology(): Chronology
 
     //-----------------------------------------------------------------------
@@ -110,6 +113,7 @@ interface ChronoPeriod: TemporalAmount {
      *
      * @return true if this period is zero-length
      */
+    @JsName("isZero")
     fun isZero(): Boolean {
         for (unit in getUnits()) {
             if (get(unit) != 0L) {
@@ -124,6 +128,7 @@ interface ChronoPeriod: TemporalAmount {
      *
      * @return true if any unit of this period is negative
      */
+    @JsName("isNegative")
     fun isNegative(): Boolean {
         for (unit in getUnits()) {
             if (get(unit) < 0) {
@@ -184,6 +189,7 @@ interface ChronoPeriod: TemporalAmount {
      * by the scalar, not null
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("multipliedBy")
     fun multipliedBy(scalar: Int): ChronoPeriod
 
     /**
@@ -199,6 +205,7 @@ interface ChronoPeriod: TemporalAmount {
      * @throws ArithmeticException if numeric overflow occurs, which only happens if
      * one of the units has the value `Long.MIN_VALUE`
      */
+    @JsName("negated")
     fun negated(): ChronoPeriod {
         return multipliedBy(-1)
     }
@@ -220,6 +227,7 @@ interface ChronoPeriod: TemporalAmount {
      * unit normalized, not null
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("normalized")
     fun normalized(): ChronoPeriod
 
     //-------------------------------------------------------------------------

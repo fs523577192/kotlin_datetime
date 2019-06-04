@@ -64,6 +64,7 @@ package org.firas.datetime.chrono
 import org.firas.datetime.DateTimeException
 import org.firas.datetime.LocalTime
 import org.firas.datetime.temporal.*
+import kotlin.js.JsName
 
 /**
  * A date without time-of-day or time-zone in an arbitrary chronology, intended
@@ -293,6 +294,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
          * @throws DateTimeException if unable to convert to a `ChronoLocalDate`
          * @see Chronology#date(TemporalAccessor)
          */
+        @JsName("from")
         fun from(temporal: TemporalAccessor): ChronoLocalDate {
             if (temporal is ChronoLocalDate) {
                 return temporal
@@ -315,6 +317,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      *
      * @return the chronology, not null
      */
+    @JsName("getChronology")
     fun getChronology(): Chronology
 
     /**
@@ -330,6 +333,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      *
      * @return true if this date is in a leap year, false otherwise
      */
+    @JsName("isLeapYear")
     fun isLeapYear(): Boolean
 
     /**
@@ -340,6 +344,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      *
      * @return the length of the month in days
      */
+    @JsName("lengthOfMonth")
     fun lengthOfMonth(): Int
 
     /**
@@ -353,6 +358,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      *
      * @return the length of the year in days
      */
+    @JsName("lengthOfYear")
     fun lengthOfYear(): Int {
         return if (isLeapYear()) 366 else 365
     }
@@ -370,6 +376,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      *
      * @return the Epoch Day equivalent to this date
      */
+    @JsName("toEpochDay")
     fun toEpochDay(): Long
 
     /**
@@ -551,6 +558,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @param other  the other date to compare to, not null
      * @return true if this is after the specified date
      */
+    @JsName("isAfter")
     fun isAfter(other: ChronoLocalDate): Boolean {
         return this.toEpochDay() > other.toEpochDay()
     }
@@ -571,6 +579,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @param other  the other date to compare to, not null
      * @return true if this is before the specified date
      */
+    @JsName("isBefore")
     fun isBefore(other: ChronoLocalDate): Boolean {
         return this.toEpochDay() < other.toEpochDay()
     }
@@ -591,6 +600,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @param other  the other date to compare to, not null
      * @return true if the underlying date is equal to the specified date
      */
+    @JsName("isEqual")
     fun isEqual(other: ChronoLocalDate): Boolean {
         return this.toEpochDay() == other.toEpochDay()
     }
@@ -605,5 +615,6 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @param localTime  the local time to use, not null
      * @return the local date-time formed from this date and the specified time, not null
      */
+    @JsName("atTime")
     fun atTime(localTime: LocalTime): ChronoLocalDateTime<*>
 }

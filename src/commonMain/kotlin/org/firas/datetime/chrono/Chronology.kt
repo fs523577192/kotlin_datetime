@@ -69,6 +69,7 @@ import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
+import kotlin.js.JsName
 
 /**
  * A calendar system, used to organize and identify dates.
@@ -174,6 +175,7 @@ interface Chronology: Comparable<Chronology> {
          * @return the chronology, not null
          * @throws DateTimeException if unable to convert to a `Chronology`
          */
+        @JsName("from")
         fun from(temporal: TemporalAccessor): Chronology {
             val obj = temporal.query(TemporalQueries.CHRONO)
             return obj?:IsoChronology.INSTANCE
@@ -190,6 +192,7 @@ interface Chronology: Comparable<Chronology> {
      * @return the chronology ID, not null
      * @see .getCalendarType
      */
+    @JsName("getId")
     fun getId(): String
 
     /**
@@ -206,6 +209,7 @@ interface Chronology: Comparable<Chronology> {
      * @return the calendar system type, null if the calendar is not defined by CLDR/LDML
      * @see .getId
      */
+    @JsName("getCalendarType")
     fun getCalendarType(): String
 
     /**
@@ -218,6 +222,7 @@ interface Chronology: Comparable<Chronology> {
      * @return the local date in this chronology, not null
      * @throws DateTimeException if unable to create the date
      */
+    @JsName("date")
     fun date(prolepticYear: Int, month: Int, dayOfMonth: Int): ChronoLocalDate
 
     /**
@@ -229,6 +234,7 @@ interface Chronology: Comparable<Chronology> {
      * @return the local date in this chronology, not null
      * @throws DateTimeException if unable to create the date
      */
+    @JsName("dateYearDay")
     fun dateYearDay(prolepticYear: Int, dayOfYear: Int): ChronoLocalDate
 
     /**
@@ -242,6 +248,7 @@ interface Chronology: Comparable<Chronology> {
      * @return the local date in this chronology, not null
      * @throws DateTimeException if unable to create the date
      */
+    @JsName("dateEpochDay")
     fun dateEpochDay(epochDay: Long): ChronoLocalDate
 
     /**
@@ -266,6 +273,7 @@ interface Chronology: Comparable<Chronology> {
      * @param prolepticYear  the proleptic-year to check, not validated for range
      * @return true if the year is a leap year
      */
+    @JsName("isLeapYear")
     fun isLeapYear(prolepticYear: Long): Boolean
 
     /**
@@ -287,6 +295,7 @@ interface Chronology: Comparable<Chronology> {
      * @return the range of valid values for the field, not null
      * @throws DateTimeException if the range for the field cannot be obtained
      */
+    @JsName("range")
     fun range(field: ChronoField): ValueRange
 
     /**
@@ -309,6 +318,7 @@ interface Chronology: Comparable<Chronology> {
      * @throws DateTimeException if the date cannot be resolved, typically
      * because of a conflict in the input data
      */
+    @JsName("resolveDate")
     fun resolveDate(fieldValues: MutableMap<TemporalField, Long>, resolverStyle: ResolverStyle): ChronoLocalDate?
 
     /**
@@ -327,8 +337,9 @@ interface Chronology: Comparable<Chronology> {
      * @param zoneOffset the zone offset, not null
      * @return the number of seconds relative to 1970-01-01T00:00:00Z, may be negative
      * @throws DateTimeException if any of the values are out of range
-     * @since 9
+     * @since Java 9
      */
+    @JsName("epochSecond")
     fun epochSecond(
         prolepticYear: Int, month: Int, dayOfMonth: Int,
         hour: Int, minute: Int, second: Int, zoneOffset: ZoneOffset
@@ -362,6 +373,7 @@ interface Chronology: Comparable<Chronology> {
      * @throws DateTimeException if unable to create the date
      * @see ChronoLocalDate#from(TemporalAccessor)
      */
+    @JsName("date")
     fun date(temporal: TemporalAccessor): ChronoLocalDate
 
     /**
@@ -388,6 +400,7 @@ interface Chronology: Comparable<Chronology> {
      * @throws DateTimeException if unable to create the date-time
      * @see ChronoLocalDateTime#from(TemporalAccessor)
      */
+    @JsName("localDateTime")
     fun localDateTime(temporal: TemporalAccessor): ChronoLocalDateTime<out ChronoLocalDate> {
         try {
             return date(temporal).atTime(LocalTime.from(temporal))
@@ -424,6 +437,7 @@ interface Chronology: Comparable<Chronology> {
      * @throws DateTimeException if unable to create the date-time
      * @see ChronoZonedDateTime#from(TemporalAccessor)
      */
+    @JsName("zonedDateTimeWithAccessor")
     fun zonedDateTime(temporal: TemporalAccessor): ChronoZonedDateTime<out ChronoLocalDate> {
         try {
             val zone = ZoneId.from(temporal)
@@ -443,5 +457,6 @@ interface Chronology: Comparable<Chronology> {
         }
     }
 
+    @JsName("zonedDateTimeWithInstantAndZoneId")
     fun zonedDateTime(instant: Instant, zoneId: ZoneId): ChronoZonedDateTime<out ChronoLocalDate>
 }

@@ -61,6 +61,8 @@
  */
 package org.firas.datetime.temporal
 
+import kotlin.js.JsName
+
 /**
  * Framework-level interface defining read-write access to a temporal object,
  * such as a date, time, offset or some combination of these.
@@ -156,6 +158,7 @@ interface Temporal: TemporalAccessor {
      * @param unit  the unit to check, null returns false
      * @return true if the unit can be added/subtracted, false if not
      */
+    @JsName("isUnitSupported")
     fun isSupported(unit: TemporalUnit): Boolean
 
     // ----==== with ====----
@@ -198,6 +201,7 @@ interface Temporal: TemporalAccessor {
      * @throws DateTimeException if unable to make the adjustment
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("withAdjuster")
     fun with(adjuster: TemporalAdjuster): Temporal {
         return adjuster.adjustInto(this)
     }
@@ -238,6 +242,7 @@ interface Temporal: TemporalAccessor {
      * @throws UnsupportedTemporalTypeException if the field is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("withFieldValue")
     fun with(field: TemporalField, newValue: Long): Temporal
 
     //-----------------------------------------------------------------------
@@ -319,6 +324,7 @@ interface Temporal: TemporalAccessor {
      * @throws UnsupportedTemporalTypeException if the unit is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("plusByAmountAndUnit")
     fun plus(amountToAdd: Long, unit: TemporalUnit): Temporal
 
     //-----------------------------------------------------------------------
@@ -400,6 +406,7 @@ interface Temporal: TemporalAccessor {
      * @throws UnsupportedTemporalTypeException if the unit is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("minusByAmountAndUnit")
     fun minus(amountToSubtract: Long, unit: TemporalUnit): Temporal {
         return if (amountToSubtract == Long.MIN_VALUE) plus(Long.MAX_VALUE, unit).plus(
             1,
@@ -489,5 +496,6 @@ interface Temporal: TemporalAccessor {
      * @throws UnsupportedTemporalTypeException if the unit is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("until")
     fun until(endExclusive: Temporal, unit: TemporalUnit): Long
 }

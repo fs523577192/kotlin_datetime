@@ -68,11 +68,13 @@ import org.firas.datetime.zone.ZoneId
 
 /**
  * Context object used during date and time parsing.
- * <p>
+ *
+ *
  * This class represents the current state of the parse.
  * It has the ability to store and retrieve the parsed values and manage optional segments.
  * It also provides key information to the parsing methods.
- * <p>
+ *
+ *
  * Once parsing is complete, the {@link #toUnresolved()} is used to obtain the unresolved
  * result data. The {@link #toResolved()} is used to obtain the resolved result.
  *
@@ -101,12 +103,12 @@ internal class DateTimeParseContext internal constructor(
     /**
      * The list of parsed data.
      */
-    private val parsed = ArrayList<Parsed>()
+    private val parsed: MutableList<Parsed> = ArrayList()
 
     /**
      * List of Consumers&lt;Chronology&gt; to be notified if the Chronology changes.
-    private val chronoListeners: ArrayList<Consumer<Chronology>>? = null
      */
+    private var chronoListeners: MutableList<(Chronology) -> Unit>? = null
 
     /**
      * Creates a copy of this context.
@@ -119,7 +121,8 @@ internal class DateTimeParseContext internal constructor(
     //-----------------------------------------------------------------------
     /**
      * Gets the DecimalStyle.
-     * <p>
+     *
+     *
      * The DecimalStyle controls the numeric parsing.
      *
      * @return the DecimalStyle, not null
@@ -234,6 +237,17 @@ internal class DateTimeParseContext internal constructor(
     }
 
     /**
+     * Adds a Consumer&lt;Chronology&gt; to the list of listeners to be notified
+     * if the Chronology changes.
+     * @param listener a Consumer&lt;Chronology&gt; to be called when Chronology changes
+     */
+    fun addChronoChangedListener(listener: (Chronology) -> Unit) {
+        val _listeners: MutableList<(Chronology) -> Unit> = this.chronoListeners ?: ArrayList()
+        _listeners.add(listener)
+        this.chronoListeners = _listeners
+    }
+
+    /**
      * Stores the parsed zone.
      *
      * This stores the zone that has been parsed.
@@ -255,7 +269,8 @@ internal class DateTimeParseContext internal constructor(
     //-----------------------------------------------------------------------
     /**
      * Gets the first value that was parsed for the specified field.
-     * <p>
+     *
+     *
      * This searches the results of the parse, returning the first value found
      * for the specified field. No attempt is made to derive a value.
      * The field may have an out of range value.
@@ -270,7 +285,8 @@ internal class DateTimeParseContext internal constructor(
 
     /**
      * Stores the parsed field.
-     * <p>
+     *
+     *
      * This stores a field-value pair that has been parsed.
      * The value stored may be out of range for the field - no checks are performed.
      *

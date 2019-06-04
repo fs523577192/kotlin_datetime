@@ -62,6 +62,7 @@
 package org.firas.datetime.temporal
 
 import org.firas.datetime.DateTimeException
+import kotlin.js.JsName
 import kotlin.reflect.KClass
 
 /**
@@ -127,6 +128,7 @@ interface TemporalAccessor {
      * @param field  the field to check, null returns false
      * @return true if this date-time can be queried for the field, false if not
      */
+    @JsName("isFieldSupported")
     fun isSupported(field: TemporalField): Boolean
 
     /**
@@ -160,7 +162,7 @@ interface TemporalAccessor {
      *
      *
      * The default implementation must behave equivalent to this code:
-     * <pre>
+     * ```
      * if (field instanceof ChronoField) {
      *     if (isSupported(field)) {
      *         return field.range();
@@ -168,13 +170,14 @@ interface TemporalAccessor {
      *     throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
      * }
      * return field.rangeRefinedBy(this);
-     * </pre>
+     * ```
      *
      * @param field  the field to query the range for, not null
      * @return the range of valid values for the field, not null
      * @throws DateTimeException if the range for the field cannot be obtained
      * @throws UnsupportedTemporalTypeException if the field is not supported
      */
+    @JsName("range")
     fun range(field: TemporalField): ValueRange {
         if (field is ChronoField) {
             if (isSupported(field)) {
@@ -211,12 +214,12 @@ interface TemporalAccessor {
      *
      *
      * The default implementation must behave equivalent to this code:
-     * <pre>
+     * ```
      * if (range(field).isIntValue()) {
      *     return range(field).checkValidIntValue(getLong(field), field);
      * }
      * throw new UnsupportedTemporalTypeException("Invalid field " + field + " + for get() method, use getLong() instead");
-     * </pre>
+     * ```
      *
      * @param field  the field to get, not null
      * @return the value for the field, within the valid range of values
@@ -267,6 +270,7 @@ interface TemporalAccessor {
      * @throws UnsupportedTemporalTypeException if the field is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
+    @JsName("getLong")
     fun getLong(field: TemporalField): Long
 
     /**
@@ -289,13 +293,13 @@ interface TemporalAccessor {
      *
      * @implSpec
      * The default implementation must behave equivalent to this code:
-     * <pre>
+     * ```
      * if (query == TemporalQueries.zoneId() ||
      *     query == TemporalQueries.chronology() || query == TemporalQueries.precision()) {
      *     return null;
      * }
      * return query.queryFrom(this);
-     * </pre>
+     * ```
      * Future versions are permitted to add further queries to the if statement.
      *
      *
@@ -309,12 +313,12 @@ interface TemporalAccessor {
      * if statement of the default implementation, then it must do so.
      * For example, an application-defined `HourMin` class storing the hour
      * and minute must override this method as follows:
-     * <pre>
+     * ```
      * if (query == TemporalQueries.precision()) {
      *     return MINUTES;
      * }
      * return TemporalAccessor.super.query(query);
-     * </pre>
+     * ```
      *
      *
      * Implementations must ensure that no observable state is altered when this
@@ -325,7 +329,8 @@ interface TemporalAccessor {
      * @return the query result, null may be returned (defined by the query)
      * @throws DateTimeException if unable to query
      * @throws ArithmeticException if numeric overflow occurs
-    </R> */
+     */
+    @JsName("query")
     fun <R> query(query: TemporalQuery<R>): R? {
         return if (query === TemporalQueries.ZONE_ID
             || query === TemporalQueries.CHRONO
