@@ -64,7 +64,9 @@ package org.firas.datetime.format
 import org.firas.datetime.chrono.Chronology
 import org.firas.datetime.chrono.IsoChronology
 import org.firas.datetime.temporal.TemporalField
+import org.firas.datetime.util.Locale
 import org.firas.datetime.zone.ZoneId
+import kotlin.js.JsName
 
 /**
  * Context object used during date and time parsing.
@@ -120,6 +122,20 @@ internal class DateTimeParseContext internal constructor(
 
     //-----------------------------------------------------------------------
     /**
+     * Gets the locale.
+     *
+     *
+     * This locale is used to control localization in the parse except
+     * where localization is controlled by the DecimalStyle.
+     *
+     * @return the locale, not null
+     */
+    @JsName("getLocale")
+    internal fun getLocale(): Locale {
+        return formatter.locale
+    }
+
+    /**
      * Gets the DecimalStyle.
      *
      *
@@ -127,6 +143,7 @@ internal class DateTimeParseContext internal constructor(
      *
      * @return the DecimalStyle, not null
      */
+    @JsName("getDecimalStyle")
     internal fun getDecimalStyle(): DecimalStyle {
         return formatter.decimalStyle
     }
@@ -136,6 +153,7 @@ internal class DateTimeParseContext internal constructor(
      *
      * @return the effective parsing chronology, not null
      */
+    @JsName("getEffectiveChronology")
     internal fun getEffectiveChronology(): Chronology {
         var chrono = currentParsed().chrono
         if (chrono == null) {
@@ -159,6 +177,7 @@ internal class DateTimeParseContext internal constructor(
      * @param length  the length to check, valid
      * @return true if equal
      */
+    @JsName("subSequenceEquals")
     internal fun subSequenceEquals(cs1: CharSequence, offset1: Int,
                                    cs2: CharSequence, offset2: Int, length: Int): Boolean {
         if (offset1 + length > cs1.length || offset2 + length > cs2.length) {
@@ -192,6 +211,7 @@ internal class DateTimeParseContext internal constructor(
      * @param ch2  the second character
      * @return true if equal
      */
+    @JsName("charEquals")
     internal fun charEquals(ch1: Char, ch2: Char): Boolean {
         return ch1.equals(ch2, !this.caseSensitive)
     }
@@ -200,6 +220,7 @@ internal class DateTimeParseContext internal constructor(
     /**
      * Starts the parsing of an optional segment of the input.
      */
+    @JsName("startOptional")
     internal fun startOptional() {
         parsed.add(currentParsed().copy())
     }
@@ -209,6 +230,7 @@ internal class DateTimeParseContext internal constructor(
      *
      * @param successful  whether the optional segment was successfully parsed
      */
+    @JsName("endOptional")
     internal fun endOptional(successful: Boolean) {
         if (successful) {
             this.parsed.removeAt(this.parsed.size - 2)
@@ -232,6 +254,7 @@ internal class DateTimeParseContext internal constructor(
      *
      * @return the result of the parse, not null
      */
+    @JsName("toUnresolved")
     internal fun toUnresolved(): Parsed {
         return currentParsed()
     }
@@ -241,6 +264,7 @@ internal class DateTimeParseContext internal constructor(
      * if the Chronology changes.
      * @param listener a Consumer&lt;Chronology&gt; to be called when Chronology changes
      */
+    @JsName("addChronoChangedListener")
     fun addChronoChangedListener(listener: (Chronology) -> Unit) {
         val _listeners: MutableList<(Chronology) -> Unit> = this.chronoListeners ?: ArrayList()
         _listeners.add(listener)
@@ -255,6 +279,7 @@ internal class DateTimeParseContext internal constructor(
      *
      * @param zone  the parsed zone, not null
      */
+    @JsName("setParsed")
     internal fun setParsed(zone: ZoneId) {
         currentParsed().zone = zone
     }
@@ -262,6 +287,7 @@ internal class DateTimeParseContext internal constructor(
     /**
      * Stores the parsed leap second.
      */
+    @JsName("setParsedLeapSecond")
     internal fun setParsedLeapSecond() {
         currentParsed().leapSecond = true
     }
@@ -279,6 +305,7 @@ internal class DateTimeParseContext internal constructor(
      * @param field  the field to query from the map, null returns null
      * @return the value mapped to the specified field, null if field was not parsed
      */
+    @JsName("getParsed")
     internal fun getParsed(field: TemporalField): Long? {
         return currentParsed().fieldValues.get(field)
     }
@@ -296,6 +323,7 @@ internal class DateTimeParseContext internal constructor(
      * @param successPos  the position after the field being parsed
      * @return the new position
      */
+    @JsName("setParsedField")
     internal fun setParsedField(field: TemporalField, value: Long, errorPos: Int, successPos: Int): Int {
         val old = currentParsed().fieldValues.put(field, value)
         return if (old != null && old.toLong() != value) errorPos.inv() else successPos

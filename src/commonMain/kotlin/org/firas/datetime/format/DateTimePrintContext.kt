@@ -67,8 +67,11 @@ import org.firas.datetime.chrono.ChronoLocalDate
 import org.firas.datetime.chrono.Chronology
 import org.firas.datetime.chrono.IsoChronology
 import org.firas.datetime.temporal.*
+import org.firas.datetime.util.Locale
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 import kotlin.reflect.KClass
 
 /**
@@ -107,10 +110,13 @@ class DateTimePrintContext private constructor(
      * @param temporal  the temporal object being output, not null
      * @param formatter  the formatter controlling the format, not null
      */
+    @JsName("DateTimePrintContext_init")
     internal constructor(temporal: TemporalAccessor, formatter: DateTimeFormatter):
             this(formatter, adjust(temporal, formatter))
 
     companion object {
+        @JsName("adjust")
+        @JvmStatic
         fun adjust(temporal: TemporalAccessor, formatter: DateTimeFormatter): TemporalAccessor {
             // normal case first (early return is an optimization)
             var overrideChrono = formatter.chrono
@@ -178,7 +184,7 @@ class DateTimePrintContext private constructor(
             // this better handles map-like underlying temporal instances
             return DateTimePrintContext_TemporalAccessor(temporal,
                     effectiveDate, effectiveChrono!!, effectiveZone!!)
-        }
+        } // fun adjust(temporal: TemporalAccessor, formatter: DateTimeFormatter)
 
         private class DateTimePrintContext_TemporalAccessor internal constructor(
             internal val temporal: TemporalAccessor,
@@ -229,6 +235,20 @@ class DateTimePrintContext private constructor(
     } // companion object
 
     /**
+     * Gets the locale.
+     *
+     *
+     * This locale is used to control localization in the format output except
+     * where localization is controlled by the DecimalStyle.
+     *
+     * @return the locale, not null
+     */
+    @JsName("getLocale")
+    fun getLocale(): Locale {
+        return formatter.locale
+    }
+
+    /**
      * Gets the DecimalStyle.
      *
      *
@@ -236,6 +256,7 @@ class DateTimePrintContext private constructor(
      *
      * @return the DecimalStyle, not null
      */
+    @JsName("getDecimalStyle")
     fun getDecimalStyle(): DecimalStyle {
         return formatter.decimalStyle
     }
@@ -244,6 +265,7 @@ class DateTimePrintContext private constructor(
     /**
      * Starts the printing of an optional segment of the input.
      */
+    @JsName("startOptional")
     fun startOptional() {
         this.optional += 1
     }
@@ -251,6 +273,7 @@ class DateTimePrintContext private constructor(
     /**
      * Ends the printing of an optional segment of the input.
      */
+    @JsName("endOptional")
     fun endOptional() {
         this.optional -= 1
     }
@@ -262,6 +285,7 @@ class DateTimePrintContext private constructor(
      * @return the result, null if not found and optional is true
      * @throws DateTimeException if the type is not available and the section is not optional
      */
+    @JsName("getValueWithQuery")
     fun <R> getValue(query: TemporalQuery<R>): R? {
         val result = this.temporal!!.query(query)
         if (result == null && this.optional == 0) {
@@ -282,6 +306,7 @@ class DateTimePrintContext private constructor(
      * @return the value, null if not found and optional is true
      * @throws DateTimeException if the field is not available and the section is not optional
      */
+    @JsName("getValueWithField")
     fun getValue(field: TemporalField): Long? {
         return if (this.optional > 0 && !this.temporal!!.isSupported(field)) null
                 else this.temporal!!.getLong(field)
