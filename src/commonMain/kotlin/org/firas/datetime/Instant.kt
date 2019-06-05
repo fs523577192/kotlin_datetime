@@ -67,7 +67,7 @@ import org.firas.datetime.LocalTime.Companion.SECONDS_PER_HOUR
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_MINUTE
 import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
-import kotlin.reflect.KClass
+import org.firas.lang.getName
 
 /**
  * An instantaneous point on the time-line.
@@ -344,7 +344,7 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
                 return Instant.ofEpochSecond(instantSecs, nanoOfSecond.toLong())
             } catch (ex: DateTimeException) {
                 throw DateTimeException ("Unable to obtain Instant from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getClassName(), ex)
+                        temporal + " of type " + temporal::class.getName(), ex)
             }
         }
 

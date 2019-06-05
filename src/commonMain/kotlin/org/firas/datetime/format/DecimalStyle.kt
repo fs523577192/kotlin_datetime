@@ -61,6 +61,8 @@
  */
 package org.firas.datetime.format
 
+import kotlin.js.JsName
+
 /**
  * Localized decimal style used in date and time formatting.
  *
@@ -75,24 +77,37 @@ package org.firas.datetime.format
  */
 class DecimalStyle private constructor(
     /**
-     * The zero digit.
+     * The character that represents zero.
+     *
+     *
+     * The character used to represent digits may vary by culture.
+     * This field specifies the zero character to use, which implies the characters for one to nine.
      */
-    private val zeroDigit: Char,
+    val zeroDigit: Char,
 
     /**
-     * The positive sign.
+     * The character that represents the positive sign.
+     *
+     *
+     * The character used to represent a positive number may vary by culture.
      */
-    private val positiveSign: Char,
+    val positiveSign: Char,
 
     /**
-     * The negative sign.
+     * The character that represents the negative sign.
+     *
+     *
+     * The character used to represent a negative number may vary by culture.
      */
-    private val negativeSign: Char,
+    val negativeSign: Char,
 
     /**
-     * The decimal separator.
+     * The character that represents the decimal point.
+     *
+     *
+     * The character used to represent a decimal point may vary by culture.
      */
-    private val decimalSeparator: Char
+    val decimalSeparator: Char
 ) {
     companion object {
         /**
@@ -106,19 +121,6 @@ class DecimalStyle private constructor(
 
     //-----------------------------------------------------------------------
     /**
-     * Gets the character that represents zero.
-     *
-     *
-     * The character used to represent digits may vary by culture.
-     * This method specifies the zero character to use, which implies the characters for one to nine.
-     *
-     * @return the character for zero
-     */
-    fun getZeroDigit(): Char {
-        return zeroDigit
-    }
-
-    /**
      * Returns a copy of the info with a new character that represents zero.
      *
      *
@@ -128,6 +130,7 @@ class DecimalStyle private constructor(
      * @param zeroDigit  the character for zero
      * @return  a copy with a new character that represents zero, not null
      */
+    @JsName("withZeroDigit")
     fun withZeroDigit(zeroDigit: Char): DecimalStyle {
         return if (zeroDigit == this.zeroDigit) {
             this
@@ -135,19 +138,6 @@ class DecimalStyle private constructor(
     }
 
     //-----------------------------------------------------------------------
-    /**
-     * Gets the character that represents the positive sign.
-     *
-     *
-     * The character used to represent a positive number may vary by culture.
-     * This method specifies the character to use.
-     *
-     * @return the character for the positive sign
-     */
-    fun getPositiveSign(): Char {
-        return positiveSign
-    }
-
     /**
      * Returns a copy of the info with a new character that represents the positive sign.
      *
@@ -166,19 +156,6 @@ class DecimalStyle private constructor(
 
     //-----------------------------------------------------------------------
     /**
-     * Gets the character that represents the negative sign.
-     *
-     *
-     * The character used to represent a negative number may vary by culture.
-     * This method specifies the character to use.
-     *
-     * @return the character for the negative sign
-     */
-    fun getNegativeSign(): Char {
-        return negativeSign
-    }
-
-    /**
      * Returns a copy of the info with a new character that represents the negative sign.
      *
      *
@@ -188,24 +165,11 @@ class DecimalStyle private constructor(
      * @param negativeSign  the character for the negative sign
      * @return  a copy with a new character that represents the negative sign, not null
      */
+    @JsName("withNegativeSign")
     fun withNegativeSign(negativeSign: Char): DecimalStyle {
         return if (negativeSign == this.negativeSign) {
             this
         } else DecimalStyle(zeroDigit, positiveSign, negativeSign, decimalSeparator)
-    }
-
-    //-----------------------------------------------------------------------
-    /**
-     * Gets the character that represents the decimal point.
-     *
-     *
-     * The character used to represent a decimal point may vary by culture.
-     * This method specifies the character to use.
-     *
-     * @return the character for the decimal point
-     */
-    fun getDecimalSeparator(): Char {
-        return decimalSeparator
     }
 
     /**
@@ -218,6 +182,7 @@ class DecimalStyle private constructor(
      * @param decimalSeparator  the character for the decimal point
      * @return  a copy with a new character that represents the decimal point, not null
      */
+    @JsName("withDecimalSeparator")
     fun withDecimalSeparator(decimalSeparator: Char): DecimalStyle {
         return if (decimalSeparator == this.decimalSeparator) {
             this
@@ -231,6 +196,7 @@ class DecimalStyle private constructor(
      * @param ch  the character to check
      * @return the value, 0 to 9, of the character, or -1 if not a digit
      */
+    @JsName("convertToDigit")
     fun convertToDigit(ch: Char): Int {
         val value = ch - this.zeroDigit
         return if (value in 0..9) value else -1
@@ -242,6 +208,7 @@ class DecimalStyle private constructor(
      * @param numericText  the text, consisting of digits 0 to 9, to convert, not null
      * @return the internationalized text, not null
      */
+    @JsName("convertNumberToI18N")
     fun convertNumberToI18N(numericText: String): String {
         if (this.zeroDigit == '0') {
             return numericText

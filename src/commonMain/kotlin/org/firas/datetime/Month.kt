@@ -64,6 +64,7 @@ package org.firas.datetime
 import org.firas.datetime.chrono.Chronology
 import org.firas.datetime.chrono.IsoChronology
 import org.firas.datetime.temporal.*
+import org.firas.lang.getName
 import kotlin.reflect.KClass
 
 /**
@@ -207,7 +208,7 @@ enum class Month: TemporalAccessor {
             } catch (ex: DateTimeException) {
                 throw DateTimeException(
                     "Unable to obtain Month from TemporalAccessor: " +
-                            temporal + " of type " + temporal.getClassName(), ex
+                            temporal + " of type " + temporal::class.getName(), ex
                 )
             }
         }

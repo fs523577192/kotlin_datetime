@@ -96,7 +96,6 @@ class ValueRange private constructor(
         /**
          * Serialization version.
          */
-        @JvmStatic
         private const val serialVersionUID = -7317881728594519368L
 
         /**

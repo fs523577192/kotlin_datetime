@@ -65,7 +65,9 @@ import org.firas.datetime.DateTimeException
 import org.firas.datetime.Instant
 import org.firas.datetime.temporal.TemporalAccessor
 import org.firas.datetime.temporal.TemporalQueries
-import org.firas.datetime.temporal.getClassName
+import org.firas.lang.getName
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * A time-zone ID, such as `Europe/Paris`.
@@ -219,6 +221,7 @@ abstract class ZoneId internal constructor() {
          * </ul>
          * The map is unmodifiable.
          */
+        @JvmStatic
         val SHORT_IDS: Map<String, String> = hashMapOf(
             Pair("ACT", "Australia/Darwin"),
             Pair("AET", "Australia/Sydney"),
@@ -269,6 +272,8 @@ abstract class ZoneId internal constructor() {
          * @throws IllegalArgumentException if the prefix is not one of
          * "GMT", "UTC", or "UT", or ""
          */
+        @JsName("ofOffset")
+        @JvmStatic
         fun ofOffset(prefix: String, offset: ZoneOffset): ZoneId {
             var prefix = prefix
             if (prefix.isEmpty()) {
@@ -309,10 +314,12 @@ abstract class ZoneId internal constructor() {
          * @return the zone ID, not null
          * @throws DateTimeException if unable to convert to a `ZoneId`
          */
+        @JsName("from")
+        @JvmStatic
         fun from(temporal: TemporalAccessor): ZoneId {
             return temporal.query(TemporalQueries.ZONE) ?: throw DateTimeException(
                 "Unable to obtain ZoneId from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getClassName()
+                        temporal + " of type " + temporal::class.getName()
             )
         }
 
@@ -326,6 +333,8 @@ abstract class ZoneId internal constructor() {
          * @throws DateTimeException if the ID format is invalid
          * @throws ZoneRulesException if checking availability and the ID cannot be found
          */
+        @JsName("of")
+        @JvmStatic
         internal fun of(zoneId: String, checkAvailable: Boolean): ZoneId {
             if (zoneId.length <= 1 || zoneId.startsWith("+") || zoneId.startsWith("-")) {
                 return ZoneOffset.of(zoneId)
@@ -374,6 +383,7 @@ abstract class ZoneId internal constructor() {
      *
      * @return the time-zone unique ID, not null
      */
+    @JsName("getId")
     abstract fun getId(): String
 
     /**
@@ -400,6 +410,7 @@ abstract class ZoneId internal constructor() {
      * @return the rules, not null
      * @throws ZoneRulesException if no rules are available for this ID
      */
+    @JsName("getRules")
     abstract fun getRules(): ZoneRules?
 
     /**
@@ -417,6 +428,7 @@ abstract class ZoneId internal constructor() {
      *
      * @return the time-zone unique ID, not null
      */
+    @JsName("normalized")
     fun normalized(): ZoneId? {
         try {
             val rules = getRules()!!

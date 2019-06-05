@@ -63,6 +63,7 @@ package org.firas.datetime
 
 import org.firas.datetime.temporal.*
 import org.firas.datetime.zone.ZoneOffset
+import org.firas.lang.getName
 import kotlin.reflect.KClass
 
 /**
@@ -326,7 +327,7 @@ class LocalTime private constructor(
         fun from(temporal: TemporalAccessor): LocalTime {
             return temporal.query(TemporalQueries.LOCAL_TIME) ?:
                     throw DateTimeException("Unable to obtain LocalTime from TemporalAccessor: " +
-                            temporal + " of type " + temporal.getClassName())
+                            temporal + " of type " + temporal::class.getName())
         }
 
         /**

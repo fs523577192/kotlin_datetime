@@ -89,11 +89,11 @@ import kotlin.jvm.JvmStatic
  * There are two equivalent ways of using a `TemporalQuery`.
  * The first is to invoke the method on this interface directly.
  * The second is to use {@link TemporalAccessor#query(TemporalQuery)}:
- * <pre>
+ * ```
  *   // these two lines are equivalent, but the second approach is recommended
  *   temporal = thisQuery.queryFrom(temporal);
  *   temporal = temporal.query(thisQuery);
- * </pre>
+ * ```
  * It is recommended to use the second approach, `query(TemporalQuery)`,
  * as it is a lot clearer to read in code.
  *

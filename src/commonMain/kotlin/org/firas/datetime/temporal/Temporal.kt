@@ -61,6 +61,10 @@
  */
 package org.firas.datetime.temporal
 
+import org.firas.datetime.DateTimeException
+import org.firas.datetime.Duration
+import org.firas.datetime.Period
+import org.firas.datetime.chrono.ChronoLocalDate
 import kotlin.js.JsName
 
 /**
@@ -94,7 +98,7 @@ import kotlin.js.JsName
  * around instances of concrete types, such as `LocalDate`.
  * There are many reasons for this, part of which is that implementations
  * of this interface may be in calendar systems other than ISO.
- * See [org.firas.datetime.chrono.ChronoLocalDate] for a fuller discussion of the issues.
+ * See [ChronoLocalDate] for a fuller discussion of the issues.
  *
  * <h3>When to implement</h3>
  *
@@ -169,19 +173,19 @@ interface Temporal: TemporalAccessor {
      * This adjusts this date-time according to the rules of the specified adjuster.
      * A simple adjuster might simply set the one of the fields, such as the year field.
      * A more complex adjuster might set the date to the last day of the month.
-     * A selection of common adjustments is provided in
-     * [TemporalAdjusters][java.time.temporal.TemporalAdjusters].
+     * A selection of common adjustments is provided in [TemporalAdjusters].
+     *
      * These include finding the "last day of the month" and "next Wednesday".
      * The adjuster is responsible for handling special cases, such as the varying
      * lengths of month and leap years.
      *
      *
      * Some example code indicating how and why this method is used:
-     * <pre>
+     * ```
      * date = date.with(Month.JULY);        // most key classes implement TemporalAdjuster
      * date = date.with(lastDayOfMonth());  // static import from Adjusters
      * date = date.with(next(WEDNESDAY));   // static import from Adjusters and DayOfWeek
-     * </pre>
+     * ```
      *
      * @implSpec
      *
@@ -192,9 +196,9 @@ interface Temporal: TemporalAccessor {
      *
      *
      * The default implementation must behave equivalent to this code:
-     * <pre>
+     * ```
      * return adjuster.adjustInto(this);
-     * </pre>
+     * ```
      *
      * @param adjuster  the adjuster to use, not null
      * @return an object of the same type with the specified adjustment made, not null
@@ -251,16 +255,16 @@ interface Temporal: TemporalAccessor {
      *
      *
      * This adjusts this temporal, adding according to the rules of the specified amount.
-     * The amount is typically a [java.time.Period] but may be any other type implementing
-     * the [TemporalAmount] interface, such as [java.time.Duration].
+     * The amount is typically a [Period] but may be any other type implementing
+     * the [TemporalAmount] interface, such as [Duration].
      *
      *
      * Some example code indicating how and why this method is used:
-     * <pre>
+     * ```
      * date = date.plus(period);                // add a Period instance
      * date = date.plus(duration);              // add a Duration instance
      * date = date.plus(workingDays(6));        // example user-written workingDays method
-     * </pre>
+     * ```
      *
      *
      * Note that calling `plus` followed by `minus` is not guaranteed to
@@ -275,9 +279,9 @@ interface Temporal: TemporalAccessor {
      *
      *
      * The default implementation must behave equivalent to this code:
-     * <pre>
+     * ```
      * return amount.addTo(this);
-     * </pre>
+     * ```
      *
      * @param amount  the amount to add, not null
      * @return an object of the same type with the specified adjustment made, not null
@@ -333,16 +337,16 @@ interface Temporal: TemporalAccessor {
      *
      *
      * This adjusts this temporal, subtracting according to the rules of the specified amount.
-     * The amount is typically a [java.time.Period] but may be any other type implementing
-     * the [TemporalAmount] interface, such as [java.time.Duration].
+     * The amount is typically a [Period] but may be any other type implementing
+     * the [TemporalAmount] interface, such as [Duration].
      *
      *
      * Some example code indicating how and why this method is used:
-     * <pre>
+     * ```
      * date = date.minus(period);               // subtract a Period instance
      * date = date.minus(duration);             // subtract a Duration instance
      * date = date.minus(workingDays(6));       // example user-written workingDays method
-     * </pre>
+     * ```
      *
      *
      * Note that calling `plus` followed by `minus` is not guaranteed to
@@ -357,9 +361,9 @@ interface Temporal: TemporalAccessor {
      *
      *
      * The default implementation must behave equivalent to this code:
-     * <pre>
+     * ```
      * return amount.subtractFrom(this);
-     * </pre>
+     * ```
      *
      * @param amount  the amount to subtract, not null
      * @return an object of the same type with the specified adjustment made, not null
@@ -394,10 +398,10 @@ interface Temporal: TemporalAccessor {
      *
      *
      * The default implementation must behave equivalent to this code:
-     * <pre>
+     * ```
      * return (amountToSubtract == Long.MIN_VALUE ?
      * plus(Long.MAX_VALUE, unit).plus(1, unit) : plus(-amountToSubtract, unit));
-     * </pre>
+     * ```
      *
      * @param amountToSubtract  the amount of the specified unit to subtract, may be negative
      * @param unit  the unit of the amount to subtract, not null
@@ -437,21 +441,21 @@ interface Temporal: TemporalAccessor {
      * There are two equivalent ways of using this method.
      * The first is to invoke this method directly.
      * The second is to use [TemporalUnit.between]:
-     * <pre>
+     * ```
      * // these two lines are equivalent
      * temporal = start.until(end, unit);
      * temporal = unit.between(start, end);
-     * </pre>
+     * ```
      * The choice should be made based on which makes the code more readable.
      *
      *
      * For example, this method allows the number of days between two dates to
      * be calculated:
-     * <pre>
+     * ```
      * long daysBetween = start.until(end, DAYS);
      * // or alternatively
      * long daysBetween = DAYS.between(start, end);
-     * </pre>
+     * ```
      *
      * @implSpec
      * Implementations must begin by checking to ensure that the input temporal
@@ -468,14 +472,14 @@ interface Temporal: TemporalAccessor {
      *
      *
      * In summary, implementations must behave in a manner equivalent to this pseudo-code:
-     * <pre>
+     * ```
      * // convert the end temporal to the same type as this class
      * if (unit instanceof ChronoUnit) {
      *     // if unit is supported, then calculate and return result
      *     // else throw UnsupportedTemporalTypeException for unsupported units
      * }
      * return unit.between(this, convertedEndTemporal);
-     * </pre>
+     * ```
      *
      *
      * Note that the unit's `between` method must only be invoked if the

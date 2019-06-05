@@ -65,6 +65,7 @@ import org.firas.datetime.Duration
 import org.firas.datetime.Instant
 import org.firas.datetime.LocalDateTime
 import org.firas.util.Integers
+import kotlin.js.JsName
 
 /**
  * A transition between two offsets caused by a discontinuity in the local time-line.
@@ -156,6 +157,7 @@ class ZoneOffsetTransition private constructor(
      *
      * @return the transition date-time expressed with the before offset, not null
      */
+    @JsName("getDateTimeBefore")
     fun getDateTimeBefore(): LocalDateTime {
         return transition
     }
@@ -172,6 +174,7 @@ class ZoneOffsetTransition private constructor(
      *
      * @return the transition date-time expressed with the after offset, not null
      */
+    @JsName("getDateTimeAfter")
     fun getDateTimeAfter(): LocalDateTime {
         return transition.plusSeconds(getDurationSeconds().toLong())
     }
@@ -189,6 +192,7 @@ class ZoneOffsetTransition private constructor(
      *
      * @return the transition instant, not null
      */
+    @JsName("getInstant")
     fun getInstant(): Instant {
         return Instant.ofEpochSecond(epochSecond)
     }
@@ -203,6 +207,7 @@ class ZoneOffsetTransition private constructor(
      *
      * @return the duration of the transition, positive for gaps, negative for overlaps
      */
+    @JsName("getDuration")
     fun getDuration(): Duration {
         return Duration.ofSeconds(getDurationSeconds().toLong())
     }
@@ -217,6 +222,7 @@ class ZoneOffsetTransition private constructor(
      *
      * @return true if this transition is a gap, false if it is an overlap
      */
+    @JsName("isGap")
     fun isGap(): Boolean {
         return this.offsetAfter.totalSeconds > this.offsetBefore.totalSeconds
     }
@@ -231,6 +237,7 @@ class ZoneOffsetTransition private constructor(
      *
      * @return true if this transition is an overlap, false if it is a gap
      */
+    @JsName("isOverlap")
     fun isOverlap(): Boolean {
         return this.offsetAfter.totalSeconds < this.offsetBefore.totalSeconds
     }
@@ -246,6 +253,7 @@ class ZoneOffsetTransition private constructor(
      * @param offset  the offset to check, null returns false
      * @return true if the offset is valid during the transition
      */
+    @JsName("isValidOffset")
     fun isValidOffset(offset: ZoneOffset): Boolean {
         return if (isGap()) false else (this.offsetBefore == offset || this.offsetAfter == offset)
     }
@@ -272,6 +280,7 @@ class ZoneOffsetTransition private constructor(
      *
      * @return the list of valid offsets
      */
+    @JsName("getValidOffsets")
     internal fun getValidOffsets(): List<ZoneOffset> {
         return if (isGap()) listOf()
                 else listOf(this.offsetBefore, this.offsetAfter)

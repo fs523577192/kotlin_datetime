@@ -98,7 +98,6 @@ class UnsupportedTemporalTypeException: DateTimeException {
         /**
          * Serialization version.
          */
-        @JvmStatic
         private const val serialVersionUID = -6158898438688206006L
     }
 }

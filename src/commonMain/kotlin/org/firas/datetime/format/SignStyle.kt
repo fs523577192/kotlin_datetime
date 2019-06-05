@@ -61,6 +61,8 @@
  */
 package org.firas.datetime.format
 
+import kotlin.js.JsName
+
 /**
  * Enumeration of ways to handle the positive/negative sign.
  *
@@ -132,6 +134,7 @@ enum class SignStyle {
      * @param fixedWidth  true if fixed width, false if not
      * @return
      */
+    @JsName("parse")
     internal fun parse(positive: Boolean, strict: Boolean, fixedWidth: Boolean): Boolean {
         return when (ordinal) {
             0 // NORMAL

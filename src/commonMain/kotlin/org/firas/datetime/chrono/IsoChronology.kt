@@ -112,10 +112,8 @@ class IsoChronology private constructor(): Chronology {
         /**
          * Serialization version.
          */
-        @JvmStatic
         private const val serialVersionUID = -1440403870442975015L
 
-        @JvmStatic
         private const val DAYS_0000_TO_1970 = 146097 * 5L - (30L * 365L + 7L) // taken from LocalDate
     }
 

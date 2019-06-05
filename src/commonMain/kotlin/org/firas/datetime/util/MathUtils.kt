@@ -24,6 +24,8 @@
  */
 package org.firas.datetime.util
 
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 import kotlin.math.absoluteValue
 
 /**
@@ -42,8 +44,10 @@ class MathUtils private constructor() {
          * @param value the long value
          * @return the argument as an int
          * @throws ArithmeticException if the `argument` overflows an int
-         * @since 1.8
+         * @since Java 1.8
          */
+        @JsName("toIntExact")
+        @JvmStatic
         fun toIntExact(value: Long): Int {
             if (value.toInt().toLong() != value) {
                 throw ArithmeticException("integer overflow")
@@ -61,6 +65,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows an int
          * @since Java 1.8
          */
+        @JsName("addExactInt")
+        @JvmStatic
         fun addExact(x: Int, y: Int): Int {
             val r = x + y
             // HD 2-12 Overflow iff both arguments have the opposite sign of the result
@@ -80,6 +86,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows a long
          * @since Java 1.8
          */
+        @JsName("addExactLong")
+        @JvmStatic
         fun addExact(x: Long, y: Long): Long {
             val r = x + y
             // HD 2-12 Overflow iff both arguments have the opposite sign of the result
@@ -99,6 +107,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows an int
          * @since Java 1.8
          */
+        @JsName("subtractExactInt")
+        @JvmStatic
         fun subtractExact(x: Int, y: Int): Int {
             val r = x - y
             // HD 2-12 Overflow iff the arguments have different signs and
@@ -119,6 +129,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows a long
          * @since Java 1.8
          */
+        @JsName("subtractExactLong")
+        @JvmStatic
         fun subtractExact(x: Long, y: Long): Long {
             val r = x - y
             // HD 2-12 Overflow iff the arguments have different signs and
@@ -139,6 +151,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows an int
          * @since Java 1.8
          */
+        @JsName("multiplyExactInt")
+        @JvmStatic
         fun multiplyExact(x: Int, y: Int): Int {
             val r = x.toLong() * y.toLong()
             if (r.toInt().toLong() != r) {
@@ -157,6 +171,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows a long
          * @since Java 1.8
          */
+        @JsName("multiplyExactLong")
+        @JvmStatic
         fun multiplyExact(x: Long, y: Long): Long {
             val r = x * y
             val ax = x.absoluteValue
@@ -181,6 +197,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows an int
          * @since Java 1.8
          */
+        @JsName("incrementExactInt")
+        @JvmStatic
         fun incrementExact(a: Int): Int {
             if (a == Int.MAX_VALUE) {
                 throw ArithmeticException("integer overflow")
@@ -197,6 +215,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows a long
          * @since Java 1.8
          */
+        @JsName("incrementExactLong")
+        @JvmStatic
         fun incrementExact(a: Long): Long {
             if (a == Long.MAX_VALUE) {
                 throw ArithmeticException("long overflow")
@@ -213,6 +233,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows an int
          * @since Java 1.8
          */
+        @JsName("decrementExactInt")
+        @JvmStatic
         fun decrementExact(a: Int): Int {
             if (a == Int.MIN_VALUE) {
                 throw ArithmeticException("integer overflow")
@@ -229,6 +251,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows a long
          * @since Java 1.8
          */
+        @JsName("decrementExactLong")
+        @JvmStatic
         fun decrementExact(a: Long): Long {
             if (a == Long.MIN_VALUE) {
                 throw ArithmeticException("long overflow")
@@ -246,6 +270,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows an int
          * @since Java 1.8
          */
+        @JsName("negateExactInt")
+        @JvmStatic
         fun negateExact(a: Int): Int {
             if (a == Int.MIN_VALUE) {
                 throw ArithmeticException("integer overflow")
@@ -262,6 +288,8 @@ class MathUtils private constructor() {
          * @throws ArithmeticException if the result overflows a long
          * @since Java 1.8
          */
+        @JsName("negateExactLong")
+        @JvmStatic
         fun negateExact(a: Long): Long {
             if (a == Long.MIN_VALUE) {
                 throw ArithmeticException("long overflow")
@@ -295,8 +323,6 @@ class MathUtils private constructor() {
          *
          *
          *
-         *
-         *
          * @param x the dividend
          * @param y the divisor
          * @return the largest (closest to positive infinity)
@@ -306,11 +332,13 @@ class MathUtils private constructor() {
          * @see .floor
          * @since Java 1.8
          */
+        @JsName("floorDivInt")
+        @JvmStatic
         fun floorDiv(x: Int, y: Int): Int {
             var r = x / y
             // if the signs are different and modulo not zero, round down
             if (x xor y < 0 && r * y != x) {
-                r--
+                r -= 1
             }
             return r
         }
@@ -342,11 +370,13 @@ class MathUtils private constructor() {
          * @see .floor
          * @since Java 1.8
          */
+        @JsName("floorDivLong")
+        @JvmStatic
         fun floorDiv(x: Long, y: Long): Long {
             var r = x / y
             // if the signs are different and modulo not zero, round down
             if (x xor y < 0 && r * y != x) {
-                r--
+                r -= 1
             }
             return r
         }
@@ -388,8 +418,6 @@ class MathUtils private constructor() {
          *
          *
          *
-         *
-         *
          * If the signs of arguments are unknown and a positive modulus
          * is needed it can be computed as `(floorMod(x, y) + abs(y)) % abs(y)`.
          *
@@ -400,6 +428,8 @@ class MathUtils private constructor() {
          * @see .floorDiv
          * @since Java 1.8
          */
+        @JsName("floorModInt")
+        @JvmStatic
         fun floorMod(x: Int, y: Int): Int {
             return x - floorDiv(x, y) * y
         }
@@ -429,6 +459,8 @@ class MathUtils private constructor() {
          * @see .floorDiv
          * @since Java 1.8
          */
+        @JsName("floorModLong")
+        @JvmStatic
         fun floorMod(x: Long, y: Long): Long {
             return x - floorDiv(x, y) * y
         }

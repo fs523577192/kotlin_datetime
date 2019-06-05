@@ -61,6 +61,8 @@
  */
 package org.firas.datetime.format
 
+import kotlin.js.JsName
+
 /**
  * Enumeration of the style of text formatting and parsing.
  * <p>
@@ -125,6 +127,7 @@ enum class TextStyle(
      * Returns true if the Style is a stand-alone style.
      * @return true if the style is a stand-alone style.
      */
+    @JsName("isStandalone")
     fun isStandalone(): Boolean {
         return ordinal and 1 == 1
     }
@@ -133,6 +136,7 @@ enum class TextStyle(
      * Returns the stand-alone style with the same size.
      * @return the stand-alone style with the same size
      */
+    @JsName("asStandalone")
     fun asStandalone(): TextStyle {
         return TextStyle.values()[ordinal or 1]
     }
@@ -142,6 +146,7 @@ enum class TextStyle(
      *
      * @return the normal style with the same size
      */
+    @JsName("asNormal")
     fun asNormal(): TextStyle {
         return TextStyle.values()[ordinal and 1.inv()]
     }

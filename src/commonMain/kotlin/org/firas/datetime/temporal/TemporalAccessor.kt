@@ -62,8 +62,8 @@
 package org.firas.datetime.temporal
 
 import org.firas.datetime.DateTimeException
+import org.firas.datetime.chrono.ChronoLocalDate
 import kotlin.js.JsName
-import kotlin.reflect.KClass
 
 /**
  * Framework-level interface defining read-only access to a temporal object,
@@ -85,7 +85,7 @@ import kotlin.reflect.KClass
  * These can be accessed via {@linkplain #query(TemporalQuery) queries} using
  * the static methods defined on [TemporalQuery].
  *
- * A sub-interface, {@link Temporal}, extends this definition to one that also
+ * A sub-interface, [Temporal], extends this definition to one that also
  * supports adjustment and manipulation on more complete temporal objects.
  *
  * This interface is a framework-level interface that should not be widely
@@ -93,7 +93,7 @@ import kotlin.reflect.KClass
  * around instances of concrete types, such as `LocalDate`.
  * There are many reasons for this, part of which is that implementations
  * of this interface may be in calendar systems other than ISO.
- * See [org.firas.datetime.chrono.ChronoLocalDate] for a fuller discussion of the issues.
+ * See [ChronoLocalDate] for a fuller discussion of the issues.
  *
  * @implSpec
  * This interface places no restrictions on the mutability of implementations,
@@ -340,5 +340,3 @@ interface TemporalAccessor {
         } else query.queryFrom(this)
     }
 }
-
-expect fun TemporalAccessor.getClassName(): String

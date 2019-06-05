@@ -66,6 +66,7 @@ import org.firas.datetime.temporal.*
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.zone.getSystemZoneOffset
+import org.firas.lang.getName
 import kotlin.reflect.KClass
 
 /**
@@ -275,7 +276,7 @@ class OffsetDateTime private constructor(
                 }
             } catch (ex: DateTimeException) {
                 throw DateTimeException("Unable to obtain OffsetDateTime from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getClassName(), ex)
+                        temporal + " of type " + temporal::class.getName(), ex)
             }
         }
 

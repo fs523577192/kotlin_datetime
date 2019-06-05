@@ -70,6 +70,7 @@ import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
+import kotlin.js.JsName
 
 /**
  * A store of parsed data.
@@ -135,6 +136,7 @@ internal class Parsed internal constructor(): TemporalAccessor {
     /**
      * Creates a copy.
      */
+    @JsName("copy")
     internal fun copy(): Parsed {
         // only copy fields used in parsing stage
         val cloned = Parsed()
@@ -241,6 +243,7 @@ internal class Parsed internal constructor(): TemporalAccessor {
      * @throws DateTimeException if resolving one field results in a value for
      * another field that is in conflict
      */
+    @JsName("resolve")
     internal fun resolve(resolverStyle: ResolverStyle, resolverFields: Set<TemporalField>?): TemporalAccessor {
         if (resolverFields != null) {
             fieldValues.keys.retainAll(resolverFields)
@@ -320,7 +323,7 @@ internal class Parsed internal constructor(): TemporalAccessor {
                 resolveTimeFields()
             }
         }
-    }
+    } // private fun resolveFields()
 
     private fun updateCheckConflict(targetField: TemporalField, changeField: TemporalField, changeValue: Long) {
         val old = fieldValues.put(changeField, changeValue)
@@ -480,7 +483,7 @@ internal class Parsed internal constructor(): TemporalAccessor {
             val nos = fieldValues.remove(ChronoField.NANO_OF_SECOND)!!
             resolveTime(hod, moh, som, nos)
         }
-    }
+    } // private fun resolveTimeFields()
 
     private fun resolveTimeLenient() {
         // leniently create a time from incomplete information
@@ -541,7 +544,7 @@ internal class Parsed internal constructor(): TemporalAccessor {
                 }
             }
         }
-    }
+    } // private fun resolveTimeLenient()
 
     private fun resolveTime(hod: Long, moh: Long, som: Long, nos: Long) {
         if (resolverStyle === ResolverStyle.LENIENT) {

@@ -66,6 +66,9 @@ import org.firas.datetime.LocalTime.Companion.MINUTES_PER_HOUR
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_HOUR
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_MINUTE
 import org.firas.datetime.temporal.*
+import org.firas.lang.getName
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 import kotlin.math.absoluteValue
 import kotlin.reflect.KClass
 
@@ -128,6 +131,7 @@ class ZoneOffset private constructor(
         /**
          * The abs maximum seconds.
          */
+        @JvmStatic
         private val MAX_SECONDS = 18 * SECONDS_PER_HOUR
 
         /**
@@ -138,14 +142,17 @@ class ZoneOffset private constructor(
         /**
          * The time-zone offset for UTC, with an ID of 'Z'.
          */
+        @JvmStatic
         val UTC = ZoneOffset.ofTotalSeconds(0)
         /**
          * Constant for the minimum supported offset.
          */
+        @JvmStatic
         val MIN = ZoneOffset.ofTotalSeconds(-MAX_SECONDS)
         /**
          * Constant for the maximum supported offset.
          */
+        @JvmStatic
         val MAX = ZoneOffset.ofTotalSeconds(MAX_SECONDS)
 
         /**
@@ -181,6 +188,8 @@ class ZoneOffset private constructor(
          * @return the zone-offset, not null
          * @throws DateTimeException if the offset ID is invalid
          */
+        @JsName("of")
+        @JvmStatic
         fun of(offsetId: String): ZoneOffset {
             var offsetId = offsetId
             // "Z" is always in the cache
@@ -246,6 +255,8 @@ class ZoneOffset private constructor(
          * @return the zone-offset, not null
          * @throws DateTimeException if the offset is not in the required range
          */
+        @JsName("ofHours")
+        @JvmStatic
         fun ofHours(hours: Int): ZoneOffset {
             return ofHoursMinutesSeconds(hours, 0, 0)
         }
@@ -264,6 +275,8 @@ class ZoneOffset private constructor(
          * @return the zone-offset, not null
          * @throws DateTimeException if the offset is not in the required range
          */
+        @JsName("ofHoursMinutes")
+        @JvmStatic
         fun ofHoursMinutes(hours: Int, minutes: Int): ZoneOffset {
             return ofHoursMinutesSeconds(hours, minutes, 0)
         }
@@ -282,6 +295,8 @@ class ZoneOffset private constructor(
          * @return the zone-offset, not null
          * @throws DateTimeException if the offset is not in the required range
          */
+        @JsName("ofHoursMinutesSeconds")
+        @JvmStatic
         fun ofHoursMinutesSeconds(hours: Int, minutes: Int, seconds: Int): ZoneOffset {
             validate(hours, minutes, seconds)
             val totalSeconds = totalSeconds(hours, minutes, seconds)
@@ -298,6 +313,8 @@ class ZoneOffset private constructor(
          * @return the ZoneOffset, not null
          * @throws DateTimeException if the offset is not in the required range
          */
+        @JsName("ofTotalSeconds")
+        @JvmStatic
         fun ofTotalSeconds(totalSeconds: Int): ZoneOffset {
             if (totalSeconds < -MAX_SECONDS || totalSeconds > MAX_SECONDS) {
                 throw DateTimeException("Zone offset not in valid range: -18:00 to +18:00")
@@ -340,10 +357,12 @@ class ZoneOffset private constructor(
          * @return the zone-offset, not null
          * @throws DateTimeException if unable to convert to an `ZoneOffset`
          */
+        @JsName("from")
+        @JvmStatic
         fun from(temporal: TemporalAccessor): ZoneOffset {
             return temporal.query(TemporalQueries.OFFSET) ?: throw DateTimeException(
                     "Unable to obtain ZoneOffset from TemporalAccessor: " +
-                    temporal + " of type " + temporal.getClassName())
+                    temporal + " of type " + temporal::class.getName())
         }
 
         private fun buildId(totalSeconds: Int): String {

@@ -68,6 +68,7 @@ import org.firas.datetime.ZonedDateTime
 import org.firas.datetime.temporal.*
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
+import org.firas.lang.getName
 import org.firas.util.Integers
 import kotlin.js.JsName
 
@@ -149,7 +150,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
             if (chrono == null) {
                 throw DateTimeException(
                     "Unable to obtain ChronoZonedDateTime from TemporalAccessor: " +
-                            temporal.getClassName()
+                            temporal::class.getName()
                 )
             }
             return chrono.zonedDateTime(temporal)

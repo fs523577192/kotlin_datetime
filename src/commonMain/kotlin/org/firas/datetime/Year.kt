@@ -65,6 +65,7 @@ import org.firas.datetime.chrono.Chronology
 import org.firas.datetime.chrono.IsoChronology
 import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
+import org.firas.lang.getName
 import kotlin.reflect.KClass
 
 /**
@@ -207,7 +208,7 @@ class Year private constructor(val value: Int): Temporal, Comparable<Year> {
                 return of(temporal.get(ChronoField.YEAR))
             } catch (ex: DateTimeException) {
                 throw DateTimeException ("Unable to obtain Year from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getClassName(), ex)
+                        temporal + " of type " + temporal::class.getName(), ex)
             }
         }
     } // companion object

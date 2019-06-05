@@ -69,6 +69,7 @@ import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
+import org.firas.lang.getName
 import kotlin.js.JsName
 import kotlin.jvm.JvmStatic
 
@@ -224,7 +225,7 @@ interface Chronology: Comparable<Chronology> {
      * @return the local date in this chronology, not null
      * @throws DateTimeException if unable to create the date
      */
-    @JsName("date")
+    @JsName("dateFromYearMonthAndDayOfMonth")
     fun date(prolepticYear: Int, month: Int, dayOfMonth: Int): ChronoLocalDate
 
     /**
@@ -408,7 +409,7 @@ interface Chronology: Comparable<Chronology> {
             return date(temporal).atTime(LocalTime.from(temporal))
         } catch (ex: DateTimeException) {
             throw DateTimeException("Unable to obtain ChronoLocalDateTime from TemporalAccessor: " +
-                    temporal.getClassName(), ex)
+                    temporal::class.getName(), ex)
         }
     }
 
@@ -455,7 +456,7 @@ interface Chronology: Comparable<Chronology> {
             */
         } catch (ex: DateTimeException) {
             throw DateTimeException("Unable to obtain ChronoZonedDateTime from TemporalAccessor: " +
-                    temporal.getClassName(), ex)
+                    temporal::class.getName(), ex)
         }
     }
 

@@ -65,6 +65,7 @@ import org.firas.datetime.chrono.Chronology
 import org.firas.datetime.chrono.IsoChronology
 import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
+import org.firas.lang.getName
 import kotlin.math.absoluteValue
 import kotlin.reflect.KClass
 
@@ -173,7 +174,7 @@ class YearMonth private constructor(
                 return of(temporal.get(ChronoField.YEAR), temporal.get(ChronoField.MONTH_OF_YEAR))
             } catch (ex: DateTimeException) {
                 throw DateTimeException ("Unable to obtain YearMonth from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getClassName(), ex)
+                        temporal + " of type " + temporal::class.getName(), ex)
             }
         }
     } // companion object

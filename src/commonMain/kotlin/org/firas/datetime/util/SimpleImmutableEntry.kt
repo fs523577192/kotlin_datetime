@@ -24,6 +24,9 @@
  */
 package org.firas.datetime.util
 
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
+
 /**
  * An Entry maintaining an immutable key and value.  This class
  * does not support method `setValue`.  This class may be
@@ -51,6 +54,7 @@ class SimpleImmutableEntry<K, V>(
      *
      * @param entry the entry to copy
      */
+    @JsName("SimpleImmutableEntry_initWithMapEntry")
     constructor(entry: Map.Entry<out K, out V>) :
             this(entry.key, entry.value)
 

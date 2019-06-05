@@ -7,18 +7,22 @@ package org.firas.datetime
 actual class Date: Comparable<Date> {
     private var date: kotlin.js.Date
 
+    @JsName("Date_init")
     actual constructor() {
         this.date = kotlin.js.Date()
     }
 
+    @JsName("Date_initWithMilliseconds")
     actual constructor(milliseconds: Long) {
         this.date = kotlin.js.Date(milliseconds)
     }
 
+    @JsName("getTime")
     actual fun getTime(): Long {
         return this.date.getTime().toLong()
     }
 
+    @JsName("setTime")
     actual fun setTime(milliseconds: Long) {
         this.date = kotlin.js.Date(milliseconds)
     }

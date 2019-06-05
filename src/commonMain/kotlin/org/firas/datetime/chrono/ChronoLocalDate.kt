@@ -64,6 +64,7 @@ package org.firas.datetime.chrono
 import org.firas.datetime.DateTimeException
 import org.firas.datetime.LocalTime
 import org.firas.datetime.temporal.*
+import org.firas.lang.getName
 import kotlin.js.JsName
 import kotlin.jvm.JvmStatic
 
@@ -305,7 +306,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
             val chrono = temporal.query(TemporalQueries.CHRONO)
             if (chrono == null) {
                 throw DateTimeException("Unable to obtain ChronoLocalDate from TemporalAccessor: " +
-                        temporal.getClassName())
+                        temporal::class.getName())
             }
             return chrono.date(temporal)
         }

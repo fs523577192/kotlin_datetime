@@ -66,6 +66,7 @@ import org.firas.datetime.chrono.ChronoZonedDateTime
 import org.firas.datetime.temporal.*
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
+import org.firas.lang.getName
 import org.firas.util.Integers
 import kotlin.reflect.KClass
 
@@ -435,7 +436,7 @@ class ZonedDateTime(
                 }
             } catch (ex: DateTimeException) {
                 throw DateTimeException("Unable to obtain ZonedDateTime from TemporalAccessor: " +
-                        temporal + " of type " + temporal.getClassName(), ex)
+                        temporal + " of type " + temporal::class.getName(), ex)
             }
         }
 
