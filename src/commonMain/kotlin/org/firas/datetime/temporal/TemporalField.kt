@@ -394,7 +394,7 @@ interface TemporalField {
      */
     @JsName("resolve")
     fun resolve(
-        fieldValues: Map<TemporalField, Long>,
+        fieldValues: MutableMap<TemporalField, Long>,
         partialTemporal: TemporalAccessor,
         resolverStyle: ResolverStyle
     ): TemporalAccessor? {

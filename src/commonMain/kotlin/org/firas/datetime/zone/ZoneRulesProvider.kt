@@ -62,6 +62,8 @@
 package org.firas.datetime.zone
 
 import org.firas.datetime.LocalDateTime
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * Provider of time-zone rules to the system.
@@ -149,10 +151,14 @@ open class ZoneRulesProvider {
          * otherwise not null
          * @throws ZoneRulesException if rules cannot be obtained for the zone ID
          */
+        @JsName("getRules")
+        @JvmStatic
         fun getRules(zoneId: String, forCaching: Boolean): ZoneRules {
             return getProvider(zoneId).provideRules(zoneId, forCaching)
         }
 
+        @JsName("getAvailableZoneIds")
+        @JvmStatic
         fun getAvailableZoneIds(): Set<String> {
             return ZONES.keys
         }
@@ -164,6 +170,7 @@ open class ZoneRulesProvider {
          * @return the provider, not null
          * @throws ZoneRulesException if the zone ID is unknown
          */
+        @JvmStatic
         private fun getProvider(zoneId: String): ZoneRulesProvider {
             val provider: ZoneRulesProvider? = ZONES.get(zoneId)
             if (provider == null) {
@@ -175,14 +182,21 @@ open class ZoneRulesProvider {
             return provider
         }
 
+        @JvmStatic
         private val offsets = HashMap<Int, ZoneOffset>(14 + 12 + 1, 1f)
         init {
             for (i in -14..12) {
                 offsets[i] = ZoneOffset.ofHours(i)
             }
         }
+
+        @JvmStatic
         private val emptyTransitionList = listOf<ZoneOffsetTransition>()
+
+        @JvmStatic
         private val emptyTransitionRuleList = listOf<ZoneOffsetTransitionRule>()
+
+        @JvmStatic
         private val transitionListPRC = listOf(
             ZoneOffsetTransition(LocalDateTime.of(1986, 5, 4, 2, 0), offsets[8]!!, offsets[9]!!),
             ZoneOffsetTransition(LocalDateTime.of(1986, 9, 14, 2, 0), offsets[9]!!, offsets[8]!!),
@@ -197,6 +211,8 @@ open class ZoneRulesProvider {
             ZoneOffsetTransition(LocalDateTime.of(1991, 4, 14, 2, 0), offsets[8]!!, offsets[9]!!),
             ZoneOffsetTransition(LocalDateTime.of(1991, 9, 15, 2, 0), offsets[9]!!, offsets[8]!!)
         )
+
+        @JvmStatic
         private val gmtZoneIdPattern = Regex("Etc/GMT((\\+|-)?\\d{1,2})")
         init {
             val instance = ZoneRulesProvider()
@@ -222,7 +238,7 @@ open class ZoneRulesProvider {
                 ZONES["Etc/GMT+$i"] = instance
             }
         }
-    }
+    } // companion object
 
     /**
      * SPI method to get the rules for the zone ID.
@@ -253,6 +269,7 @@ open class ZoneRulesProvider {
      * otherwise not null
      * @throws ZoneRulesException if rules cannot be obtained for the zone ID
      */
+    @JsName("provideRules")
     protected open fun provideRules(zoneId: String, forCaching: Boolean): ZoneRules {
         val gmtZoneIdMatcher = gmtZoneIdPattern.matchEntire(zoneId)
         if (null != gmtZoneIdMatcher && gmtZoneIdMatcher.groups.size == 3) {

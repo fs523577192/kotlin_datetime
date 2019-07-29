@@ -294,8 +294,8 @@ interface TemporalAccessor {
      * @implSpec
      * The default implementation must behave equivalent to this code:
      * ```
-     * if (query == TemporalQueries.zoneId() ||
-     *     query == TemporalQueries.chronology() || query == TemporalQueries.precision()) {
+     * if (query == TemporalQueries.ZONE_ID ||
+     *     query == TemporalQueries.CHRONO || query == TemporalQueries.PRECISION) {
      *     return null;
      * }
      * return query.queryFrom(this);

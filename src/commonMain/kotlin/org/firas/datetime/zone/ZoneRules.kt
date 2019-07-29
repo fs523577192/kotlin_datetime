@@ -64,6 +64,8 @@ package org.firas.datetime.zone
 import org.firas.datetime.*
 import org.firas.datetime.util.MathUtils
 import org.firas.util.Arrays
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * The rules defining how the zone offset varies for a single time-zone.
@@ -254,16 +256,19 @@ class ZoneRules {
         /**
          * The zero-length long array.
          */
+        @JvmStatic
         private val EMPTY_LONG_ARRAY = LongArray(0)
 
         /**
          * The zero-length lastrules array.
          */
+        @JvmStatic
         private val EMPTY_LASTRULES = arrayOf<ZoneOffsetTransitionRule>()
 
         /**
          * The zero-length ldt array.
          */
+        @JvmStatic
         private val EMPTY_LDT_ARRAY = arrayOf<LocalDateTime>()
 
         /**
@@ -273,6 +278,8 @@ class ZoneRules {
          * @return the zone rules, not null
          * @see .isFixedOffset
          */
+        @JsName("ofZoneOffset")
+        @JvmStatic
         fun of(offset: ZoneOffset): ZoneRules {
             return ZoneRules(offset)
         }
@@ -287,6 +294,8 @@ class ZoneRules {
          * @param lastRules  the recurring last rules, size 16 or less, not null
          * @return the zone rules, not null
          */
+        @JsName("of")
+        @JvmStatic
         fun of(
             baseStandardOffset: ZoneOffset,
             baseWallOffset: ZoneOffset,
@@ -306,6 +315,7 @@ class ZoneRules {
      *
      * @return true if the time-zone is fixed and the offset never changes
      */
+    @JsName("isFixedOffset")
     fun isFixedOffset(): Boolean {
         return savingsInstantTransitions.isEmpty()
     }
@@ -322,6 +332,7 @@ class ZoneRules {
      * may be ignored if the rules have a single offset for all instants
      * @return the offset, not null
      */
+    @JsName("getOffsetByInstant")
     fun getOffset(instant: Instant): ZoneOffset? {
         if (savingsInstantTransitions.isEmpty()) {
             return standardOffsets[0]
@@ -380,6 +391,7 @@ class ZoneRules {
      * may be ignored if the rules have a single offset for all instants
      * @return the best available offset for the local date-time, not null
      */
+    @JsName("getOffsetByLocalDateTime")
     fun getOffset(localDateTime: LocalDateTime): ZoneOffset {
         val info = getOffsetInfo(localDateTime)
         return if (info is ZoneOffsetTransition) {
@@ -476,6 +488,7 @@ class ZoneRules {
      * may be ignored if the rules have a single offset for all instants
      * @return the offset transition, null if the local date-time is not in transition
      */
+    @JsName("getTransition")
     fun getTransition(localDateTime: LocalDateTime): ZoneOffsetTransition? {
         val info = getOffsetInfo(localDateTime)
         return if (info is ZoneOffsetTransition) info else null
@@ -494,6 +507,7 @@ class ZoneRules {
      * may be ignored if the rules have a single offset for all instants
      * @return the standard offset, not null
      */
+    @JsName("getStandardOffset")
     fun getStandardOffset(instant: Instant): ZoneOffset? {
         if (savingsInstantTransitions.isEmpty()) {
             return standardOffsets[0]
@@ -526,6 +540,7 @@ class ZoneRules {
      * may be ignored if the rules have a single offset for all instants
      * @return the difference between the standard and actual offset, not null
      */
+    @JsName("getDaylightSavings")
     fun getDaylightSavings(instant: Instant): Duration {
         if (savingsInstantTransitions.isEmpty()) {
             return Duration.ZERO
@@ -551,6 +566,7 @@ class ZoneRules {
      *  may be ignored if the rules have a single offset for all instants
      * @return the standard offset, not null
      */
+    @JsName("isDaylightSavings")
     fun isDaylightSavings(instant: Instant): Boolean {
         return (getStandardOffset(instant) != getOffset(instant))
     }
@@ -571,6 +587,7 @@ class ZoneRules {
      * @param offset  the offset to check, null returns false
      * @return true if the offset date-time is valid for these rules
      */
+    @JsName("isValidOffset")
     fun isValidOffset(localDateTime: LocalDateTime, offset: ZoneOffset): Boolean {
         return getValidOffsets(localDateTime).contains(offset)
     }
@@ -587,6 +604,7 @@ class ZoneRules {
      * may be ignored if the rules have a single offset for all instants
      * @return the next transition after the specified instant, null if this is after the last transition
      */
+    @JsName("nextTransition")
     fun nextTransition(instant: Instant): ZoneOffsetTransition? {
         if (savingsInstantTransitions.isEmpty()) {
             return null
@@ -636,6 +654,7 @@ class ZoneRules {
      * may be ignored if the rules have a single offset for all instants
      * @return the previous transition before the specified instant, null if this is before the first transition
      */
+    @JsName("previousTransition")
     fun previousTransition(instant: Instant): ZoneOffsetTransition? {
         if (savingsInstantTransitions.isEmpty()) {
             return null
@@ -691,6 +710,7 @@ class ZoneRules {
      *
      * @return an immutable list of fully defined transitions, not null
      */
+    @JsName("getTransitions")
     fun getTransitions(): List<ZoneOffsetTransition> {
         val list = ArrayList<ZoneOffsetTransition>()
         for (i in 0 until savingsInstantTransitions.size) {
@@ -724,6 +744,7 @@ class ZoneRules {
      *
      * @return an immutable list of transition rules, not null
      */
+    @JsName("getTransitionRules")
     fun getTransitionRules(): List<ZoneOffsetTransitionRule> {
         return lastRules.asList()
     }

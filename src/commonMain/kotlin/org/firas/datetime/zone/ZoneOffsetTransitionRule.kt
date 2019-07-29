@@ -64,6 +64,8 @@ package org.firas.datetime.zone
 import org.firas.datetime.*
 import org.firas.datetime.temporal.TemporalAdjusters.Companion.nextOrSame
 import org.firas.datetime.temporal.TemporalAdjusters.Companion.previousOrSame
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * A rule expressing how to create a transition.
@@ -174,6 +176,8 @@ class ZoneOffsetTransitionRule(
          * @throws IllegalArgumentException if the end of day flag is true when the time is not midnight
          * @throws IllegalArgumentException if `time.nano` returns non-zero value
          */
+        @JsName("of")
+        @JvmStatic
         fun of(
             month: Month,
             dayOfMonthIndicator: Int,
@@ -240,6 +244,7 @@ class ZoneOffsetTransitionRule(
              * @param wallOffset  the wall offset, not null
              * @return the date-time relative to the wall/before offset, not null
              */
+            @JsName("createDateTime")
             fun createDateTime(
                 dateTime: LocalDateTime,
                 standardOffset: ZoneOffset,
@@ -270,6 +275,7 @@ class ZoneOffsetTransitionRule(
      * @param year  the year to create a transition for, not null
      * @return the transition instance, not null
      */
+    @JsName("createTransition")
     fun createTransition(year: Int): ZoneOffsetTransition {
         var date: LocalDate
         if (this.dom < 0) {

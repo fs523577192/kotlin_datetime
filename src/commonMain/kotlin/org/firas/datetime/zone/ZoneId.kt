@@ -67,6 +67,7 @@ import org.firas.datetime.temporal.TemporalAccessor
 import org.firas.datetime.temporal.TemporalQueries
 import org.firas.lang.getName
 import kotlin.js.JsName
+import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 
 /**
@@ -174,6 +175,23 @@ import kotlin.jvm.JvmStatic
 abstract class ZoneId internal constructor() {
 
     companion object {
+
+        /**
+         * A style specifier for <code>getDisplayName()</code> indicating
+         * a short name, such as "PST."
+         * @see java.util.TimeZone
+         * @since Java 1.2
+         */
+        const val SHORT = 0
+
+        /**
+         * A style specifier for <code>getDisplayName()</code> indicating
+         * a long name, such as "Pacific Standard Time."
+         * @see java.util.TimeZone
+         * @since 1.2
+         */
+        const val LONG  = 1
+
         /**
          * A map of zone overrides to enable the short time-zone names to be used.
          *
@@ -275,19 +293,19 @@ abstract class ZoneId internal constructor() {
         @JsName("ofOffset")
         @JvmStatic
         fun ofOffset(prefix: String, offset: ZoneOffset): ZoneId {
-            var prefix = prefix
-            if (prefix.isEmpty()) {
+            var _prefix = prefix
+            if (_prefix.isEmpty()) {
                 return offset
             }
 
-            if (!prefix.equals("GMT") && !prefix.equals("UTC") && !prefix.equals("UT")) {
-                throw IllegalArgumentException("prefix should be GMT, UTC or UT, is: $prefix")
+            if (_prefix != "GMT" && _prefix != "UTC" && _prefix != "UT") {
+                throw IllegalArgumentException("prefix should be GMT, UTC or UT, is: $_prefix")
             }
 
             if (offset.totalSeconds != 0) {
-                prefix = prefix + offset.getId()
+                _prefix = _prefix + offset.getId()
             }
-            return ZoneRegion(prefix, offset.getRules())
+            return ZoneRegion(_prefix, offset.getRules())
         }
 
         /**
@@ -335,7 +353,8 @@ abstract class ZoneId internal constructor() {
          */
         @JsName("of")
         @JvmStatic
-        internal fun of(zoneId: String, checkAvailable: Boolean): ZoneId {
+        @JvmOverloads
+        internal fun of(zoneId: String, checkAvailable: Boolean = true): ZoneId {
             if (zoneId.length <= 1 || zoneId.startsWith("+") || zoneId.startsWith("-")) {
                 return ZoneOffset.of(zoneId)
             } else if (zoneId.startsWith("UTC") || zoneId.startsWith("GMT")) {
@@ -354,6 +373,7 @@ abstract class ZoneId internal constructor() {
          * @return the zone ID, not null
          * @throws DateTimeException if the zone ID has an invalid format
          */
+        @JvmStatic
         private fun ofWithPrefix(zoneId: String, prefixLength: Int, checkAvailable: Boolean): ZoneId {
             val prefix = zoneId.substring(0, prefixLength)
             if (zoneId.length == prefixLength) {

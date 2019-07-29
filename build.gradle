@@ -9,7 +9,7 @@ repositories {
 }
 
 group 'org.firas.date_time'
-version '0.4.2'
+version '0.5.0'
 
 apply plugin: 'maven-publish'
 kotlin {
@@ -25,7 +25,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation 'org.jetbrains.kotlin:kotlin-stdlib-common'
-                api 'org.firas.big_number:big_number:0.6.2'
+                api 'org.firas.big_number:big_number:0.7.2'
             }
         }
         commonTest {

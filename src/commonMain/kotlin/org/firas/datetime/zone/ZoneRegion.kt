@@ -57,6 +57,8 @@
 package org.firas.datetime.zone
 
 import org.firas.datetime.DateTimeException
+import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * A geographical region where the same time-zone rules apply.
@@ -98,6 +100,8 @@ class ZoneRegion internal constructor(
          * @throws DateTimeException if the ID format is invalid
          * @throws ZoneRulesException if checking availability and the ID cannot be found
          */
+        @JsName("ofId")
+        @JvmStatic
         internal fun ofId(zoneId: String, checkAvailable: Boolean): ZoneRegion {
             checkName(zoneId)
             var rules: ZoneRules? = null
@@ -118,6 +122,7 @@ class ZoneRegion internal constructor(
          * @param zoneId  the time-zone ID, not null
          * @throws DateTimeException if the ID format is invalid
          */
+        @JvmStatic
         private fun checkName(zoneId: String) {
             val n = zoneId.length
             if (n < 2) {
