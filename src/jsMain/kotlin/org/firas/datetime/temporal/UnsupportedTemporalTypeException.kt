@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,7 +29,7 @@
  * However, the following notice accompanied the original version of this
  * file:
  *
- * Copyright (c) 2008-2012, Stephen Colebourne & Michael Nascimento Santos
+ * Copyright (c) 2013, Stephen Colebourne & Michael Nascimento Santos
  *
  * All rights reserved.
  *
@@ -59,13 +59,14 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firas.datetime
+package org.firas.datetime.temporal
+
+import org.firas.datetime.DateTimeException
+import kotlin.js.JsName
 
 /**
- * Exception used to indicate a problem while calculating a date-time.
- * <p>
- * This exception is used to indicate problems with creating, querying
- * and manipulating date-time objects.
+ * UnsupportedTemporalTypeException indicates that a ChronoField or ChronoUnit is
+ * not supported for a Temporal class.
  *
  * @implSpec
  * This class is intended for use in a single thread.
@@ -73,9 +74,29 @@ package org.firas.datetime
  * @since Java 1.8
  * @author Wu Yuping (migrate to Kotlin)
  */
-expect open class DateTimeException: RuntimeException {
+actual class UnsupportedTemporalTypeException: DateTimeException {
 
-    constructor(message: String)
+    /**
+     * Constructs a new UnsupportedTemporalTypeException with the specified message.
+     *
+     * @param message  the message to use for this exception, may be null
+     */
+    @JsName("UnsupportedTemporalTypeException_initWithMessage")
+    actual constructor(message: String): super(message)
 
-    constructor(message: String, cause: Throwable)
+    /**
+     * Constructs a new UnsupportedTemporalTypeException with the specified message and cause.
+     *
+     * @param message  the message to use for this exception, may be null
+     * @param cause  the cause of the exception, may be null
+     */
+    @JsName("UnsupportedTemporalTypeException_initWithMessageAndCause")
+    actual constructor(message: String, cause: Throwable): super(message, cause)
+
+    companion object {
+        /**
+         * Serialization version.
+         */
+        private const val serialVersionUID = -6158898438688206006L
+    }
 }

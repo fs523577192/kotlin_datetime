@@ -73,9 +73,18 @@ package org.firas.datetime
  * @since Java 1.8
  * @author Wu Yuping (migrate to Kotlin)
  */
-expect open class DateTimeException: RuntimeException {
+actual open class DateTimeException: RuntimeException {
 
-    constructor(message: String)
+    @JsName("init")
+    actual constructor(message: String): super(message)
 
-    constructor(message: String, cause: Throwable)
+    @JsName("initWithCause")
+    actual constructor(message: String, cause: Throwable): super(message, cause)
+
+    companion object {
+        /**
+         * Serialization version.
+         */
+        private const val serialVersionUID = -1632418723876261839L
+    }
 }
