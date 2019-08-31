@@ -90,7 +90,7 @@ package org.firas.datetime
  * @since Java 1.8
  * @author Wu Yuping (migrate to Kotlin)
  */
-expect enum class DayOfWeek {
+actual enum class DayOfWeek {
     /**
      * The singleton instance for the day-of-week of Monday.
      * This has the numeric value of {@code 1}.
@@ -127,6 +127,28 @@ expect enum class DayOfWeek {
      */
     SUNDAY;
 
+    companion object {
+        /**
+         * Obtains an instance of `DayOfWeek` from an `int` value.
+         *
+         *
+         * `DayOfWeek` is an enum representing the 7 days of the week.
+         * This factory allows the enum to be obtained from the `int` value.
+         * The `int` value follows the ISO-8601 standard, from 1 (Monday) to 7 (Sunday).
+         *
+         * @param dayOfWeek  the day-of-week to represent, from 1 (Monday) to 7 (Sunday)
+         * @return the day-of-week singleton, not null
+         * @throws DateTimeException if the day-of-week is invalid
+         */
+        fun of(dayOfWeek: Int): DayOfWeek {
+            if (dayOfWeek < 1 || dayOfWeek > 7) {
+                throw DateTimeException("Invalid value for DayOfWeek: $dayOfWeek")
+            }
+            return DayOfWeek.values()[dayOfWeek - 1]
+        }
+    }
+
+    // ----==== Operation ====----
     /**
      * Returns the day-of-week that is the specified number of days after this one.
      *
@@ -140,7 +162,10 @@ expect enum class DayOfWeek {
      * @param days  the days to add, positive or negative
      * @return the resulting day-of-week, not null
      */
-    fun plus(days: Long): DayOfWeek
+    actual operator fun plus(days: Long): DayOfWeek {
+        val amount = (days % 7).toInt()
+        return DayOfWeek.values()[(this.ordinal + (amount + 7)) % 7]
+    }
 
     /**
      * Returns the day-of-week that is the specified number of days before this one.
@@ -155,7 +180,9 @@ expect enum class DayOfWeek {
      * @param days  the days to subtract, positive or negative
      * @return the resulting day-of-week, not null
      */
-    fun minus(days: Long): DayOfWeek
+    actual operator fun minus(days: Long): DayOfWeek {
+        return plus(-(days % 7))
+    }
 
     /**
      * Gets the day-of-week `int` value.
@@ -166,5 +193,7 @@ expect enum class DayOfWeek {
      *
      * @return the day-of-week, from 1 (Monday) to 7 (Sunday)
      */
-    fun getValue(): Int
+    actual fun getValue(): Int {
+        return this.ordinal + 1
+    }
 }
