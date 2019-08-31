@@ -75,7 +75,7 @@ package org.firas.datetime.format
  * @since Java 1.8
  * @author Wu Yuping (migrate to Kotlin)
  */
-enum class ResolverStyle {
+expect enum class ResolverStyle {
     /**
      * Style to resolve dates and times strictly.
      *

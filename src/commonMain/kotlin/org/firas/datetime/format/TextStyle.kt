@@ -61,8 +61,6 @@
  */
 package org.firas.datetime.format
 
-import kotlin.js.JsName
-
 /**
  * Enumeration of the style of text formatting and parsing.
  * <p>
@@ -86,9 +84,7 @@ import kotlin.js.JsName
  * @since Java 1.8
  * @author Wu Yuping (migrate to Kotlin)
  */
-enum class TextStyle(
-    val zoneNameStyleIndex: Int
-) {
+expect enum class TextStyle {
     // ordered from large to small
     // ordered so that bit 0 of the ordinal indicates stand-alone.
 
@@ -96,58 +92,49 @@ enum class TextStyle(
      * Full text, typically the full description.
      * For example, day-of-week Monday might output "Monday".
      */
-    FULL(0),
+    FULL,
     /**
      * Full text for stand-alone use, typically the full description.
      * For example, day-of-week Monday might output "Monday".
      */
-    FULL_STANDALONE(0),
+    FULL_STANDALONE,
     /**
      * Short text, typically an abbreviation.
      * For example, day-of-week Monday might output "Mon".
      */
-    SHORT(1),
+    SHORT,
     /**
      * Short text for stand-alone use, typically an abbreviation.
      * For example, day-of-week Monday might output "Mon".
      */
-    SHORT_STANDALONE(1),
+    SHORT_STANDALONE,
     /**
      * Narrow text, typically a single letter.
      * For example, day-of-week Monday might output "M".
      */
-    NARROW(1),
+    NARROW,
     /**
      * Narrow text for stand-alone use, typically a single letter.
      * For example, day-of-week Monday might output "M".
      */
-    NARROW_STANDALONE(1);
+    NARROW_STANDALONE;
 
     /**
      * Returns true if the Style is a stand-alone style.
      * @return true if the style is a stand-alone style.
      */
-    @JsName("isStandalone")
-    fun isStandalone(): Boolean {
-        return ordinal and 1 == 1
-    }
+    fun isStandalone(): Boolean
 
     /**
      * Returns the stand-alone style with the same size.
      * @return the stand-alone style with the same size
      */
-    @JsName("asStandalone")
-    fun asStandalone(): TextStyle {
-        return TextStyle.values()[ordinal or 1]
-    }
+    fun asStandalone(): TextStyle
 
     /**
      * Returns the normal style with the same size.
      *
      * @return the normal style with the same size
      */
-    @JsName("asNormal")
-    fun asNormal(): TextStyle {
-        return TextStyle.values()[ordinal and 1.inv()]
-    }
+    fun asNormal(): TextStyle
 }

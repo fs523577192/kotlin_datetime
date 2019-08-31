@@ -73,7 +73,7 @@ package org.firas.datetime.format
  *
  * @since Java 1.8
  */
-expect enum class FormatStyle {
+actual enum class FormatStyle {
     // ordered from large to small
 
     /**

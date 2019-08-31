@@ -61,42 +61,93 @@
  */
 package org.firas.datetime.format
 
+import kotlin.js.JsName
+
 /**
- * Enumeration of the style of a localized date, time or date-time formatter.
- *
- *
- * These styles are used when obtaining a date-time style from configuration.
- * See [DateTimeFormatter] and [DateTimeFormatterBuilder] for usage.
+ * Enumeration of the style of text formatting and parsing.
+ * <p>
+ * Text styles define three sizes for the formatted text - 'full', 'short' and 'narrow'.
+ * Each of these three sizes is available in both 'standard' and 'stand-alone' variations.
+ * <p>
+ * The difference between the three sizes is obvious in most languages.
+ * For example, in English the 'full' month is 'January', the 'short' month is 'Jan'
+ * and the 'narrow' month is 'J'. Note that the narrow size is often not unique.
+ * For example, 'January', 'June' and 'July' all have the 'narrow' text 'J'.
+ * <p>
+ * The difference between the 'standard' and 'stand-alone' forms is trickier to describe
+ * as there is no difference in English. However, in other languages there is a difference
+ * in the word used when the text is used alone, as opposed to in a complete date.
+ * For example, the word used for a month when used alone in a date picker is different
+ * to the word used for month in association with a day and year in a date.
  *
  * @implSpec
- * This is an immutable and thread-safe enum.
+ * This is immutable and thread-safe enum.
  *
  * @since Java 1.8
+ * @author Wu Yuping (migrate to Kotlin)
  */
-expect enum class FormatStyle {
+actual enum class TextStyle(
+    val zoneNameStyleIndex: Int
+) {
     // ordered from large to small
+    // ordered so that bit 0 of the ordinal indicates stand-alone.
 
     /**
-     * Full text style, with the most detail.
-     * For example, the format might be 'Tuesday, April 12, 1952 AD' or '3:30:42pm PST'.
+     * Full text, typically the full description.
+     * For example, day-of-week Monday might output "Monday".
      */
-    FULL,
+    FULL(0),
+    /**
+     * Full text for stand-alone use, typically the full description.
+     * For example, day-of-week Monday might output "Monday".
+     */
+    FULL_STANDALONE(0),
+    /**
+     * Short text, typically an abbreviation.
+     * For example, day-of-week Monday might output "Mon".
+     */
+    SHORT(1),
+    /**
+     * Short text for stand-alone use, typically an abbreviation.
+     * For example, day-of-week Monday might output "Mon".
+     */
+    SHORT_STANDALONE(1),
+    /**
+     * Narrow text, typically a single letter.
+     * For example, day-of-week Monday might output "M".
+     */
+    NARROW(1),
+    /**
+     * Narrow text for stand-alone use, typically a single letter.
+     * For example, day-of-week Monday might output "M".
+     */
+    NARROW_STANDALONE(1);
 
     /**
-     * Long text style, with lots of detail.
-     * For example, the format might be 'January 12, 1952'.
+     * Returns true if the Style is a stand-alone style.
+     * @return true if the style is a stand-alone style.
      */
-    LONG,
+    @JsName("isStandalone")
+    actual fun isStandalone(): Boolean {
+        return ordinal and 1 == 1
+    }
 
     /**
-     * Medium text style, with some detail.
-     * For example, the format might be 'Jan 12, 1952'.
+     * Returns the stand-alone style with the same size.
+     * @return the stand-alone style with the same size
      */
-    MEDIUM,
+    @JsName("asStandalone")
+    actual fun asStandalone(): TextStyle {
+        return TextStyle.values()[ordinal or 1]
+    }
 
     /**
-     * Short text style, typically numeric.
-     * For example, the format might be '12.13.52' or '3:30pm'.
+     * Returns the normal style with the same size.
+     *
+     * @return the normal style with the same size
      */
-    SHORT
+    @JsName("asNormal")
+    actual fun asNormal(): TextStyle {
+        return TextStyle.values()[ordinal and 1.inv()]
+    }
 }
