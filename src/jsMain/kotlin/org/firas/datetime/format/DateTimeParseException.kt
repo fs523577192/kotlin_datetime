@@ -74,12 +74,36 @@ import org.firas.datetime.DateTimeException
  * @since Java 1.8
  * @author Wu Yuping (migrate to Kotlin)
  */
-expect class DateTimeParseException: DateTimeException {
+actual class DateTimeParseException: DateTimeException {
 
-    constructor(message: String, parsedData: CharSequence, errorIndex: Int)
+    private val parsedString: String
 
-    constructor(message: String, parsedData: CharSequence, errorIndex: Int, cause: Throwable)
+    private val errorIndex: Int
 
-    fun getParsedString(): String
-    fun getErrorIndex(): Int
+    actual constructor(message: String, parsedData: CharSequence, errorIndex: Int):
+            super(message) {
+        this.parsedString = parsedData.toString()
+        this.errorIndex = errorIndex
+    }
+
+    actual constructor(message: String, parsedData: CharSequence, errorIndex: Int, cause: Throwable):
+            super(message, cause) {
+        this.parsedString = parsedData.toString()
+        this.errorIndex = errorIndex
+    }
+
+    actual fun getParsedString(): String {
+        return this.parsedString
+    }
+
+    actual fun getErrorIndex(): Int {
+        return this.errorIndex
+    }
+
+    companion object {
+        /**
+         * Serialization version.
+         */
+        private const val serialVersionUID = 4304633501674722597L
+    }
 }
