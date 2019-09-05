@@ -63,6 +63,9 @@ package org.firas.datetime
 
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.temporal.ChronoField
+import kotlin.js.JsName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 
 /**
  * A time with an offset from UTC/Greenwich in the ISO-8601 calendar system,
@@ -101,6 +104,8 @@ class OffsetTime private constructor(
          * This combines [LocalTime.MIN] and [ZoneOffset.MAX].
          * This could be used by an application as a "far past" date.
          */
+        @JvmStatic
+        @JvmField
         val MIN = LocalTime.MIN.atOffset(ZoneOffset.MAX)
         /**
          * The maximum supported `OffsetTime`, '23:59:59.999999999-18:00'.
@@ -109,6 +114,8 @@ class OffsetTime private constructor(
          * This combines [LocalTime.MAX] and [ZoneOffset.MIN].
          * This could be used by an application as a "far future" date.
          */
+        @JvmStatic
+        @JvmField
         val MAX = LocalTime.MAX.atOffset(ZoneOffset.MIN)
 
         /**
@@ -123,6 +130,8 @@ class OffsetTime private constructor(
          * @param offset  the zone offset, not null
          * @return the offset time, not null
          */
+        @JvmStatic
+        @JsName("ofLocalTimeAndOffset")
         fun of(time: LocalTime, offset: ZoneOffset): OffsetTime {
             return OffsetTime(time, offset)
         }
@@ -148,6 +157,8 @@ class OffsetTime private constructor(
          * @return the offset time, not null
          * @throws DateTimeException if the value of any field is out of range
          */
+        @JvmStatic
+        @JsName("of")
         fun of(hour: Int, minute: Int, second: Int, nanoOfSecond: Int, offset: ZoneOffset): OffsetTime {
             return OffsetTime(LocalTime.of(hour, minute, second, nanoOfSecond), offset)
         }

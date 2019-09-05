@@ -420,7 +420,7 @@ enum class Month: TemporalAccessor {
         if (field == ChronoField.MONTH_OF_YEAR) {
             return field.range()
         }
-        TODO("return TemporalAccessor.super.range(field)")
+        return TemporalAccessor.range(this, field)
     }
 
     /**
@@ -455,7 +455,7 @@ enum class Month: TemporalAccessor {
         if (field == ChronoField.MONTH_OF_YEAR) {
             return getValue()
         }
-        TODO("return TemporalAccessor.super.get(field)")
+        return TemporalAccessor.get(this, field)
     }
 
     /**
@@ -490,5 +490,9 @@ enum class Month: TemporalAccessor {
             throw UnsupportedTemporalTypeException("Unsupported field: $field")
         }
         return field.getFrom(this)
+    }
+
+    override fun <R> query(query: TemporalQuery<R>): R? {
+        return TemporalAccessor.query(this, query)
     }
 }

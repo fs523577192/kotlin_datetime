@@ -5,4 +5,5 @@ expect class Date: Comparable<Date> {
     constructor(milliseconds: Long)
     fun getTime(): Long
     fun setTime(milliseconds: Long)
+    fun getTimezoneOffset(): Int
 }

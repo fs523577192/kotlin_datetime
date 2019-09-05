@@ -71,12 +71,16 @@ import org.firas.datetime.LocalTime.Companion.NANOS_PER_MINUTE
 import org.firas.datetime.LocalTime.Companion.NANOS_PER_SECOND
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_DAY
 import org.firas.datetime.chrono.ChronoLocalDateTime
+import org.firas.datetime.chrono.Chronology
 import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.datetime.zone.getSystemZoneOffset
 import org.firas.lang.getName
+import kotlin.js.JsName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 import kotlin.reflect.KClass
 
 /**
@@ -136,6 +140,8 @@ class LocalDateTime private constructor(
          * This combines [LocalDate.MIN] and [LocalTime.MIN].
          * This could be used by an application as a "far past" date-time.
          */
+        @JvmStatic
+        @JvmField
         val MIN = LocalDateTime.of(LocalDate.MIN, LocalTime.MIN)
         /**
          * The maximum supported `LocalDateTime`, '+999999999-12-31T23:59:59.999999999'.
@@ -143,6 +149,8 @@ class LocalDateTime private constructor(
          * This combines [LocalDate.MAX] and [LocalTime.MAX].
          * This could be used by an application as a "far future" date-time.
          */
+        @JvmStatic
+        @JvmField
         val MAX = LocalDateTime.of(LocalDate.MAX, LocalTime.MAX)
 
         /**
@@ -150,6 +158,8 @@ class LocalDateTime private constructor(
          */
         private const val serialVersionUID = 6207766400415563566L
 
+        @JvmStatic
+        @JsName("now")
         fun now(): LocalDateTime {
             val currentInstant = Instant.now()
             return ofEpochSecond(currentInstant.epochSecond, currentInstant.nanos,
@@ -176,6 +186,8 @@ class LocalDateTime private constructor(
          * @throws DateTimeException if the value of any field is out of range,
          * or if the day-of-month is invalid for the month-year
          */
+        @JvmStatic
+        @JsName("ofYearMonthEnumDayHourAndMinute")
         fun of(year: Int, month: Month, dayOfMonth: Int, hour: Int, minute: Int): LocalDateTime {
             val date = LocalDate.of(year, month, dayOfMonth)
             val time = LocalTime.of(hour, minute)
@@ -202,6 +214,8 @@ class LocalDateTime private constructor(
          * @throws DateTimeException if the value of any field is out of range,
          * or if the day-of-month is invalid for the month-year
          */
+        @JvmStatic
+        @JsName("ofYearMonthEnumDayHourMinuteAndSecond")
         fun of(year: Int, month: Month, dayOfMonth: Int, hour: Int, minute: Int, second: Int): LocalDateTime {
             val date = LocalDate.of(year, month, dayOfMonth)
             val time = LocalTime.of(hour, minute, second)
@@ -228,6 +242,8 @@ class LocalDateTime private constructor(
          * @throws DateTimeException if the value of any field is out of range,
          * or if the day-of-month is invalid for the month-year
          */
+        @JvmStatic
+        @JsName("ofYearMonthEnumDayHourMinuteSecondAndNano")
         fun of(
             year: Int,
             month: Month,
@@ -262,6 +278,8 @@ class LocalDateTime private constructor(
          * @throws DateTimeException if the value of any field is out of range,
          * or if the day-of-month is invalid for the month-year
          */
+        @JvmStatic
+        @JsName("ofYearMonthDayHourAndMinute")
         fun of(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): LocalDateTime {
             val date = LocalDate.of(year, month, dayOfMonth)
             val time = LocalTime.of(hour, minute)
@@ -288,6 +306,8 @@ class LocalDateTime private constructor(
          * @throws DateTimeException if the value of any field is out of range,
          * or if the day-of-month is invalid for the month-year
          */
+        @JvmStatic
+        @JsName("ofYearMonthDayHourMinuteAndSecond")
         fun of(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int, second: Int): LocalDateTime {
             val date = LocalDate.of(year, month, dayOfMonth)
             val time = LocalTime.of(hour, minute, second)
@@ -314,6 +334,8 @@ class LocalDateTime private constructor(
          * @throws DateTimeException if the value of any field is out of range,
          * or if the day-of-month is invalid for the month-year
          */
+        @JvmStatic
+        @JsName("of")
         fun of(
             year: Int,
             month: Int,
@@ -335,6 +357,8 @@ class LocalDateTime private constructor(
          * @param time  the local time, not null
          * @return the local date-time, not null
          */
+        @JvmStatic
+        @JsName("ofDateAndTime")
         fun of(date: LocalDate, time: LocalTime): LocalDateTime {
             return LocalDateTime(date, time)
         }
@@ -355,6 +379,8 @@ class LocalDateTime private constructor(
          * @throws DateTimeException if the result exceeds the supported range,
          * or if the nano-of-second is invalid
          */
+        @JvmStatic
+        @JsName("ofEpochSecond")
         fun ofEpochSecond(epochSecond: Long, nanoOfSecond: Int, offset: ZoneOffset): LocalDateTime {
             ChronoField.NANO_OF_SECOND.checkValidValue(nanoOfSecond.toLong())
             val localSecond = epochSecond + offset.totalSeconds  // overflow caught later
@@ -384,6 +410,8 @@ class LocalDateTime private constructor(
          * @return the local date-time, not null
          * @throws DateTimeException if unable to convert to a `LocalDateTime`
          */
+        @JvmStatic
+        @JsName("from")
         fun from(temporal: TemporalAccessor): LocalDateTime {
             if (temporal is LocalDateTime) {
                 return temporal
@@ -415,6 +443,7 @@ class LocalDateTime private constructor(
      *
      * @return the year, from MIN_YEAR to MAX_YEAR
      */
+    @JsName("getYear")
     fun getYear(): Int {
         return date.year
     }
@@ -430,6 +459,7 @@ class LocalDateTime private constructor(
      * @return the month-of-year, from 1 to 12
      * @see .getMonth
      */
+    @JsName("getMonthValue")
     fun getMonthValue(): Int {
         return date.monthValue.toInt()
     }
@@ -446,6 +476,7 @@ class LocalDateTime private constructor(
      * @return the month-of-year, not null
      * @see .getMonthValue
      */
+    @JsName("getMonth")
     fun getMonth(): Month {
         return date.getMonth()
     }
@@ -458,6 +489,7 @@ class LocalDateTime private constructor(
      *
      * @return the day-of-month, from 1 to 31
      */
+    @JsName("getDayOfMonth")
     fun getDayOfMonth(): Int {
         return date.dayOfMonth.toInt()
     }
@@ -470,6 +502,7 @@ class LocalDateTime private constructor(
      *
      * @return the day-of-year, from 1 to 365, or 366 in a leap year
      */
+    @JsName("getDayOfYear")
     fun getDayOfYear(): Int {
         return date.getDayOfYear()
     }
@@ -489,6 +522,7 @@ class LocalDateTime private constructor(
      *
      * @return the day-of-week, not null
      */
+    @JsName("getDayOfWeek")
     fun getDayOfWeek(): DayOfWeek {
         return date.getDayOfWeek()
     }
@@ -498,6 +532,7 @@ class LocalDateTime private constructor(
      *
      * @return the hour-of-day, from 0 to 23
      */
+    @JsName("getHour")
     fun getHour(): Int {
         return time.hour.toInt()
     }
@@ -507,6 +542,7 @@ class LocalDateTime private constructor(
      *
      * @return the minute-of-hour, from 0 to 59
      */
+    @JsName("getMinute")
     fun getMinute(): Int {
         return time.minute.toInt()
     }
@@ -516,6 +552,7 @@ class LocalDateTime private constructor(
      *
      * @return the second-of-minute, from 0 to 59
      */
+    @JsName("getSecond")
     fun getSecond(): Int {
         return time.second.toInt()
     }
@@ -525,6 +562,7 @@ class LocalDateTime private constructor(
      *
      * @return the nano-of-second, from 0 to 999,999,999
      */
+    @JsName("getNano")
     fun getNano(): Int {
         return time.nano
     }
@@ -539,6 +577,7 @@ class LocalDateTime private constructor(
      * @param offset  the offset to combine with, not null
      * @return the offset date-time formed from this date-time and the specified offset, not null
      */
+    @JsName("atOffset")
     fun atOffset(offset: ZoneOffset): OffsetDateTime {
         return OffsetDateTime.of(this, offset)
     }
@@ -709,7 +748,7 @@ class LocalDateTime private constructor(
         if (field is ChronoField) {
             return if (field.isTimeBased()) time.get(field) else date.get(field)
         }
-        TODO("return ChronoLocalDateTime.super.get(field)")
+        return TemporalAccessor.get(this, field)
     }
 
     /**
@@ -987,6 +1026,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the requested year, not null
      * @throws DateTimeException if the year value is invalid
      */
+    @JsName("withYear")
     fun withYear(year: Int): LocalDateTime {
         return with(date.withYear(year), time)
     }
@@ -1005,6 +1045,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the requested month, not null
      * @throws DateTimeException if the month-of-year value is invalid
      */
+    @JsName("withMonth")
     fun withMonth(month: Int): LocalDateTime {
         return with(date.withMonth(month), time)
     }
@@ -1024,6 +1065,7 @@ class LocalDateTime private constructor(
      * @throws DateTimeException if the day-of-month value is invalid,
      * or if the day-of-month is invalid for the month-year
      */
+    @JsName("withDayOfMonth")
     fun withDayOfMonth(dayOfMonth: Int): LocalDateTime {
         return with(date.withDayOfMonth(dayOfMonth), time)
     }
@@ -1042,6 +1084,7 @@ class LocalDateTime private constructor(
      * @throws DateTimeException if the day-of-year value is invalid,
      * or if the day-of-year is invalid for the year
      */
+    @JsName("withDayOfYear")
     fun withDayOfYear(dayOfYear: Int): LocalDateTime {
         return with(date.withDayOfYear(dayOfYear), time)
     }
@@ -1057,6 +1100,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the requested hour, not null
      * @throws DateTimeException if the hour value is invalid
      */
+    @JsName("withHour")
     fun withHour(hour: Int): LocalDateTime {
         val newTime = time.withHour(hour)
         return with(date, newTime)
@@ -1072,6 +1116,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the requested minute, not null
      * @throws DateTimeException if the minute value is invalid
      */
+    @JsName("withMinute")
     fun withMinute(minute: Int): LocalDateTime {
         val newTime = time.withMinute(minute)
         return with(date, newTime)
@@ -1087,6 +1132,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the requested second, not null
      * @throws DateTimeException if the second value is invalid
      */
+    @JsName("withSecond")
     fun withSecond(second: Int): LocalDateTime {
         val newTime = time.withSecond(second)
         return with(date, newTime)
@@ -1102,6 +1148,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the requested nanosecond, not null
      * @throws DateTimeException if the nano value is invalid
      */
+    @JsName("withNano")
     fun withNano(nanoOfSecond: Int): LocalDateTime {
         val newTime = time.withNano(nanoOfSecond)
         return with(date, newTime)
@@ -1131,6 +1178,7 @@ class LocalDateTime private constructor(
      * @throws DateTimeException if unable to truncate
      * @throws UnsupportedTemporalTypeException if the unit is not supported
      */
+    @JsName("truncatedTo(")
     fun truncatedTo(unit: TemporalUnit): LocalDateTime {
         return with(date, time.truncatedTo(unit))
     }
@@ -1243,6 +1291,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the years added, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("plusYears")
     fun plusYears(years: Long): LocalDateTime {
         val newDate = date.plusYears(years)
         return with(newDate, time)
@@ -1271,6 +1320,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the months added, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("plusMonths")
     fun plusMonths(months: Long): LocalDateTime {
         val newDate = date.plusMonths(months)
         return with(newDate, time)
@@ -1294,6 +1344,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the weeks added, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("plusWeeks")
     fun plusWeeks(weeks: Long): LocalDateTime {
         val newDate = date.plusWeeks(weeks)
         return with(newDate, time)
@@ -1317,6 +1368,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the days added, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("plusDays")
     fun plusDays(days: Long): LocalDateTime {
         val newDate = date.plusDays(days)
         return with(newDate, time)
@@ -1333,6 +1385,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the hours added, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("plusHours")
     fun plusHours(hours: Long): LocalDateTime {
         return plusWithOverflow(date, hours, 0, 0, 0, 1)
     }
@@ -1347,6 +1400,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the minutes added, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("plusMinutes")
     fun plusMinutes(minutes: Long): LocalDateTime {
         return plusWithOverflow(date, 0, minutes, 0, 0, 1)
     }
@@ -1361,6 +1415,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the seconds added, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("plusSeconds")
     fun plusSeconds(seconds: Long): LocalDateTime {
         return plusWithOverflow(date, 0, 0, seconds, 0, 1)
     }
@@ -1375,6 +1430,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the nanoseconds added, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("plusNanos")
     fun plusNanos(nanos: Long): LocalDateTime {
         return plusWithOverflow(date, 0, 0, 0, nanos, 1)
     }
@@ -1402,6 +1458,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the years subtracted, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("minusYears")
     fun minusYears(years: Long): LocalDateTime {
         return if (years == Long.MIN_VALUE) plusYears(Long.MAX_VALUE).plusYears(1) else plusYears(-years)
     }
@@ -1429,6 +1486,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the months subtracted, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("minusMonths")
     fun minusMonths(months: Long): LocalDateTime {
         return if (months == Long.MIN_VALUE) plusMonths(Long.MAX_VALUE).plusMonths(1) else plusMonths(-months)
     }
@@ -1451,6 +1509,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the weeks subtracted, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("minusWeeks")
     fun minusWeeks(weeks: Long): LocalDateTime {
         return if (weeks == Long.MIN_VALUE) plusWeeks(Long.MAX_VALUE).plusWeeks(1) else plusWeeks(-weeks)
     }
@@ -1473,6 +1532,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the days subtracted, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("minusDays")
     fun minusDays(days: Long): LocalDateTime {
         return if (days == Long.MIN_VALUE) plusDays(Long.MAX_VALUE).plusDays(1) else plusDays(-days)
     }
@@ -1488,6 +1548,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the hours subtracted, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("minusHours")
     fun minusHours(hours: Long): LocalDateTime {
         return plusWithOverflow(date, hours, 0, 0, 0, -1)
     }
@@ -1502,6 +1563,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the minutes subtracted, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("minusMinutes")
     fun minusMinutes(minutes: Long): LocalDateTime {
         return plusWithOverflow(date, 0, minutes, 0, 0, -1)
     }
@@ -1516,6 +1578,7 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the seconds subtracted, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
+    @JsName("minusSeconds")
     fun minusSeconds(seconds: Long): LocalDateTime {
         return plusWithOverflow(date, 0, 0, seconds, 0, -1)
     }
@@ -1530,7 +1593,8 @@ class LocalDateTime private constructor(
      * @return a `LocalDateTime` based on this date-time with the nanoseconds subtracted, not null
      * @throws DateTimeException if the result exceeds the supported date range
      */
-    fun minusNanos(nanos: Long): LocalDateTime {
+    @JsName("minusNanos")
+    fun isAfter(nanos: Long): LocalDateTime {
         return plusWithOverflow(date, 0, 0, 0, nanos, -1)
     }
 
@@ -1540,10 +1604,12 @@ class LocalDateTime private constructor(
         return if (cmp == 0) this.time.compareTo(other.time) else cmp
     }
 
+    @JsName("isAfter")
     fun isAfter(other: LocalDateTime): Boolean {
         return this > other
     }
 
+    @JsName("isBefore")
     fun isBefore(other: LocalDateTime): Boolean {
         return this < other
     }
@@ -1596,6 +1662,54 @@ class LocalDateTime private constructor(
      */
     override fun toString(): String {
         return date.toString() + 'T' + time.toString()
+    }
+
+    override fun getChronology(): Chronology {
+        return ChronoLocalDateTime.getChronology(this)
+    }
+
+    override fun toInstant(offset: ZoneOffset): Instant {
+        return ChronoLocalDateTime.toInstant(this, offset)
+    }
+
+    override fun toEpochSecond(offset: ZoneOffset): Long {
+        return ChronoLocalDateTime.toEpochSecond(this, offset)
+    }
+
+    override fun isSupported(unit: TemporalUnit): Boolean {
+        return ChronoLocalDateTime.isSupported(this, unit)
+    }
+
+    override fun <R> query(query: TemporalQuery<R>): R? {
+        return ChronoLocalDateTime.query(this, query)
+    }
+
+    override fun adjustInto(temporal: Temporal): Temporal {
+        return ChronoLocalDateTime.adjustInto(this, temporal)
+    }
+
+    override fun compareTo(other: ChronoLocalDateTime<*>): Int {
+        return ChronoLocalDateTime.compare(this, other)
+    }
+
+    override fun isAfter(other: ChronoLocalDateTime<*>): Boolean {
+        return ChronoLocalDateTime.isAfter(this, other)
+    }
+
+    override fun isBefore(other: ChronoLocalDateTime<*>): Boolean {
+        return ChronoLocalDateTime.isBefore(this, other)
+    }
+
+    override fun isEqual(other: ChronoLocalDateTime<*>): Boolean {
+        return ChronoLocalDateTime.isEqual(this, other)
+    }
+
+    override fun minus(amount: TemporalAmount): Temporal {
+        return Temporal.minus(this, amount)
+    }
+
+    override fun minus(amountToSubtract: Long, unit: TemporalUnit): Temporal {
+        return Temporal.minus(this, amountToSubtract, unit)
     }
 
     /**

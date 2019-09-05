@@ -71,6 +71,8 @@ import org.firas.datetime.zone.ZoneOffset
 import org.firas.lang.getName
 import org.firas.util.Integers
 import kotlin.js.JsName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 
 /**
  * A date-time with a time-zone in an arbitrary chronology,
@@ -110,12 +112,15 @@ import kotlin.js.JsName
 interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
 
     companion object {
-        internal val timeLineOrder = { dateTime1: ChronoZonedDateTime<*>, dateTime2: ChronoZonedDateTime<*> ->
-            val cmp = Integers.compare(dateTime1.toEpochSecond(), dateTime2.toEpochSecond())
-            if (cmp == 0) {
-                Integers.signum(dateTime1.toLocalTime().nano - dateTime2.toLocalTime().nano)
-            } else cmp
-        } as Comparator<ChronoZonedDateTime<*>>
+        @JvmStatic
+        @JvmField
+        internal val timeLineOrder = object: Comparator<ChronoZonedDateTime<*>> {
+            override fun compare(a: ChronoZonedDateTime<*>, b: ChronoZonedDateTime<*>): Int {
+                val cmp = Integers.compare(a.toEpochSecond(), b.toEpochSecond())
+                return if (cmp == 0) Integers.signum(a.toLocalTime().nano - b.toLocalTime().nano)
+                        else cmp
+            }
+        }
 
         /**
          * Obtains an instance of `ChronoZonedDateTime` from a temporal object.
@@ -141,54 +146,173 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
          * @throws DateTimeException if unable to convert to a `ChronoZonedDateTime`
          * @see Chronology#zonedDateTime(TemporalAccessor)
          */
+        @JvmStatic
         @JsName("from")
         fun from(temporal: TemporalAccessor): ChronoZonedDateTime<*> {
             if (temporal is ChronoZonedDateTime<*>) {
                 return temporal
             }
-            val chrono = temporal.query(TemporalQueries.CHRONO)
-            if (chrono == null) {
-                throw DateTimeException(
-                    "Unable to obtain ChronoZonedDateTime from TemporalAccessor: " +
-                            temporal::class.getName()
-                )
-            }
+            val chrono = temporal.query(TemporalQueries.CHRONO) ?: throw DateTimeException(
+                "Unable to obtain ChronoZonedDateTime from TemporalAccessor: " +
+                        temporal::class.getName()
+            )
             return chrono.zonedDateTime(temporal)
+        }
+
+        // Write default implementation here because
+        // 1. the default implementation mechanism in Kotlin is different from
+        //    the default implementation mechanism in Java;
+        // 2. Kotlin does not support calling implementation of a base class
+        //    when the derived class has an overridden implementation
+
+        @JvmStatic
+        @JsName("range")
+        fun <D: ChronoLocalDate> range(zonedDateTime: ChronoZonedDateTime<D>, field: TemporalField): ValueRange {
+            if (field is ChronoField) {
+                if (field == ChronoField.INSTANT_SECONDS || field == ChronoField.OFFSET_SECONDS) {
+                    return field.range()
+                }
+                return zonedDateTime.toLocalDateTime().range(field)
+            }
+            return field.rangeRefinedBy(zonedDateTime)
+        }
+
+        @JvmStatic
+        @JsName("get")
+        fun <D: ChronoLocalDate> get(zonedDateTime: ChronoZonedDateTime<D>, field: TemporalField): Int {
+            if (field is ChronoField) {
+                return when (field) {
+                    ChronoField.INSTANT_SECONDS -> throw UnsupportedTemporalTypeException(
+                        "Invalid field 'InstantSeconds' for get() method, use getLong() instead")
+                    ChronoField.OFFSET_SECONDS -> zonedDateTime.getOffset().totalSeconds
+                    else -> zonedDateTime.toLocalDateTime().get(field)
+                }
+            }
+            return TemporalAccessor.get(zonedDateTime, field)
+        }
+
+        @JvmStatic
+        @JsName("getLong")
+        fun <D: ChronoLocalDate> getLong(zonedDateTime: ChronoZonedDateTime<D>, field: TemporalField): Long {
+            if (field is ChronoField) {
+                return when (field) {
+                    ChronoField.INSTANT_SECONDS -> zonedDateTime.toEpochSecond()
+                    ChronoField.OFFSET_SECONDS -> zonedDateTime.getOffset().totalSeconds.toLong()
+                    else -> zonedDateTime.toLocalDateTime().getLong(field)
+                }
+            }
+            return field.getFrom(zonedDateTime)
+        }
+
+        @JvmStatic
+        @JsName("toLocalDate")
+        fun <D: ChronoLocalDate> toLocalDate(zonedDateTime: ChronoZonedDateTime<D>): D {
+            return zonedDateTime.toLocalDateTime().getDate()
+        }
+
+        @JvmStatic
+        @JsName("toLocalTime")
+        fun <D: ChronoLocalDate> toLocalTime(zonedDateTime: ChronoZonedDateTime<D>): LocalTime {
+            return zonedDateTime.toLocalDateTime().getTime()
+        }
+
+        @JvmStatic
+        @JsName("getChronology")
+        fun <D: ChronoLocalDate> getChronology(zonedDateTime: ChronoZonedDateTime<D>): Chronology {
+            return zonedDateTime.toLocalDate().getChronology()
+        }
+
+        @JvmStatic
+        @JsName("isSupported")
+        fun <D: ChronoLocalDate> isSupported(zonedDateTime: ChronoZonedDateTime<D>, unit: TemporalUnit): Boolean {
+            return if (unit is ChronoUnit) unit != ChronoUnit.FOREVER
+                    else unit.isSupportedBy(zonedDateTime)
+        }
+
+        @JvmStatic
+        @JsName("query")
+        fun <D: ChronoLocalDate, R> query(zonedDateTime: ChronoZonedDateTime<D>, query: TemporalQuery<R>): R {
+            if (query === TemporalQueries.ZONE || query === TemporalQueries.ZONE_ID) {
+                return zonedDateTime.getZone() as R
+            } else if (query === TemporalQueries.OFFSET) {
+                return zonedDateTime.getOffset() as R
+            } else if (query === TemporalQueries.LOCAL_TIME) {
+                return zonedDateTime.toLocalTime() as R
+            } else if (query === TemporalQueries.CHRONO) {
+                return zonedDateTime.getChronology() as R
+            } else if (query === TemporalQueries.PRECISION) {
+                return ChronoUnit.NANOS as R
+            }
+            // inline TemporalAccessor.super.query(query) as an optimization
+            // non-JDK classes are not permitted to make this optimization
+            return query.queryFrom(zonedDateTime)
+        }
+
+        @JvmStatic
+        @JsName("toInstant")
+        fun <D: ChronoLocalDate> toInstant(zonedDateTime: ChronoZonedDateTime<D>): Instant {
+            return Instant.ofEpochSecond(zonedDateTime.toEpochSecond(), zonedDateTime.toLocalTime().nano.toLong())
+        }
+
+        @JvmStatic
+        @JsName("toEpochSecond")
+        fun <D: ChronoLocalDate> toEpochSecond(zonedDateTime: ChronoZonedDateTime<D>): Long {
+            val epochDay = zonedDateTime.toLocalDate().toEpochDay()
+            var secs = epochDay * 86400 + zonedDateTime.toLocalTime().toSecondOfDay()
+            secs -= zonedDateTime.getOffset().totalSeconds
+            return secs
+        }
+
+        @JvmStatic
+        @JsName("compare")
+        fun <D: ChronoLocalDate> compare(zonedDateTime: ChronoZonedDateTime<D>, other: ChronoZonedDateTime<*>): Int {
+            var cmp = Integers.compare(zonedDateTime.toEpochSecond(), other.toEpochSecond())
+            if (cmp == 0) {
+                cmp = zonedDateTime.toLocalTime().nano - other.toLocalTime().nano
+                if (cmp == 0) {
+                    cmp = zonedDateTime.toLocalDateTime().compareTo(other.toLocalDateTime())
+                    if (cmp == 0) {
+                        cmp = zonedDateTime.getZone().getId().compareTo(other.getZone().getId())
+                        if (cmp == 0) {
+                            cmp = zonedDateTime.getChronology().compareTo(other.getChronology())
+                        }
+                    }
+                }
+            }
+            return cmp
+        }
+
+        @JvmStatic
+        @JsName("isBefore")
+        fun <D: ChronoLocalDate> isBefore(zonedDateTime: ChronoZonedDateTime<D>, other: ChronoZonedDateTime<*>): Boolean {
+            val thisEpochSec = zonedDateTime.toEpochSecond()
+            val otherEpochSec = other.toEpochSecond()
+            return thisEpochSec < otherEpochSec ||
+                    thisEpochSec == otherEpochSec && zonedDateTime.toLocalTime().nano < other.toLocalTime().nano
+        }
+
+        @JvmStatic
+        @JsName("isAfter")
+        fun <D: ChronoLocalDate> isAfter(zonedDateTime: ChronoZonedDateTime<D>, other: ChronoZonedDateTime<*>): Boolean {
+            val thisEpochSec = zonedDateTime.toEpochSecond()
+            val otherEpochSec = other.toEpochSecond()
+            return thisEpochSec > otherEpochSec ||
+                    thisEpochSec == otherEpochSec && zonedDateTime.toLocalTime().nano > other.toLocalTime().nano
+        }
+
+        @JvmStatic
+        @JsName("isEqual")
+        fun <D: ChronoLocalDate> isEqual(zonedDateTime: ChronoZonedDateTime<D>, other: ChronoZonedDateTime<*>): Boolean {
+            return zonedDateTime.toEpochSecond() == other.toEpochSecond() &&
+                    zonedDateTime.toLocalTime().nano == other.toLocalTime().nano
         }
     } // companion object
 
-    override fun range(field: TemporalField): ValueRange {
-        if (field is ChronoField) {
-            if (field == ChronoField.INSTANT_SECONDS || field == ChronoField.OFFSET_SECONDS) {
-                return field.range()
-            }
-            return toLocalDateTime().range(field)
-        }
-        return field.rangeRefinedBy(this)
-    }
+    override fun range(field: TemporalField): ValueRange
 
-    override fun get(field: TemporalField): Int {
-        if (field is ChronoField) {
-            return when (field) {
-                ChronoField.INSTANT_SECONDS -> throw UnsupportedTemporalTypeException(
-                        "Invalid field 'InstantSeconds' for get() method, use getLong() instead")
-                ChronoField.OFFSET_SECONDS -> getOffset().totalSeconds
-                else -> toLocalDateTime().get(field)
-            }
-        }
-        TODO("return Temporal.super.get(this, field)")
-    }
+    override fun get(field: TemporalField): Int
 
-    override fun getLong(field: TemporalField): Long {
-        if (field is ChronoField) {
-            return when (field) {
-                ChronoField.INSTANT_SECONDS -> toEpochSecond()
-                ChronoField.OFFSET_SECONDS -> getOffset().totalSeconds.toLong()
-                else -> toLocalDateTime().getLong(field)
-            }
-        }
-        return field.getFrom(this)
-    }
+    override fun getLong(field: TemporalField): Long
 
     /**
      * Gets the local date part of this date-time.
@@ -199,9 +323,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      *
      * @return the date part of this date-time, not null
      */
-    fun toLocalDate(): D {
-        return toLocalDateTime().getDate()
-    }
+    fun toLocalDate(): D
 
     /**
      * Gets the local time part of this date-time.
@@ -212,9 +334,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      *
      * @return the time part of this date-time, not null
      */
-    fun toLocalTime(): LocalTime {
-        return toLocalDateTime().getTime()
-    }
+    fun toLocalTime(): LocalTime
 
     /**
      * Gets the local date-time part of this date-time.
@@ -236,9 +356,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      *
      * @return the chronology, not null
      */
-    fun getChronology(): Chronology {
-        return toLocalDate().getChronology()
-    }
+    fun getChronology(): Chronology
 
     /**
      * Gets the zone offset, such as '+01:00'.
@@ -370,11 +488,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      * @param unit  the unit to check, null returns false
      * @return true if the unit can be added/subtracted, false if not
      */
-    override fun isSupported(unit: TemporalUnit): Boolean {
-        return if (unit is ChronoUnit) {
-            unit != ChronoUnit.FOREVER
-        } else unit.isSupportedBy(this)
-    }
+    override fun isSupported(unit: TemporalUnit): Boolean
 
     //-----------------------------------------------------------------------
     /**
@@ -397,22 +511,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      * @throws DateTimeException if unable to query (defined by the query)
      * @throws ArithmeticException if numeric overflow occurs (defined by the query)
      */
-    override fun <R> query(query: TemporalQuery<R>): R {
-        if (query === TemporalQueries.ZONE || query === TemporalQueries.ZONE_ID) {
-            return getZone() as R
-        } else if (query === TemporalQueries.OFFSET) {
-            return getOffset() as R
-        } else if (query === TemporalQueries.LOCAL_TIME) {
-            return toLocalTime() as R
-        } else if (query === TemporalQueries.CHRONO) {
-            return getChronology() as R
-        } else if (query === TemporalQueries.PRECISION) {
-            return ChronoUnit.NANOS as R
-        }
-        // inline TemporalAccessor.super.query(query) as an optimization
-        // non-JDK classes are not permitted to make this optimization
-        return query.queryFrom(this)
-    }
+    override fun <R> query(query: TemporalQuery<R>): R
 
     //-----------------------------------------------------------------------
     /**
@@ -426,9 +525,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      *
      * @return an `Instant` representing the same instant, not null
      */
-    fun toInstant(): Instant {
-        return Instant.ofEpochSecond(toEpochSecond(), toLocalTime().nano.toLong())
-    }
+    fun toInstant(): Instant
 
     /**
      * Converts this date-time to the number of seconds from the epoch
@@ -442,12 +539,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      *
      * @return the number of seconds from the epoch of 1970-01-01T00:00:00Z
      */
-    fun toEpochSecond(): Long {
-        val epochDay = toLocalDate().toEpochDay()
-        var secs = epochDay * 86400 + toLocalTime().toSecondOfDay()
-        secs -= getOffset().totalSeconds
-        return secs
-    }
+    fun toEpochSecond(): Long
 
     //-----------------------------------------------------------------------
     /**
@@ -468,22 +560,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      * @param other  the other date-time to compare to, not null
      * @return the comparator value, negative if less, positive if greater
      */
-    operator fun compareTo(other: ChronoZonedDateTime<*>): Int {
-        var cmp = Integers.compare(toEpochSecond(), other.toEpochSecond())
-        if (cmp == 0) {
-            cmp = toLocalTime().nano - other.toLocalTime().nano
-            if (cmp == 0) {
-                cmp = toLocalDateTime().compareTo(other.toLocalDateTime())
-                if (cmp == 0) {
-                    cmp = getZone().getId().compareTo(other.getZone().getId())
-                    if (cmp == 0) {
-                        cmp = getChronology().compareTo(other.getChronology())
-                    }
-                }
-            }
-        }
-        return cmp
-    }
+    operator fun compareTo(other: ChronoZonedDateTime<*>): Int
 
     /**
      * Checks if the instant of this date-time is before that of the specified date-time.
@@ -500,12 +577,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      * @param other  the other date-time to compare to, not null
      * @return true if this point is before the specified date-time
      */
-    fun isBefore(other: ChronoZonedDateTime<*>): Boolean {
-        val thisEpochSec = toEpochSecond()
-        val otherEpochSec = other.toEpochSecond()
-        return thisEpochSec < otherEpochSec ||
-                thisEpochSec == otherEpochSec && toLocalTime().nano < other.toLocalTime().nano
-    }
+    fun isBefore(other: ChronoZonedDateTime<*>): Boolean
 
     /**
      * Checks if the instant of this date-time is after that of the specified date-time.
@@ -522,12 +594,7 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      * @param other  the other date-time to compare to, not null
      * @return true if this is after the specified date-time
      */
-    fun isAfter(other: ChronoZonedDateTime<*>): Boolean {
-        val thisEpochSec = toEpochSecond()
-        val otherEpochSec = other.toEpochSecond()
-        return thisEpochSec > otherEpochSec ||
-                thisEpochSec == otherEpochSec && toLocalTime().nano > other.toLocalTime().nano
-    }
+    fun isAfter(other: ChronoZonedDateTime<*>): Boolean
 
     /**
      * Checks if the instant of this date-time is equal to that of the specified date-time.
@@ -544,7 +611,5 @@ interface ChronoZonedDateTime<D: ChronoLocalDate>: Temporal {
      * @param other  the other date-time to compare to, not null
      * @return true if the instant equals the instant of the specified date-time
      */
-    fun isEqual(other: ChronoZonedDateTime<*>): Boolean {
-        return toEpochSecond() == other.toEpochSecond() && toLocalTime().nano == other.toLocalTime().nano
-    }
+    fun isEqual(other: ChronoZonedDateTime<*>): Boolean
 }

@@ -27,6 +27,11 @@ actual class Date: Comparable<Date> {
         this.date = kotlin.js.Date(milliseconds)
     }
 
+    @JsName("getTimezoneOffset")
+    actual fun getTimezoneOffset(): Int {
+        return this.date.getTimezoneOffset()
+    }
+
     override fun compareTo(other: Date): Int {
         val a = this.getTime()
         val b = other.getTime()

@@ -64,6 +64,7 @@ package org.firas.datetime.temporal
 import org.firas.datetime.DateTimeException
 import org.firas.datetime.chrono.ChronoLocalDate
 import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * Framework-level interface defining read-only access to a temporal object,
@@ -103,6 +104,51 @@ import kotlin.js.JsName
  * @author Wu Yuping (migrate to Kotlin)
  */
 interface TemporalAccessor {
+
+    companion object {
+        // Write default implementation here because
+        // 1. the default implementation mechanism in Kotlin is different from
+        //    the default implementation mechanism in Java;
+        // 2. Kotlin does not support calling implementation of a base class
+        //    when the derived class has an overridden implementation
+
+        @JvmStatic
+        @JsName("range")
+        fun range(temporalAccessor: TemporalAccessor, field: TemporalField): ValueRange {
+            if (field is ChronoField) {
+                if (temporalAccessor.isSupported(field)) {
+                    return field.range()
+                }
+                throw UnsupportedTemporalTypeException("Unsupported field: $field")
+            }
+            return field.rangeRefinedBy(temporalAccessor)
+        }
+
+        @JvmStatic
+        @JsName("get")
+        fun get(temporalAccessor: TemporalAccessor, field: TemporalField): Int {
+            val range = range(temporalAccessor, field)
+            if (!range.isIntValue()) {
+                throw UnsupportedTemporalTypeException("Invalid field $field for get() method, use getLong() instead")
+            }
+            val value = temporalAccessor.getLong(field)
+            if (!range.isValidValue(value)) {
+                throw DateTimeException("Invalid value for $field (valid values $range): $value")
+            }
+            return value.toInt()
+        }
+
+        @JvmStatic
+        @JsName("query")
+        fun <R> query(temporalAccessor: TemporalAccessor, query: TemporalQuery<R>): R? {
+            return if (query === TemporalQueries.ZONE_ID
+                || query === TemporalQueries.CHRONO
+                || query === TemporalQueries.PRECISION
+            ) {
+                null
+            } else query.queryFrom(temporalAccessor)
+        }
+    }
 
     /**
      * Checks if the specified field is supported.
@@ -178,15 +224,7 @@ interface TemporalAccessor {
      * @throws UnsupportedTemporalTypeException if the field is not supported
      */
     @JsName("range")
-    fun range(field: TemporalField): ValueRange {
-        if (field is ChronoField) {
-            if (isSupported(field)) {
-                return field.range()
-            }
-            throw UnsupportedTemporalTypeException("Unsupported field: $field")
-        }
-        return field.rangeRefinedBy(this)
-    }
+    fun range(field: TemporalField): ValueRange
 
     /**
      * Gets the value of the specified field as an `int`.
@@ -229,17 +267,8 @@ interface TemporalAccessor {
      * the range of values exceeds an `int`
      * @throws ArithmeticException if numeric overflow occurs
      */
-    operator fun get(field: TemporalField): Int {
-        val range = range(field)
-        if (!range.isIntValue()) {
-            throw UnsupportedTemporalTypeException("Invalid field $field for get() method, use getLong() instead")
-        }
-        val value = getLong(field)
-        if (!range.isValidValue(value)) {
-            throw DateTimeException("Invalid value for $field (valid values $range): $value")
-        }
-        return value.toInt()
-    }
+    @JsName("get")
+    operator fun get(field: TemporalField): Int
 
     /**
      * Gets the value of the specified field as a `long`.
@@ -331,12 +360,5 @@ interface TemporalAccessor {
      * @throws ArithmeticException if numeric overflow occurs
      */
     @JsName("query")
-    fun <R> query(query: TemporalQuery<R>): R? {
-        return if (query === TemporalQueries.ZONE_ID
-            || query === TemporalQueries.CHRONO
-            || query === TemporalQueries.PRECISION
-        ) {
-            null
-        } else query.queryFrom(this)
-    }
+    fun <R> query(query: TemporalQuery<R>): R?
 }

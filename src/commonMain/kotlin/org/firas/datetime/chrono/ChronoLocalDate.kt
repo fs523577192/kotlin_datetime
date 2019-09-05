@@ -66,6 +66,7 @@ import org.firas.datetime.LocalTime
 import org.firas.datetime.temporal.*
 import org.firas.lang.getName
 import kotlin.js.JsName
+import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
 
 /**
@@ -265,12 +266,17 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
          * @see .isEqual
          */
         @JvmStatic
-        val timeLineOrder: Comparator<ChronoLocalDate> =
-            { date1: ChronoLocalDate, date2: ChronoLocalDate ->
-                val a = date1.toEpochDay()
-                val b = date2.toEpochDay()
-                if (a > b) 1 else if (a < b) -1 else 0
-            } as Comparator<ChronoLocalDate>
+        @JvmField
+        val timeLineOrder = object: Comparator<ChronoLocalDate> {
+            override fun compare(a: ChronoLocalDate, b: ChronoLocalDate): Int {
+                val _a = a.toEpochDay()
+                val _b = b.toEpochDay()
+
+                return if (_a > _b) 1
+                    else if (_a < _b) -1
+                    else 0
+            }
+        }
 
         /**
          * Obtains an instance of `ChronoLocalDate` from a temporal object.
@@ -309,6 +315,85 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
                         temporal::class.getName())
             }
             return chrono.date(temporal)
+        }
+
+        // Write default implementation here because
+        // 1. the default implementation mechanism in Kotlin is different from
+        //    the default implementation mechanism in Java;
+        // 2. Kotlin does not support calling implementation of a base class
+        //    when the derived class has an overridden implementation
+
+        @JvmStatic
+        @JsName("lengthOfYear")
+        fun lengthOfYear(localDate: ChronoLocalDate): Int {
+            return if (localDate.isLeapYear()) 366 else 365
+        }
+
+        @JvmStatic
+        @JsName("isFieldSupported")
+        fun isSupported(localDate: ChronoLocalDate, field: TemporalField): Boolean {
+            return if (field is ChronoField) field.isDateBased()
+                else field.isSupportedBy(localDate)
+        }
+
+        @JvmStatic
+        @JsName("isUnitSupported")
+        fun isSupported(localDate: ChronoLocalDate, unit: TemporalUnit): Boolean {
+            return if (unit is ChronoUnit) unit.isDateBased()
+                else unit.isSupportedBy(localDate)
+        }
+
+        @JvmStatic
+        @JsName("query")
+        fun <R> query(localDate: ChronoLocalDate, query: TemporalQuery<R>): R? {
+            if (query === TemporalQueries.ZONE_ID || query === TemporalQueries.ZONE
+                || query === TemporalQueries.OFFSET
+            ) {
+                return null
+            } else if (query === TemporalQueries.LOCAL_TIME) {
+                return null
+            } else if (query === TemporalQueries.CHRONO) {
+                return localDate.getChronology() as R
+            } else if (query === TemporalQueries.PRECISION) {
+                return ChronoUnit.DAYS as R
+            }
+            // inline TemporalAccessor.super.query(query) as an optimization
+            // non-JDK classes are not permitted to make this optimization
+            return query.queryFrom(localDate)
+        }
+
+        @JvmStatic
+        @JsName("adjustInto")
+        fun adjustInto(localDate: ChronoLocalDate, temporal: Temporal): Temporal {
+            return temporal.with(ChronoField.EPOCH_DAY, localDate.toEpochDay())
+        }
+
+        @JvmStatic
+        @JsName("compare")
+        fun compare(localDate: ChronoLocalDate, other: ChronoLocalDate): Int {
+            val a = localDate.toEpochDay()
+            val b = other.toEpochDay()
+            return if (a > b) 1
+                else if (a < b) -1
+                else localDate.getChronology().compareTo(other.getChronology())
+        }
+
+        @JvmStatic
+        @JsName("isAfter")
+        fun isAfter(localDate: ChronoLocalDate, other: ChronoLocalDate): Boolean {
+            return localDate.toEpochDay() > other.toEpochDay()
+        }
+
+        @JvmStatic
+        @JsName("isBefore")
+        fun isBefore(localDate: ChronoLocalDate, other: ChronoLocalDate): Boolean {
+            return localDate.toEpochDay() < other.toEpochDay()
+        }
+
+        @JvmStatic
+        @JsName("isEqual")
+        fun isEqual(localDate: ChronoLocalDate, other: ChronoLocalDate): Boolean {
+            return localDate.toEpochDay() == other.toEpochDay()
         }
     } // companion object
 
@@ -363,9 +448,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @return the length of the year in days
      */
     @JsName("lengthOfYear")
-    fun lengthOfYear(): Int {
-        return if (isLeapYear()) 366 else 365
-    }
+    fun lengthOfYear(): Int
 
     /**
      * Converts this date to the Epoch Day.
@@ -405,11 +488,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @param field  the field to check, null returns false
      * @return true if the field can be queried, false if not
      */
-    override fun isSupported(field: TemporalField): Boolean {
-        return if (field is ChronoField) {
-            field.isDateBased()
-        } else field.isSupportedBy(this)
-    }
+    override fun isSupported(field: TemporalField): Boolean
 
     /**
      * Checks if the specified unit is supported.
@@ -432,11 +511,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @param unit  the unit to check, null returns false
      * @return true if the unit can be added/subtracted, false if not
      */
-    override fun isSupported(unit: TemporalUnit): Boolean {
-        return if (unit is ChronoUnit) {
-            unit.isDateBased()
-        } else unit.isSupportedBy(this)
-    }
+    override fun isSupported(unit: TemporalUnit): Boolean
 
     //-----------------------------------------------------------------------
     /**
@@ -459,21 +534,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @throws DateTimeException if unable to query (defined by the query)
      * @throws ArithmeticException if numeric overflow occurs (defined by the query)
      */
-    override fun <R> query(query: TemporalQuery<R>): R? {
-        if (query === TemporalQueries.ZONE_ID || query === TemporalQueries.ZONE
-                || query === TemporalQueries.OFFSET) {
-            return null
-        } else if (query === TemporalQueries.LOCAL_TIME) {
-            return null
-        } else if (query === TemporalQueries.CHRONO) {
-            return getChronology() as R
-        } else if (query === TemporalQueries.PRECISION) {
-            return ChronoUnit.DAYS as R
-        }
-        // inline TemporalAccessor.super.query(query) as an optimization
-        // non-JDK classes are not permitted to make this optimization
-        return query.queryFrom(this)
-    }
+    override fun <R> query(query: TemporalQuery<R>): R?
 
     /**
      * Adjusts the specified temporal object to have the same date as this object.
@@ -503,9 +564,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @throws DateTimeException if unable to make the adjustment
      * @throws ArithmeticException if numeric overflow occurs
      */
-    override fun adjustInto(temporal: Temporal): Temporal {
-        return temporal.with(ChronoField.EPOCH_DAY, toEpochDay())
-    }
+    override fun adjustInto(temporal: Temporal): Temporal
 
     //-----------------------------------------------------------------------
     /**
@@ -540,11 +599,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @param other  the other date to compare to, not null
      * @return the comparator value, negative if less, positive if greater
      */
-    override operator fun compareTo(other: ChronoLocalDate): Int {
-        val a = this.toEpochDay()
-        val b = other.toEpochDay()
-        return if (a > b) 1 else if (a < b) -1 else this.getChronology().compareTo(other.getChronology())
-    }
+    override operator fun compareTo(other: ChronoLocalDate): Int
 
     /**
      * Checks if this date is after the specified date ignoring the chronology.
@@ -563,9 +618,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @return true if this is after the specified date
      */
     @JsName("isAfter")
-    fun isAfter(other: ChronoLocalDate): Boolean {
-        return this.toEpochDay() > other.toEpochDay()
-    }
+    fun isAfter(other: ChronoLocalDate): Boolean
 
     /**
      * Checks if this date is before the specified date ignoring the chronology.
@@ -584,9 +637,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @return true if this is before the specified date
      */
     @JsName("isBefore")
-    fun isBefore(other: ChronoLocalDate): Boolean {
-        return this.toEpochDay() < other.toEpochDay()
-    }
+    fun isBefore(other: ChronoLocalDate): Boolean
 
     /**
      * Checks if this date is equal to the specified date ignoring the chronology.
@@ -605,9 +656,7 @@ interface ChronoLocalDate: Temporal, TemporalAdjuster, Comparable<ChronoLocalDat
      * @return true if the underlying date is equal to the specified date
      */
     @JsName("isEqual")
-    fun isEqual(other: ChronoLocalDate): Boolean {
-        return this.toEpochDay() == other.toEpochDay()
-    }
+    fun isEqual(other: ChronoLocalDate): Boolean
 
     /**
      * Combines this date with a time to create a `ChronoLocalDateTime`.

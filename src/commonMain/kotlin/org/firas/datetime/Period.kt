@@ -67,6 +67,8 @@ import org.firas.datetime.format.DateTimeParseException
 import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.util.Integers
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 
 /**
  * A date-based amount of time in the ISO-8601 calendar system,
@@ -139,6 +141,8 @@ class Period private constructor(
         /**
          * A constant for a period of zero.
          */
+        @JvmStatic
+        @JvmField
         val ZERO = Period(0, 0, 0)
 
         /**
@@ -171,6 +175,7 @@ class Period private constructor(
          * @param years  the number of years, positive or negative
          * @return the period of years, not null
          */
+        @JvmStatic
         fun ofYears(years: Int): Period {
             return create(years, 0, 0)
         }
@@ -185,6 +190,7 @@ class Period private constructor(
          * @param months  the number of months, positive or negative
          * @return the period of months, not null
          */
+        @JvmStatic
         fun ofMonths(months: Int): Period {
             return create(0, months, 0)
         }
@@ -200,6 +206,7 @@ class Period private constructor(
          * @param weeks  the number of weeks, positive or negative
          * @return the period, with the input weeks converted to days, not null
          */
+        @JvmStatic
         fun ofWeeks(weeks: Int): Period {
             return create(0, 0, MathUtils.multiplyExact(weeks, 7))
         }
@@ -214,6 +221,7 @@ class Period private constructor(
          * @param days  the number of days, positive or negative
          * @return the period of days, not null
          */
+        @JvmStatic
         fun ofDays(days: Int): Period {
             return create(0, 0, days)
         }
@@ -230,6 +238,7 @@ class Period private constructor(
          * @param days  the amount of days, may be negative
          * @return the period of years, months and days, not null
          */
+        @JvmStatic
         fun of(years: Int, months: Int, days: Int): Period {
             return create(years, months, days)
         }
@@ -256,6 +265,7 @@ class Period private constructor(
          * @return the period between this date and the end date, not null
          * @see ChronoLocalDate.until
          */
+        @JvmStatic
         fun between(startDateInclusive: LocalDate, endDateExclusive: LocalDate): Period {
             TODO()
             // return startDateInclusive.until(endDateExclusive)
@@ -284,6 +294,7 @@ class Period private constructor(
          * @throws DateTimeException if unable to convert to a `Period`
          * @throws ArithmeticException if the amount of years, months or days exceeds an int
          */
+        @JvmStatic
         fun from(amount: TemporalAmount): Period {
             if (amount is Period) {
                 return amount
@@ -355,6 +366,7 @@ class Period private constructor(
          * @return the parsed period, not null
          * @throws DateTimeParseException if the text cannot be parsed to a period
          */
+         @JvmStatic
          fun parse(text: CharSequence): Period {
             val matchResults = PATTERN.matchEntire(text)
             if (null != matchResults && matchResults.groups.size > 5) {

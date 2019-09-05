@@ -68,6 +68,9 @@ import org.firas.datetime.LocalTime.Companion.SECONDS_PER_MINUTE
 import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.lang.getName
+import kotlin.js.JsName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 
 /**
  * An instantaneous point on the time-line.
@@ -201,6 +204,8 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
         /**
          * Constant for the 1970-01-01T00:00:00Z epoch instant.
          */
+        @JvmStatic
+        @JvmField
         val EPOCH = Instant(0, 0)
         /**
          * The minimum supported epoch second.
@@ -221,6 +226,8 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
          * The value is also chosen such that the value of the year fits in
          * an `int`.
          */
+        @JvmStatic
+        @JvmField
         val MIN = Instant.ofEpochSecond(MIN_SECOND, 0)
         /**
          * The maximum supported `Instant`, '1000000000-12-31T23:59:59.999999999Z'.
@@ -233,6 +240,8 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
          * The value is also chosen such that the value of the year fits in
          * an `int`.
          */
+        @JvmStatic
+        @JvmField
         val MAX = Instant.ofEpochSecond(MAX_SECOND, 999999999)
 
         /**
@@ -248,6 +257,7 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
          *
          * @author Wu Yuping
          */
+        @JvmStatic
         fun now(): Instant {
             val timestamp = Date().getTime()
             return ofEpochSecond(timestamp / 1000,
@@ -265,6 +275,8 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
          * @return an instant, not null
          * @throws DateTimeException if the instant exceeds the maximum or minimum instant
          */
+        @JvmStatic
+        @JsName("ofEpochSecond")
         fun ofEpochSecond(epochSecond: Long): Instant {
             return create(epochSecond, 0)
         }
@@ -290,6 +302,8 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
          * @throws DateTimeException if the instant exceeds the maximum or minimum instant
          * @throws ArithmeticException if numeric overflow occurs
          */
+        @JvmStatic
+        @JsName("ofEpochSecondAndNano")
         fun ofEpochSecond(epochSecond: Long, nanoAdjustment: Long): Instant {
             val secs = MathUtils.addExact(epochSecond, MathUtils.floorDiv(
                     nanoAdjustment, LocalTime.NANOS_PER_SECOND))
@@ -334,6 +348,7 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
          * @return the instant, not null
          * @throws DateTimeException if unable to convert to an `Instant`
          */
+        @JvmStatic
         fun from(temporal: TemporalAccessor): Instant {
             if (temporal is Instant) {
                 return temporal
@@ -830,6 +845,22 @@ class Instant(val epochSecond: Long, val nanos: Int): Temporal, TemporalAdjuster
             }
         }
         return unit.addTo(this, amountToAdd)
+    }
+
+    override fun minus(amount: TemporalAmount): Temporal {
+        return Temporal.minus(this, amount)
+    }
+
+    override fun minus(amountToSubtract: Long, unit: TemporalUnit): Temporal {
+        return Temporal.minus(this, amountToSubtract, unit)
+    }
+
+    override fun range(field: TemporalField): ValueRange {
+        return TemporalAccessor.range(this, field)
+    }
+
+    override fun <R> query(query: TemporalQuery<R>): R? {
+        return TemporalAccessor.query(this, query)
     }
 
     /**

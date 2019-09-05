@@ -67,6 +67,9 @@ import org.firas.datetime.temporal.*
 import org.firas.datetime.util.MathUtils
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.lang.getName
+import kotlin.js.JsName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 import kotlin.reflect.KClass
 
 /**
@@ -118,15 +121,21 @@ class LocalDate private constructor(
          * The minimum supported `LocalDate`, '-999999999-01-01'.
          * This could be used by an application as a "far past" date.
          */
+        @JvmStatic
+        @JvmField
         val MIN = LocalDate.of(Year.MIN_VALUE, 1, 1)
         /**
          * The maximum supported `LocalDate`, '+999999999-12-31'.
          * This could be used by an application as a "far future" date.
          */
+        @JvmStatic
+        @JvmField
         val MAX = LocalDate.of(Year.MAX_VALUE, 12, 31)
         /**
          * The epoch year `LocalDate`, '1970-01-01'.
          */
+        @JvmStatic
+        @JvmField
         val EPOCH = LocalDate.of(1970, 1, 1)
 
         /**
@@ -144,6 +153,8 @@ class LocalDate private constructor(
          * There are five 400 year cycles from year zero to 2000.
          * There are 7 leap years from 1970 to 2000.
          */
+        @JvmStatic
+        @JvmField
         internal const val DAYS_0000_TO_1970 = DAYS_PER_CYCLE * 5L - (30L * 365L + 7L)
 
         // ----==== Factory methods "of" ====----
@@ -161,6 +172,8 @@ class LocalDate private constructor(
          * @throws DateTimeException if the value of any field is out of range,
          * or if the day-of-month is invalid for the month-year
          */
+        @JvmStatic
+        @JsName("ofYearMonthEnumAndDay")
         fun of(year: Int, month: Month, dayOfMonth: Int): LocalDate {
             ChronoField.YEAR.checkValidValue(year.toLong())
             ChronoField.DAY_OF_MONTH.checkValidValue(dayOfMonth.toLong())
@@ -181,6 +194,8 @@ class LocalDate private constructor(
          * @throws DateTimeException if the value of any field is out of range,
          * or if the day-of-month is invalid for the month-year
          */
+        @JvmStatic
+        @JsName("ofYearMonthAndDay")
         fun of(year: Int, month: Int, dayOfMonth: Int): LocalDate {
             ChronoField.YEAR.checkValidValue(year.toLong())
             ChronoField.MONTH_OF_YEAR.checkValidValue(month.toLong())
@@ -202,6 +217,7 @@ class LocalDate private constructor(
          * @throws DateTimeException if the value of any field is out of range,
          * or if the day-of-year is invalid for the year
          */
+        @JvmStatic
         fun ofYearDay(year: Int, dayOfYear: Int): LocalDate {
             ChronoField.YEAR.checkValidValue(year.toLong())
             ChronoField.DAY_OF_YEAR.checkValidValue(dayOfYear.toLong())
@@ -230,6 +246,7 @@ class LocalDate private constructor(
          * @return the local date, not null
          * @throws DateTimeException if the epoch day exceeds the supported date range
          */
+        @JvmStatic
         fun ofEpochDay(epochDay: Long): LocalDate {
             ChronoField.EPOCH_DAY.checkValidValue(epochDay)
             var zeroDay = epochDay + DAYS_0000_TO_1970
@@ -283,6 +300,7 @@ class LocalDate private constructor(
          * @return the local date, not null
          * @throws DateTimeException if unable to convert to a `LocalDate`
          */
+        @JvmStatic
         fun from(temporal: TemporalAccessor): LocalDate {
             return temporal.query(TemporalQueries.LOCAL_DATE) ?:
                     throw DateTimeException ("Unable to obtain LocalDate from TemporalAccessor: " +
@@ -395,7 +413,7 @@ class LocalDate private constructor(
      */
     fun getDayOfWeek(): DayOfWeek {
         val dow0 = MathUtils.floorMod(toEpochDay() + 3, 7).toInt()
-        return DayOfWeek.of(dow0 + 1)
+        return DayOfWeek.values()[dow0]
     }
 
     /**
@@ -1094,6 +1112,46 @@ class LocalDate private constructor(
             plusDays(Long.MAX_VALUE).plusDays(1) else plusDays(-daysToSubtract)
     }
 
+    override fun isSupported(field: TemporalField): Boolean {
+        return ChronoLocalDate.isSupported(this, field)
+    }
+
+    override fun isSupported(unit: TemporalUnit): Boolean {
+        return ChronoLocalDate.isSupported(this, unit)
+    }
+
+    override fun minus(amount: TemporalAmount): Temporal {
+        return Temporal.minus(this, amount)
+    }
+
+    override fun minus(amountToSubtract: Long, unit: TemporalUnit): Temporal {
+        return Temporal.minus(this, amountToSubtract, unit)
+    }
+
+    override fun range(field: TemporalField): ValueRange {
+        return TemporalAccessor.range(this, field)
+    }
+
+    override fun <R> query(query: TemporalQuery<R>): R? {
+        return ChronoLocalDate.query(this, query)
+    }
+
+    override fun adjustInto(temporal: Temporal): Temporal {
+        return ChronoLocalDate.adjustInto(this, temporal)
+    }
+
+    override fun isAfter(other: ChronoLocalDate): Boolean {
+        return ChronoLocalDate.isAfter(this, other)
+    }
+
+    override fun isBefore(other: ChronoLocalDate): Boolean {
+        return ChronoLocalDate.isBefore(this, other)
+    }
+
+    override fun isEqual(other: ChronoLocalDate): Boolean {
+        return ChronoLocalDate.isEqual(this, other)
+    }
+
     override operator fun compareTo(other: ChronoLocalDate): Int {
         return if (other is LocalDate) compareTo(other) else -other.compareTo(this)
     }
@@ -1361,7 +1419,7 @@ class LocalDate private constructor(
         if (field is ChronoField) {
             return get0(field)
         }
-        TODO("return ChronoLocalDate.super.get(field)")
+        return TemporalAccessor.get(this, field)
     }
 
     /**

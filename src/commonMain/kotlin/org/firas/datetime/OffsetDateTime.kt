@@ -751,6 +751,14 @@ class OffsetDateTime private constructor(
         }
     }
 
+    override fun minus(amount: TemporalAmount): Temporal {
+        return Temporal.minus(this, amount)
+    }
+
+    override fun minus(amountToSubtract: Long, unit: TemporalUnit): Temporal {
+        return Temporal.minus(this, amountToSubtract, unit)
+    }
+
     //-----------------------------------------------------------------------
     /**
      * Returns a copy of this `OffsetDateTime` with the specified number of years added.
@@ -1335,7 +1343,7 @@ class OffsetDateTime private constructor(
                 else -> this.localDateTime.get(field)
             }
         }
-        TODO("return Temporal.super.get(field)")
+        return TemporalAccessor.get(this, field)
     }
 
     /**

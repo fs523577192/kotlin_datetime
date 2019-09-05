@@ -364,11 +364,11 @@ class YearMonth private constructor(
      * @throws UnsupportedTemporalTypeException if the field is not supported
      */
     override fun range(field: TemporalField): ValueRange {
-        if (field === ChronoField.YEAR_OF_ERA) {
-            return if (this.year <= 0) ValueRange.of(1L, Year.MAX_VALUE + 1L)
-                    else ValueRange.of(1L, Year.MAX_VALUE.toLong())
+        return if (field === ChronoField.YEAR_OF_ERA) {
+            if (this.year <= 0) ValueRange.of(1L, Year.MAX_VALUE + 1L)
+            else ValueRange.of(1L, Year.MAX_VALUE.toLong())
         } else {
-            TODO("return Temporal.super.range(field)")
+            TemporalAccessor.range(this, field)
         }
     }
 
@@ -926,6 +926,22 @@ class YearMonth private constructor(
                 .toString()
     }
 
+    override fun with(adjuster: TemporalAdjuster): Temporal {
+        return Temporal.with(this, adjuster)
+    }
+
+    override fun minus(amount: TemporalAmount): Temporal {
+        return Temporal.minus(this, amount)
+    }
+
+    override fun minus(amountToSubtract: Long, unit: TemporalUnit): Temporal {
+        return Temporal.minus(this, amountToSubtract, unit)
+    }
+
+    override fun <R> query(query: TemporalQuery<R>): R? {
+        return TemporalAccessor.query(this, query)
+    }
+
     /**
      * Returns a copy of this year-month with the new year and month, checking
      * to see if a new object is in fact required.
@@ -935,9 +951,8 @@ class YearMonth private constructor(
      * @return the year-month, not null
      */
     private fun with(newYear: Int, newMonth: Int): YearMonth {
-        return if (this.year == newYear && this.monthValue == newMonth) {
-            this
-        } else YearMonth(newYear, newMonth)
+        return if (this.year == newYear && this.monthValue == newMonth) this
+            else YearMonth(newYear, newMonth)
     }
 
     private fun getProlepticMonth(): Long {

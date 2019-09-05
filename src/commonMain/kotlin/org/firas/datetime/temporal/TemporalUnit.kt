@@ -67,6 +67,7 @@ import org.firas.datetime.chrono.ChronoLocalDate
 import org.firas.datetime.chrono.ChronoLocalDateTime
 import org.firas.datetime.chrono.ChronoZonedDateTime
 import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * A unit of date-time, such as Days or Hours.
@@ -98,6 +99,42 @@ import kotlin.js.JsName
  * @author Wu Yuping (migrate to Kotlin)
  */
 interface TemporalUnit {
+
+    companion object {
+        // Write default implementation here because
+        // 1. the default implementation mechanism in Kotlin is different from
+        //    the default implementation mechanism in Java;
+        // 2. Kotlin does not support calling implementation of a base class
+        //    when the derived class has an overridden implementation
+
+        @JvmStatic
+        @JsName("isSupportedBy")
+        fun isSupportedBy(temporalUnit: TemporalUnit, temporal: Temporal): Boolean {
+            if (temporal is LocalTime) {
+                return temporalUnit.isTimeBased()
+            }
+            if (temporal is ChronoLocalDate) {
+                return temporalUnit.isDateBased()
+            }
+            if (temporal is ChronoLocalDateTime<*> || temporal is ChronoZonedDateTime<*>) {
+                return true
+            }
+            return try {
+                temporal.plus(1, temporalUnit)
+                true
+            } catch (ex: UnsupportedTemporalTypeException) {
+                false
+            } catch (ex: RuntimeException) {
+                try {
+                    temporal.plus(-1, temporalUnit)
+                    true
+                } catch (ex2: RuntimeException) {
+                    false
+                }
+            }
+        }
+    }
+
     /**
      * Gets the duration of this unit, which may be an estimate.
      *
@@ -179,30 +216,7 @@ interface TemporalUnit {
      * @return true if the unit is supported
      */
     @JsName("isSupportedBy")
-    fun isSupportedBy(temporal: Temporal): Boolean {
-        if (temporal is LocalTime) {
-            return isTimeBased()
-        }
-        if (temporal is ChronoLocalDate) {
-            return isDateBased()
-        }
-        if (temporal is ChronoLocalDateTime<*> || temporal is ChronoZonedDateTime<*>) {
-            return true
-        }
-        try {
-            temporal.plus(1, this)
-            return true
-        } catch (ex: UnsupportedTemporalTypeException) {
-            return false
-        } catch (ex: RuntimeException) {
-            try {
-                temporal.plus(-1, this)
-                return true
-            } catch (ex2: RuntimeException) {
-                return false
-            }
-        }
-    }
+    fun isSupportedBy(temporal: Temporal): Boolean
 
     /**
      * Returns a copy of the specified temporal object with the specified period added.

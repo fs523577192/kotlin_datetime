@@ -63,6 +63,7 @@ package org.firas.datetime
 
 import org.firas.datetime.chrono.ChronoLocalDateTime
 import org.firas.datetime.chrono.ChronoZonedDateTime
+import org.firas.datetime.chrono.Chronology
 import org.firas.datetime.temporal.*
 import org.firas.datetime.zone.ZoneId
 import org.firas.datetime.zone.ZoneOffset
@@ -895,7 +896,7 @@ class ZonedDateTime(
                 else -> dateTime.get(field)
             }
         }
-        TODO("return ChronoZonedDateTime.super.get(field)")
+        return ChronoZonedDateTime.get(this, field)
     }
 
     /**
@@ -1413,7 +1414,9 @@ class ZonedDateTime(
             } else {
                 resolveInstant(dateTime.plus(amountToAdd, unit))
             }
-        } else unit.addTo(this, amountToAdd)
+        } else {
+            unit.addTo(this, amountToAdd)
+        }
     }
 
     //-----------------------------------------------------------------------
@@ -1947,7 +1950,7 @@ class ZonedDateTime(
         return if (query === TemporalQueries.LOCAL_DATE) {
             toLocalDate() as R
         } else {
-            TODO("super@ChronoZonedDateTime.query(query)")
+            ChronoZonedDateTime.query(this, query)
         }
     }
 
@@ -2090,6 +2093,38 @@ class ZonedDateTime(
         } else {
             str
         }
+    }
+
+    override fun getChronology(): Chronology {
+        return ChronoZonedDateTime.getChronology(this)
+    }
+
+    override fun isSupported(unit: TemporalUnit): Boolean {
+        return ChronoZonedDateTime.isSupported(this, unit)
+    }
+
+    override fun toInstant(): Instant {
+        return ChronoZonedDateTime.toInstant(this)
+    }
+
+    override fun toEpochSecond(): Long {
+        return ChronoZonedDateTime.toEpochSecond(this)
+    }
+
+    override fun compareTo(other: ChronoZonedDateTime<*>): Int {
+        return ChronoZonedDateTime.compare(this, other)
+    }
+
+    override fun isBefore(other: ChronoZonedDateTime<*>): Boolean {
+        return ChronoZonedDateTime.isBefore(this, other)
+    }
+
+    override fun isAfter(other: ChronoZonedDateTime<*>): Boolean {
+        return ChronoZonedDateTime.isAfter(this, other)
+    }
+
+    override fun isEqual(other: ChronoZonedDateTime<*>): Boolean {
+        return ChronoZonedDateTime.isEqual(this, other)
     }
 
     /**

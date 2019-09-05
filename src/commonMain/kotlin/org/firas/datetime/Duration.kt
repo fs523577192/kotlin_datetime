@@ -68,9 +68,11 @@ import org.firas.datetime.LocalTime.Companion.SECONDS_PER_DAY
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_HOUR
 import org.firas.datetime.LocalTime.Companion.SECONDS_PER_MINUTE
 import org.firas.datetime.temporal.*
-import org.firas.math.BigDecimal
-import org.firas.math.BigInteger
 import org.firas.datetime.util.MathUtils
+import org.firas.math.*
+import kotlin.js.JsName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 
 /**
  * A time-based amount of time, such as '34.5 seconds'.
@@ -123,6 +125,8 @@ class Duration private constructor(
         /**
          * Constant for a duration of zero.
          */
+        @JvmStatic
+        @JvmField
         val ZERO = Duration(0, 0)
 
         private val UNITS = listOf<TemporalUnit>(ChronoUnit.SECONDS, ChronoUnit.NANOS)
@@ -135,7 +139,7 @@ class Duration private constructor(
         /**
          * Constant for nanos per second.
          */
-        private val BI_NANOS_PER_SECOND = BigInteger.valueOf(LocalTime.NANOS_PER_SECOND)
+        private val BI_NANOS_PER_SECOND = longToBigInteger(LocalTime.NANOS_PER_SECOND)
 
         /**
          * Obtains a `Duration` representing a number of seconds.
@@ -146,6 +150,8 @@ class Duration private constructor(
          * @param seconds  the number of seconds, positive or negative
          * @return a `Duration`, not null
          */
+        @JvmStatic
+        @JsName("ofSeconds")
         fun ofSeconds(seconds: Long): Duration {
             return create(seconds, 0)
         }
@@ -170,6 +176,8 @@ class Duration private constructor(
          * @return a `Duration`, not null
          * @throws ArithmeticException if the adjustment causes the seconds to exceed the capacity of `Duration`
          */
+        @JvmStatic
+        @JsName("ofSecondsAndNanos")
         fun ofSeconds(seconds: Long, nanoAdjustment: Long): Duration {
             val secs = MathUtils.addExact(seconds, MathUtils.floorDiv(nanoAdjustment,
                     LocalTime.NANOS_PER_SECOND))
@@ -1010,9 +1018,8 @@ class Duration private constructor(
         if (multiplicand == 0L) {
             return ZERO
         }
-        return if (multiplicand == 1L) {
-            this
-        } else create(toBigDecimalSeconds() * BigDecimal.valueOf(multiplicand))
+        return if (multiplicand == 1L) this
+            else create(toBigDecimalSeconds() * longToBigDecimal(multiplicand))
     }
 
     //-------------------------------------------------------------------------
@@ -1045,14 +1052,14 @@ class Duration private constructor(
      * @throws ArithmeticException if numeric overflow occurs
      */
     override fun addTo(temporal: Temporal): Temporal {
-        var temporal = temporal
+        var _temporal = temporal
         if (this.seconds != 0L) {
-            temporal = temporal.plus(this.seconds, ChronoUnit.SECONDS)
+            _temporal = _temporal.plus(this.seconds, ChronoUnit.SECONDS)
         }
         if (this.nanos != 0) {
-            temporal = temporal.plus(this.nanos.toLong(), ChronoUnit.NANOS)
+            _temporal = _temporal.plus(this.nanos.toLong(), ChronoUnit.NANOS)
         }
-        return temporal
+        return _temporal
     }
 
     /**
@@ -1084,14 +1091,14 @@ class Duration private constructor(
      * @throws ArithmeticException if numeric overflow occurs
      */
     override fun subtractFrom(temporal: Temporal): Temporal {
-        var temporal = temporal
+        var _temporal = temporal
         if (this.seconds != 0L) {
-            temporal = temporal.minus(this.seconds, ChronoUnit.SECONDS)
+            _temporal = _temporal.minus(this.seconds, ChronoUnit.SECONDS)
         }
         if (this.nanos != 0) {
-            temporal = temporal.minus(this.nanos.toLong(), ChronoUnit.NANOS)
+            _temporal = _temporal.minus(this.nanos.toLong(), ChronoUnit.NANOS)
         }
-        return temporal
+        return _temporal
     }
 
     /**
@@ -1101,6 +1108,6 @@ class Duration private constructor(
      * @return the total length of the duration in seconds, with a scale of 9, not null
      */
     private fun toBigDecimalSeconds(): BigDecimal {
-        return BigDecimal.valueOf(seconds) + BigDecimal.valueOf(nanos.toLong(), 9)
+        return longToBigDecimal(seconds) + BigDecimal.valueOf(nanos.toLong(), 9)
     }
 }

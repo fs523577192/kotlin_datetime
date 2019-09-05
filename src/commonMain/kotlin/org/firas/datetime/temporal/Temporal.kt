@@ -66,6 +66,7 @@ import org.firas.datetime.Duration
 import org.firas.datetime.Period
 import org.firas.datetime.chrono.ChronoLocalDate
 import kotlin.js.JsName
+import kotlin.jvm.JvmStatic
 
 /**
  * Framework-level interface defining read-write access to a temporal object,
@@ -138,6 +139,41 @@ import kotlin.js.JsName
  */
 interface Temporal: TemporalAccessor {
 
+    companion object {
+        // Write default implementation here because
+        // 1. the default implementation mechanism in Kotlin is different from
+        //    the default implementation mechanism in Java;
+        // 2. Kotlin does not support calling implementation of a base class
+        //    when the derived class has an overridden implementation
+
+        @JvmStatic
+        @JsName("withAdjuster")
+        fun with(temporal: Temporal, adjuster: TemporalAdjuster): Temporal {
+            return adjuster.adjustInto(temporal)
+        }
+
+        @JvmStatic
+        @JsName("plus")
+        fun plus(temporal: Temporal, amount: TemporalAmount): Temporal {
+            return amount.addTo(temporal)
+        }
+
+        @JvmStatic
+        @JsName("minus")
+        fun minus(temporal: Temporal, amount: TemporalAmount): Temporal {
+            return amount.subtractFrom(temporal)
+        }
+
+        @JvmStatic
+        @JsName("minusByAmountAndUnit")
+        fun minus(temporal: Temporal, amountToSubtract: Long, unit: TemporalUnit): Temporal {
+            return if (amountToSubtract == Long.MIN_VALUE)
+                temporal.plus(Long.MAX_VALUE, unit).plus(1, unit)
+            else
+                temporal.plus(-amountToSubtract, unit)
+        }
+    }
+
     /**
      * Checks if the specified unit is supported.
      *
@@ -206,9 +242,7 @@ interface Temporal: TemporalAccessor {
      * @throws ArithmeticException if numeric overflow occurs
      */
     @JsName("withAdjuster")
-    fun with(adjuster: TemporalAdjuster): Temporal {
-        return adjuster.adjustInto(this)
-    }
+    fun with(adjuster: TemporalAdjuster): Temporal
 
     /**
      * Returns an object of the same type as this object with the specified field altered.
@@ -288,9 +322,8 @@ interface Temporal: TemporalAccessor {
      * @throws DateTimeException if the addition cannot be made
      * @throws ArithmeticException if numeric overflow occurs
      */
-    operator fun plus(amount: TemporalAmount): Temporal {
-        return amount.addTo(this)
-    }
+    @JsName("plus")
+    operator fun plus(amount: TemporalAmount): Temporal
 
     /**
      * Returns an object of the same type as this object with the specified period added.
@@ -370,9 +403,8 @@ interface Temporal: TemporalAccessor {
      * @throws DateTimeException if the subtraction cannot be made
      * @throws ArithmeticException if numeric overflow occurs
      */
-    operator fun minus(amount: TemporalAmount): Temporal {
-        return amount.subtractFrom(this)
-    }
+    @JsName("minus")
+    operator fun minus(amount: TemporalAmount): Temporal
 
     /**
      * Returns an object of the same type as this object with the specified period subtracted.
@@ -411,12 +443,7 @@ interface Temporal: TemporalAccessor {
      * @throws ArithmeticException if numeric overflow occurs
      */
     @JsName("minusByAmountAndUnit")
-    fun minus(amountToSubtract: Long, unit: TemporalUnit): Temporal {
-        return if (amountToSubtract == Long.MIN_VALUE) plus(Long.MAX_VALUE, unit).plus(
-            1,
-            unit
-        ) else plus(-amountToSubtract, unit)
-    }
+    fun minus(amountToSubtract: Long, unit: TemporalUnit): Temporal
 
     //-----------------------------------------------------------------------
     /**

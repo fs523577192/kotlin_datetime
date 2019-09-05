@@ -596,11 +596,11 @@ class ZoneOffset private constructor(
      * @throws DateTimeException if unable to query (defined by the query)
      * @throws ArithmeticException if numeric overflow occurs (defined by the query)
      */
-    override fun <R> query(query: TemporalQuery<R>): R {
+    override fun <R> query(query: TemporalQuery<R>): R? {
         return if (query === TemporalQueries.OFFSET || query === TemporalQueries.ZONE) {
             this as R
         } else {
-            TODO("super@TemporalAccessor.query(query)")
+            TemporalAccessor.query(this, query)
         }
     }
 
@@ -691,6 +691,10 @@ class ZoneOffset private constructor(
      */
     override fun toString(): String {
         return this.id
+    }
+
+    override fun range(field: TemporalField): ValueRange {
+        return TemporalAccessor.range(this, field)
     }
 }
 

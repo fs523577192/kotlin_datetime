@@ -64,6 +64,9 @@ package org.firas.datetime
 import org.firas.datetime.temporal.*
 import org.firas.datetime.zone.ZoneOffset
 import org.firas.lang.getName
+import kotlin.js.JsName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 import kotlin.reflect.KClass
 
 /**
@@ -112,23 +115,32 @@ class LocalTime private constructor(
          * The minimum supported `LocalTime`, '00:00'.
          * This is the time of midnight at the start of the day.
          */
+        @JvmStatic
+        @JvmField
         val MIN: LocalTime
         /**
          * The maximum supported `LocalTime`, '23:59:59.999999999'.
          * This is the time just before midnight at the end of the day.
          */
+        @JvmStatic
+        @JvmField
         val MAX: LocalTime
         /**
          * The time of midnight at the start of the day, '00:00'.
          */
+        @JvmStatic
+        @JvmField
         val MIDNIGHT: LocalTime
         /**
          * The time of noon in the middle of the day, '12:00'.
          */
+        @JvmStatic
+        @JvmField
         val NOON: LocalTime
         /**
          * Constants for the local time of each hour.
          */
+        @JvmStatic
         private val HOURS = Array(24) {
             LocalTime(it.toByte(), 0, 0, 0)
         }
@@ -142,54 +154,67 @@ class LocalTime private constructor(
         /**
          * Hours per day.
          */
+        @JvmField
         internal const val HOURS_PER_DAY = 24
         /**
          * Minutes per hour.
          */
+        @JvmField
         internal const val MINUTES_PER_HOUR = 60
         /**
          * Minutes per day.
          */
+        @JvmField
         internal const val MINUTES_PER_DAY = MINUTES_PER_HOUR * HOURS_PER_DAY
         /**
          * Seconds per minute.
          */
+        @JvmField
         internal const val SECONDS_PER_MINUTE = 60
         /**
          * Seconds per hour.
          */
+        @JvmField
         internal const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
         /**
          * Seconds per day.
          */
+        @JvmField
         internal const val SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY
         /**
          * Milliseconds per day.
          */
+        @JvmField
         internal const val MILLIS_PER_DAY = SECONDS_PER_DAY * 1000L
         /**
          * Microseconds per day.
          */
+        @JvmField
         internal const val MICROS_PER_DAY = SECONDS_PER_DAY * 1000_000L
         /**
          * Nanos per millisecond.
          */
+        @JvmField
         internal const val NANOS_PER_MILLI = 1000_000L
         /**
          * Nanos per second.
          */
+        @JvmField
         internal const val NANOS_PER_SECOND = 1000_000_000L
         /**
          * Nanos per minute.
          */
+        @JvmField
         internal const val NANOS_PER_MINUTE = NANOS_PER_SECOND * SECONDS_PER_MINUTE
         /**
          * Nanos per hour.
          */
+        @JvmField
         internal const val NANOS_PER_HOUR = NANOS_PER_MINUTE * MINUTES_PER_HOUR
         /**
          * Nanos per day.
          */
+        @JvmField
         internal const val NANOS_PER_DAY = NANOS_PER_HOUR * HOURS_PER_DAY
 
         /**
@@ -209,6 +234,8 @@ class LocalTime private constructor(
          * @return the local time, not null
          * @throws DateTimeException if the value of any field is out of range
          */
+        @JvmStatic
+        @JsName("ofHourAndMinute")
         fun of(hour: Int, minute: Int): LocalTime {
             ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
             if (minute == 0) {
@@ -231,6 +258,8 @@ class LocalTime private constructor(
          * @return the local time, not null
          * @throws DateTimeException if the value of any field is out of range
          */
+        @JvmStatic
+        @JsName("ofHourMinuteAndSecond")
         fun of(hour: Int, minute: Int, second: Int): LocalTime {
             ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
             if (minute or second == 0) {
@@ -254,6 +283,8 @@ class LocalTime private constructor(
          * @return the local time, not null
          * @throws DateTimeException if the value of any field is out of range
          */
+        @JvmStatic
+        @JsName("ofHourMinuteSecondAndNano")
         fun of(hour: Int, minute: Int, second: Int, nanoOfSecond: Int): LocalTime {
             ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
             ChronoField.MINUTE_OF_HOUR.checkValidValue(minute.toLong())
@@ -274,6 +305,8 @@ class LocalTime private constructor(
          * @return the local time, not null
          * @throws DateTimeException if the second-of-day value is invalid
          */
+        @JvmStatic
+        @JsName("ofSecondOfDay")
         fun ofSecondOfDay(secondOfDay: Long): LocalTime {
             var secondOfDay = secondOfDay
             ChronoField.SECOND_OF_DAY.checkValidValue(secondOfDay)
@@ -294,6 +327,8 @@ class LocalTime private constructor(
          * @return the local time, not null
          * @throws DateTimeException if the nanos of day value is invalid
          */
+        @JvmStatic
+        @JsName("ofNanoOfDay")
         fun ofNanoOfDay(nanoOfDay: Long): LocalTime {
             var nanoOfDay = nanoOfDay
             ChronoField.NANO_OF_DAY.checkValidValue(nanoOfDay)
@@ -324,6 +359,8 @@ class LocalTime private constructor(
          * @return the local time, not null
          * @throws DateTimeException if unable to convert to a `LocalTime`
          */
+        @JvmStatic
+        @JsName("from")
         fun from(temporal: TemporalAccessor): LocalTime {
             return temporal.query(TemporalQueries.LOCAL_TIME) ?:
                     throw DateTimeException("Unable to obtain LocalTime from TemporalAccessor: " +
@@ -385,7 +422,7 @@ class LocalTime private constructor(
         if (field is ChronoField) {
             return get0(field)
         }
-        TODO("return Temporal.super.get(this, field)")
+        return TemporalAccessor.get(this, field)
     }
 
     /**
@@ -1221,6 +1258,22 @@ class LocalTime private constructor(
         total += second * NANOS_PER_SECOND
         total += nano
         return total
+    }
+
+    override fun with(adjuster: TemporalAdjuster): Temporal {
+        return Temporal.with(this, adjuster)
+    }
+
+    override fun minus(amount: TemporalAmount): Temporal {
+        return Temporal.minus(this, amount)
+    }
+
+    override fun minus(amountToSubtract: Long, unit: TemporalUnit): Temporal {
+        return Temporal.minus(this, amountToSubtract, unit)
+    }
+
+    override fun range(field: TemporalField): ValueRange {
+        return TemporalAccessor.range(this, field)
     }
 
     private fun get0(field: TemporalField): Int {

@@ -183,6 +183,63 @@ interface Chronology: Comparable<Chronology> {
             val obj = temporal.query(TemporalQueries.CHRONO)
             return obj?:IsoChronology.INSTANCE
         }
+
+        // Write default implementation here because
+        // 1. the default implementation mechanism in Kotlin is different from
+        //    the default implementation mechanism in Java;
+        // 2. Kotlin does not support calling implementation of a base class
+        //    when the derived class has an overridden implementation
+
+        @JvmStatic
+        @JsName("epochSecond")
+        fun epochSecond(
+            chronology: Chronology,
+            prolepticYear: Int, month: Int, dayOfMonth: Int,
+            hour: Int, minute: Int, second: Int, zoneOffset: ZoneOffset
+        ): Long {
+            ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
+            ChronoField.MINUTE_OF_HOUR.checkValidValue(minute.toLong())
+            ChronoField.SECOND_OF_MINUTE.checkValidValue(second.toLong())
+
+            val daysInSec = MathUtils.multiplyExact(chronology.date(
+                    prolepticYear, month, dayOfMonth).toEpochDay(), 86400)
+            val timeinSec = ((hour * 60 + minute) * 60 + second).toLong()
+            return MathUtils.addExact(daysInSec, timeinSec - zoneOffset.totalSeconds)
+        }
+
+        @JvmStatic
+        @JsName("localDateTime")
+        fun localDateTime(chronology: Chronology, temporal: TemporalAccessor):
+                ChronoLocalDateTime<out ChronoLocalDate> {
+            try {
+                return chronology.date(temporal).atTime(LocalTime.from(temporal))
+            } catch (ex: DateTimeException) {
+                throw DateTimeException("Unable to obtain ChronoLocalDateTime from TemporalAccessor: " +
+                        temporal::class.getName(), ex)
+            }
+        }
+
+        @JvmStatic
+        @JsName("zonedDateTimeWithAccessor")
+        fun zonedDateTime(chronology: Chronology, temporal: TemporalAccessor):
+                ChronoZonedDateTime<out ChronoLocalDate> {
+            try {
+                val zone = ZoneId.from(temporal)
+                // try {
+                    val instant = Instant.from(temporal)
+                    return chronology.zonedDateTime(instant, zone)
+
+                /*
+                } catch (ex1: DateTimeException) {
+                    ChronoLocalDateTimeImpl<?> cldt = ChronoLocalDateTimeImpl.ensureValid(this, localDateTime(temporal));
+                    return ChronoZonedDateTimeImpl.ofBest(cldt, zone, null);
+                }
+                */
+            } catch (ex: DateTimeException) {
+                throw DateTimeException("Unable to obtain ChronoZonedDateTime from TemporalAccessor: " +
+                        temporal::class.getName(), ex)
+            }
+        }
     }
 
     /**
@@ -346,14 +403,7 @@ interface Chronology: Comparable<Chronology> {
     fun epochSecond(
         prolepticYear: Int, month: Int, dayOfMonth: Int,
         hour: Int, minute: Int, second: Int, zoneOffset: ZoneOffset
-    ): Long {
-        ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
-        ChronoField.MINUTE_OF_HOUR.checkValidValue(minute.toLong())
-        ChronoField.SECOND_OF_MINUTE.checkValidValue(second.toLong())
-        val daysInSec = MathUtils.multiplyExact(date(prolepticYear, month, dayOfMonth).toEpochDay(), 86400)
-        val timeinSec = ((hour * 60 + minute) * 60 + second).toLong()
-        return MathUtils.addExact(daysInSec, timeinSec - zoneOffset.totalSeconds)
-    }
+    ): Long
 
     /**
      * Obtains a local date in this chronology from another temporal object.
@@ -404,14 +454,7 @@ interface Chronology: Comparable<Chronology> {
      * @see ChronoLocalDateTime#from(TemporalAccessor)
      */
     @JsName("localDateTime")
-    fun localDateTime(temporal: TemporalAccessor): ChronoLocalDateTime<out ChronoLocalDate> {
-        try {
-            return date(temporal).atTime(LocalTime.from(temporal))
-        } catch (ex: DateTimeException) {
-            throw DateTimeException("Unable to obtain ChronoLocalDateTime from TemporalAccessor: " +
-                    temporal::class.getName(), ex)
-        }
-    }
+    fun localDateTime(temporal: TemporalAccessor): ChronoLocalDateTime<out ChronoLocalDate>
 
     /**
      * Obtains a `ChronoZonedDateTime` in this chronology from another temporal object.
@@ -441,24 +484,7 @@ interface Chronology: Comparable<Chronology> {
      * @see ChronoZonedDateTime#from(TemporalAccessor)
      */
     @JsName("zonedDateTimeWithAccessor")
-    fun zonedDateTime(temporal: TemporalAccessor): ChronoZonedDateTime<out ChronoLocalDate> {
-        try {
-            val zone = ZoneId.from(temporal)
-            // try {
-                val instant = Instant.from(temporal)
-                return zonedDateTime(instant, zone)
-
-            /*
-            } catch (ex1: DateTimeException) {
-                ChronoLocalDateTimeImpl<?> cldt = ChronoLocalDateTimeImpl.ensureValid(this, localDateTime(temporal));
-                return ChronoZonedDateTimeImpl.ofBest(cldt, zone, null);
-            }
-            */
-        } catch (ex: DateTimeException) {
-            throw DateTimeException("Unable to obtain ChronoZonedDateTime from TemporalAccessor: " +
-                    temporal::class.getName(), ex)
-        }
-    }
+    fun zonedDateTime(temporal: TemporalAccessor): ChronoZonedDateTime<out ChronoLocalDate>
 
     @JsName("zonedDateTimeWithInstantAndZoneId")
     fun zonedDateTime(instant: Instant, zoneId: ZoneId): ChronoZonedDateTime<out ChronoLocalDate>
